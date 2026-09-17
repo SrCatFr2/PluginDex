@@ -1,1096 +1,1656 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 
-    <meta
-        name="theme-color"
-        content="#c0c0c0"
-    >
+<title>PluginDex</title>
 
-    <meta
-        name="description"
-        content="PluginDex - Motor visual para crear páginas web."
-    >
+<style>
 
-    <title>PluginDex</title>
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap');
 
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="style.css">
+*{
+    box-sizing:border-box;
+}
+
+:root{
+    --desktop:#c0c0c0;
+    --panel:#d8d8d8;
+    --dark:#555;
+    --darker:#222;
+    --light:#fff;
+    --blue:#123d91;
+    --accent:#315bb5;
+}
+
+body{
+    margin:0;
+    height:100vh;
+    overflow:hidden;
+    background:
+        repeating-linear-gradient(
+            0deg,
+            rgba(0,0,0,.025) 0px,
+            rgba(0,0,0,.025) 1px,
+            transparent 1px,
+            transparent 3px
+        ),
+        #9b9b9b;
+    font-family:"Pixelify Sans",monospace;
+    color:#111;
+}
+
+/* =========================
+   APP
+========================= */
+
+.app{
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+}
+
+/* =========================
+   TOP BAR
+========================= */
+
+.topbar{
+    height:44px;
+    flex-shrink:0;
+
+    display:flex;
+    align-items:center;
+    gap:12px;
+
+    padding:5px 8px;
+
+    background:linear-gradient(
+        #eeeeee,
+        #bcbcbc
+    );
+
+    border-bottom:2px solid #555;
+
+    box-shadow:
+        inset 0 1px white,
+        0 2px 5px rgba(0,0,0,.3);
+}
+
+.logo{
+    display:flex;
+    align-items:center;
+    gap:8px;
+
+    font-size:20px;
+    font-weight:700;
+}
+
+.logoBox{
+    width:27px;
+    height:27px;
+
+    display:grid;
+    place-items:center;
+
+    color:white;
+
+    background:#193c8d;
+
+    border:2px solid white;
+
+    box-shadow:
+        2px 2px #333,
+        inset 1px 1px rgba(255,255,255,.4);
+}
+
+.logo span{
+    color:#173d91;
+}
+
+.top-actions{
+    margin-left:auto;
+    display:flex;
+    gap:5px;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+button{
+    font-family:inherit;
+    cursor:pointer;
+
+    background:#d5d5d5;
+
+    border:2px solid;
+
+    border-color:#fff #555 #555 #fff;
+
+    padding:5px 10px;
+
+    box-shadow:1px 1px #222;
+
+    font-size:13px;
+}
+
+button:hover{
+    background:#e7e7e7;
+}
+
+button:active{
+    border-color:#555 #fff #fff #555;
+    box-shadow:none;
+    transform:translate(1px,1px);
+}
+
+.run{
+    background:#214b9d;
+    color:white;
+}
+
+/* =========================
+   WORKSPACE
+========================= */
+
+.workspace{
+    flex:1;
+    display:grid;
+
+    grid-template-columns:190px 1fr 240px;
+
+    min-height:0;
+}
+
+/* =========================
+   SIDEBARS
+========================= */
+
+.sidebar{
+    background:#c8c8c8;
+
+    border-right:2px solid #555;
+
+    display:flex;
+    flex-direction:column;
+
+    min-width:0;
+}
+
+.right{
+    border-right:0;
+    border-left:2px solid #555;
+}
+
+.section-title{
+    padding:7px 8px;
+
+    color:white;
+
+    background:
+        linear-gradient(
+            90deg,
+            #163b8d,
+            #416bbd
+        );
+
+    border-bottom:2px solid #222;
+
+    font-size:14px;
+}
+
+/* =========================
+   COMPONENTS
+========================= */
+
+.components{
+    padding:8px;
+
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
+.component{
+    padding:9px;
+
+    background:#dedede;
+
+    border:2px solid;
+
+    border-color:#fff #555 #555 #fff;
+
+    cursor:grab;
+
+    box-shadow:1px 1px #222;
+
+    transition:.1s;
+}
+
+.component:hover{
+    background:#ededed;
+    transform:translateX(2px);
+}
+
+.component small{
+    display:block;
+    color:#555;
+    margin-top:2px;
+}
+
+/* =========================
+   CENTER
+========================= */
+
+.editor{
+    position:relative;
+
+    background:
+        radial-gradient(
+            #888 1px,
+            transparent 1px
+        );
+
+    background-size:10px 10px;
+
+    overflow:auto;
+
+    padding:35px;
+}
+
+.editor-label{
+    position:fixed;
+
+    top:54px;
+    left:205px;
+
+    font-size:12px;
+
+    background:#222;
+    color:white;
+
+    padding:3px 7px;
+
+    z-index:10;
+}
+
+/* =========================
+   PAGE
+========================= */
+
+.page{
+    width:850px;
+    min-height:620px;
+
+    margin:auto;
+
+    background:#efefef;
+
+    border:3px solid;
+
+    border-color:#fff #444 #444 #fff;
+
+    box-shadow:
+        4px 4px #222,
+        0 10px 35px rgba(0,0,0,.35);
+
+    position:relative;
+
+    padding:20px;
+
+    transition:.2s;
+}
+
+.page.glass{
+    background:rgba(235,235,235,.65);
+
+    backdrop-filter:blur(15px);
+    -webkit-backdrop-filter:blur(15px);
+
+    border:1px solid rgba(255,255,255,.7);
+
+    box-shadow:
+        0 15px 40px rgba(0,0,0,.25),
+        inset 0 1px rgba(255,255,255,.8);
+}
+
+/* =========================
+   ELEMENTS
+========================= */
+
+.element{
+    position:relative;
+
+    margin:8px;
+
+    padding:8px;
+
+    min-height:20px;
+
+    outline:1px dashed transparent;
+
+    cursor:pointer;
+}
+
+.element:hover{
+    outline:1px dashed #315bb5;
+}
+
+.element.selected{
+    outline:2px solid #315bb5;
+
+    background:rgba(49,91,181,.07);
+}
+
+.text-element{
+    font-size:24px;
+}
+
+.button-element{
+    display:inline-block;
+
+    background:#315bb5;
+
+    color:white;
+
+    border:3px solid;
+
+    border-color:#7695df #162b63 #162b63 #7695df;
+
+    padding:9px 16px;
+
+    font-family:inherit;
+
+    cursor:pointer;
+
+    box-shadow:2px 2px #222;
+}
+
+.box-element{
+    min-height:100px;
+
+    border:2px dashed #555;
+
+    background:rgba(255,255,255,.35);
+}
+
+.image-element{
+    width:250px;
+    height:150px;
+
+    display:grid;
+    place-items:center;
+
+    background:#bbb;
+
+    border:3px solid;
+
+    border-color:#fff #555 #555 #fff;
+
+    color:#555;
+}
+
+/* =========================
+   PROPERTIES
+========================= */
+
+.properties{
+    padding:8px;
+
+    overflow:auto;
+}
+
+.property{
+    margin-bottom:10px;
+}
+
+.property label{
+    display:block;
+
+    font-size:12px;
+
+    margin-bottom:4px;
+}
+
+input,
+select{
+    width:100%;
+
+    padding:6px;
+
+    font-family:inherit;
+
+    background:white;
+
+    border:2px solid;
+
+    border-color:#555 #fff #fff #555;
+
+    outline:none;
+}
+
+input[type="color"]{
+    height:34px;
+    padding:2px;
+}
+
+.row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:5px;
+}
+
+.no-selection{
+    color:#666;
+
+    text-align:center;
+
+    padding:25px 10px;
+
+    font-size:13px;
+}
+
+/* =========================
+   BLOCKS
+========================= */
+
+.blocks{
+    margin-top:auto;
+
+    border-top:2px solid #555;
+}
+
+.block-list{
+    padding:8px;
+
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+}
+
+.block{
+    background:#f0d35b;
+
+    padding:7px;
+
+    border:2px solid;
+
+    border-color:#fff #555 #555 #fff;
+
+    cursor:pointer;
+
+    font-size:12px;
+}
+
+.block:hover{
+    background:#ffe67e;
+}
+
+/* =========================
+   MODAL
+========================= */
+
+.modal{
+    position:fixed;
+
+    inset:0;
+
+    display:none;
+
+    align-items:center;
+    justify-content:center;
+
+    background:rgba(0,0,0,.55);
+
+    z-index:100;
+}
+
+.modal.active{
+    display:flex;
+}
+
+.window{
+    width:min(850px,90vw);
+    max-height:85vh;
+
+    background:#d0d0d0;
+
+    border:3px solid;
+
+    border-color:#fff #333 #333 #fff;
+
+    box-shadow:8px 8px rgba(0,0,0,.5);
+
+    display:flex;
+    flex-direction:column;
+}
+
+.window-title{
+    background:#173c8d;
+    color:white;
+
+    padding:7px 10px;
+
+    display:flex;
+    justify-content:space-between;
+}
+
+.code{
+    flex:1;
+
+    overflow:auto;
+
+    background:#181818;
+    color:#ddd;
+
+    padding:15px;
+
+    font-family:monospace;
+
+    white-space:pre;
+}
+
+/* =========================
+   STATUS
+========================= */
+
+.statusbar{
+    height:24px;
+
+    flex-shrink:0;
+
+    background:#c8c8c8;
+
+    border-top:2px solid #fff;
+
+    display:flex;
+
+    align-items:center;
+
+    padding:0 8px;
+
+    font-size:11px;
+}
+
+.status-right{
+    margin-left:auto;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:900px){
+
+    .workspace{
+        grid-template-columns:150px 1fr;
+    }
+
+    .right{
+        display:none;
+    }
+
+    .editor{
+        padding:15px;
+    }
+
+    .page{
+        width:100%;
+        min-height:600px;
+    }
+}
+
+</style>
 </head>
 
 <body>
 
-<div id="app">
+<div class="app">
 
-    <!-- =========================================
-         TOP BAR
-    ========================================== -->
+<!-- ================= TOP ================= -->
 
-    <header class="topbar">
+<header class="topbar">
 
-        <div class="window-title">
+    <div class="logo">
+        <div class="logoBox">P</div>
+        Plugin<span>Dex</span>
+    </div>
 
-            <div class="pixel-logo">
-                PD
+    <div class="top-actions">
+        <button onclick="newPage()">Nuevo</button>
+        <button onclick="toggleGlass()">◇ Glass</button>
+        <button class="run" onclick="preview()">▶ Ejecutar</button>
+        <button onclick="exportCode()">Exportar</button>
+    </div>
+
+</header>
+
+
+<!-- ================= WORKSPACE ================= -->
+
+<div class="workspace">
+
+
+<!-- ================= COMPONENTS ================= -->
+
+<aside class="sidebar">
+
+    <div class="section-title">
+        ELEMENTOS
+    </div>
+
+    <div class="components">
+
+        <div
+            class="component"
+            draggable="true"
+            data-type="text"
+        >
+            ▣ Texto
+            <small>Texto normal</small>
+        </div>
+
+        <div
+            class="component"
+            draggable="true"
+            data-type="button"
+        >
+            ▣ Botón
+            <small>Botón interactivo</small>
+        </div>
+
+        <div
+            class="component"
+            draggable="true"
+            data-type="box"
+        >
+            ▣ Caja
+            <small>Contenedor</small>
+        </div>
+
+        <div
+            class="component"
+            draggable="true"
+            data-type="image"
+        >
+            ▣ Imagen
+            <small>Espacio para imagen</small>
+        </div>
+
+    </div>
+
+
+    <div class="blocks">
+
+        <div class="section-title">
+            BLOQUES
+        </div>
+
+        <div class="block-list">
+
+            <div
+                class="block"
+                onclick="addLogic('click')"
+            >
+                ⚡ AL HACER CLIC
             </div>
 
-            <div>
-                <strong>PluginDex</strong>
-                <span>MiProyecto.pdx</span>
+            <div
+                class="block"
+                onclick="addLogic('text')"
+            >
+                ✎ CAMBIAR TEXTO
+            </div>
+
+            <div
+                class="block"
+                onclick="addLogic('color')"
+            >
+                ◉ CAMBIAR COLOR
             </div>
 
         </div>
 
-        <nav class="main-menu">
+    </div>
 
-            <button>Archivo</button>
-            <button>Editar</button>
-            <button>Ver</button>
-            <button>Proyecto</button>
-            <button>Herramientas</button>
-            <button>Ayuda</button>
+</aside>
 
-        </nav>
 
-        <div class="window-buttons">
+<!-- ================= EDITOR ================= -->
 
-            <button>_</button>
-            <button>□</button>
-            <button>×</button>
+<main class="editor">
 
+    <div class="editor-label">
+        PÁGINA / EDITOR
+    </div>
+
+    <div
+        id="page"
+        class="page"
+        onclick="selectPage(event)"
+    >
+
+        <div
+            class="element text-element"
+            data-id="1"
+            onclick="selectElement(event,this)"
+        >
+            Mi página
         </div>
 
-    </header>
-
-
-    <!-- =========================================
-         TOOLBAR
-    ========================================== -->
-
-    <section class="toolbar">
-
-        <button
-            class="tool-button"
-            id="newProject"
+        <div
+            class="element"
+            data-id="2"
+            onclick="selectElement(event,this)"
         >
-            <span>📄</span>
-            Nuevo
-        </button>
-
-        <button
-            class="tool-button"
-            id="saveProject"
-        >
-            <span>💾</span>
-            Guardar
-        </button>
-
-        <button
-            class="tool-button"
-            id="exportProject"
-        >
-            <span>📦</span>
-            Exportar
-        </button>
-
-        <div class="toolbar-separator"></div>
-
-        <button
-            class="tool-button active"
-            id="previewButton"
-        >
-            🖥 Vista previa
-        </button>
-
-        <button
-            class="tool-button"
-            id="compileButton"
-        >
-            ⚙ Compilar
-        </button>
-
-        <div class="toolbar-space"></div>
-
-        <div class="engine-status">
-
-            <span class="status-dot"></span>
-
-            <div>
-                <strong>PluginDex Engine</strong>
-                <small>Offline</small>
-            </div>
-
+            Bienvenido a PluginDex.
         </div>
 
-    </section>
+        <div
+            class="element button-element"
+            data-id="3"
+            onclick="selectElement(event,this)"
+        >
+            Haz clic
+        </div>
 
+    </div>
 
-    <!-- =========================================
-         WORKSPACE
-    ========================================== -->
+</main>
 
-    <main class="workspace">
 
+<!-- ================= PROPERTIES ================= -->
 
-        <!-- =====================================
-             LEFT PANEL
-        ====================================== -->
+<aside class="sidebar right">
 
-        <aside class="left-panel">
+    <div class="section-title">
+        PROPIEDADES
+    </div>
 
-            <div class="panel-header">
-                <span>COMPONENTES</span>
-                <button>×</button>
-            </div>
+    <div
+        id="properties"
+        class="properties"
+    >
 
-            <div class="component-search">
+        <div class="no-selection">
+            Selecciona un elemento
+            para editarlo.
+        </div>
 
-                <input
-                    id="componentSearch"
-                    type="text"
-                    placeholder="Buscar componente..."
-                >
+    </div>
 
-            </div>
-
-
-            <div class="component-group">
-
-                <div class="group-title">
-                    BÁSICOS
-                </div>
-
-                <button
-                    class="component"
-                    data-component="text"
-                >
-                    <span>▤</span>
-                    Texto
-                </button>
-
-                <button
-                    class="component"
-                    data-component="title"
-                >
-                    <span>T</span>
-                    Título
-                </button>
-
-                <button
-                    class="component"
-                    data-component="button"
-                >
-                    <span>▣</span>
-                    Botón
-                </button>
-
-                <button
-                    class="component"
-                    data-component="image"
-                >
-                    <span>▧</span>
-                    Imagen
-                </button>
-
-                <button
-                    class="component"
-                    data-component="container"
-                >
-                    <span>□</span>
-                    Contenedor
-                </button>
-
-                <button
-                    class="component"
-                    data-component="divider"
-                >
-                    <span>━</span>
-                    Separador
-                </button>
-
-            </div>
-
-
-            <div class="component-group">
-
-                <div class="group-title">
-                    INTERFAZ
-                </div>
-
-                <button
-                    class="component"
-                    data-component="card"
-                >
-                    <span>▣</span>
-                    Tarjeta
-                </button>
-
-                <button
-                    class="component"
-                    data-component="navbar"
-                >
-                    <span>☰</span>
-                    Navegación
-                </button>
-
-                <button
-                    class="component"
-                    data-component="input"
-                >
-                    <span>▭</span>
-                    Input
-                </button>
-
-                <button
-                    class="component"
-                    data-component="badge"
-                >
-                    <span>●</span>
-                    Badge
-                </button>
-
-            </div>
-
-
-            <div class="component-group">
-
-                <div class="group-title">
-                    LAYOUT
-                </div>
-
-                <button
-                    class="component"
-                    data-component="grid"
-                >
-                    <span>▦</span>
-                    Grid
-                </button>
-
-                <button
-                    class="component"
-                    data-component="columns"
-                >
-                    <span>▥</span>
-                    Columnas
-                </button>
-
-            </div>
-
-
-            <div class="left-bottom">
-
-                <button id="backgroundButton">
-                    🎨 Fondo
-                </button>
-
-                <button id="blocksButton">
-                    🧩 Bloques
-                </button>
-
-            </div>
-
-        </aside>
-
-
-        <!-- =====================================
-             CENTER
-        ====================================== -->
-
-        <section class="center">
-
-
-            <!-- tabs -->
-
-            <div class="editor-tabs">
-
-                <button class="tab active">
-                    <span>📄</span>
-                    index.pdx
-                    <b>×</b>
-                </button>
-
-                <button class="tab">
-                    <span>🎨</span>
-                    estilos.pdx
-                    <b>×</b>
-                </button>
-
-                <button class="tab">
-                    <span>⚡</span>
-                    scripts.pdx
-                    <b>×</b>
-                </button>
-
-                <button
-                    class="new-tab"
-                    title="Nuevo archivo"
-                >
-                    +
-                </button>
-
-            </div>
-
-
-            <!-- preview toolbar -->
-
-            <div class="preview-toolbar">
-
-                <button id="backPreview">
-                    ◀
-                </button>
-
-                <button id="forwardPreview">
-                    ▶
-                </button>
-
-                <button id="refreshPreview">
-                    ↻
-                </button>
-
-                <div class="address">
-
-                    <span>🔒</span>
-
-                    <input
-                        value="plugin://preview/index"
-                        readonly
-                    >
-
-                </div>
-
-                <button id="deviceDesktop">
-                    🖥
-                </button>
-
-                <button id="deviceMobile">
-                    📱
-                </button>
-
-            </div>
-
-
-            <!-- actual preview -->
-
-            <div class="preview-area">
-
-                <div
-                    id="previewCanvas"
-                    class="preview-canvas"
-                >
-
-                    <div
-                        id="website"
-                        class="website"
-                    >
-
-                        <header class="site-header">
-
-                            <div class="site-logo">
-                                PluginDex
-                            </div>
-
-                            <nav>
-                                <a>Inicio</a>
-                                <a>Proyectos</a>
-                                <a>Comunidad</a>
-                                <a>Ayuda</a>
-                            </nav>
-
-                        </header>
-
-
-                        <section class="hero">
-
-                            <div>
-
-                                <div class="pixel-label">
-                                    PLUGINDEX ENGINE
-                                </div>
-
-                                <h1>
-                                    Crea la web
-                                    <br>
-                                    a tu manera.
-                                </h1>
-
-                                <p>
-                                    Un motor visual para construir
-                                    páginas web sin complicarte.
-                                </p>
-
-                                <button
-                                    class="hero-button"
-                                >
-                                    Comenzar
-                                </button>
-
-                            </div>
-
-                            <div class="retro-computer">
-
-                                <div class="monitor">
-
-                                    <div class="monitor-screen">
-                                        PD_
-                                    </div>
-
-                                </div>
-
-                                <div class="computer-base">
-                                    ▰ ▰ ▰ ▰
-                                </div>
-
-                            </div>
-
-                        </section>
-
-
-                        <section class="site-grid">
-
-                            <div class="site-card">
-
-                                <h3>
-                                    Últimos proyectos
-                                </h3>
-
-                                <a>Mi Portfolio</a>
-                                <a>Mi tienda</a>
-                                <a>Landing Page</a>
-                                <a>Proyecto Retro</a>
-
-                            </div>
-
-                            <div class="site-card">
-
-                                <h3>
-                                    Recursos
-                                </h3>
-
-                                <a>Documentación</a>
-                                <a>Componentes</a>
-                                <a>Plugins</a>
-                                <a>Ejemplos</a>
-
-                            </div>
-
-                            <div class="site-card">
-
-                                <h3>
-                                    Comunidad
-                                </h3>
-
-                                <p>
-                                    Comparte tus proyectos
-                                    creados con PluginDex.
-                                </p>
-
-                                <button>
-                                    Entrar →
-                                </button>
-
-                            </div>
-
-                        </section>
-
-
-                        <footer>
-
-                            PluginDex © 2026
-
-                            <span>
-                                Motor web local
-                            </span>
-
-                        </footer>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- bottom editor -->
-
-            <section class="bottom-editor">
-
-                <div class="bottom-tabs">
-
-                    <button class="bottom-tab active">
-                        Código PDL
-                    </button>
-
-                    <button class="bottom-tab">
-                        Bloques
-                    </button>
-
-                    <button class="bottom-tab">
-                        Consola
-                    </button>
-
-                </div>
-
-
-                <div class="bottom-content">
-
-
-                    <!-- PDL -->
-
-                    <div class="code-editor">
-
-                        <div
-                            class="line-numbers"
-                            id="lineNumbers"
-                        >
-                            1
-                            <br>
-                            2
-                            <br>
-                            3
-                            <br>
-                            4
-                            <br>
-                            5
-                            <br>
-                            6
-                            <br>
-                            7
-                        </div>
-
-                        <textarea
-                            id="pdlEditor"
-                            spellcheck="false"
-                        >page "MiProyecto" {
-
-    title "Bienvenido a PluginDex"
-
-    text "Crea páginas web fácilmente."
-
-    button "Comenzar"
-}</textarea>
-
-                    </div>
-
-
-                    <!-- BLOCKS -->
-
-                    <div
-                        class="blocks-editor"
-                        id="blocksEditor"
-                    >
-
-                        <div class="block event">
-                            CUANDO
-                            <select>
-                                <option>se haga clic</option>
-                                <option>cargue la página</option>
-                            </select>
-                        </div>
-
-                        <div class="block action">
-                            CAMBIAR TEXTO DE
-                            <select>
-                                <option>Título</option>
-                                <option>Botón</option>
-                            </select>
-                        </div>
-
-                        <div class="block value">
-                            A
-                            <input
-                                value="Hola mundo"
-                            >
-                        </div>
-
-                    </div>
-
-
-                    <!-- CONSOLE -->
-
-                    <div
-                        class="console"
-                        id="console"
-                    >
-
-                        <div>
-                            [PluginDex] Motor iniciado.
-                        </div>
-
-                        <div>
-                            [PluginDex] Proyecto cargado.
-                        </div>
-
-                        <div class="success">
-                            [PluginDex] Sin errores.
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-        </section>
-
-
-        <!-- =====================================
-             RIGHT PANEL
-        ====================================== -->
-
-        <aside class="right-panel">
-
-
-            <div class="panel-header">
-
-                <span>PROPIEDADES</span>
-
-                <button>×</button>
-
-            </div>
-
-
-            <div class="selected-object">
-
-                <span class="object-icon">
-                    □
-                </span>
-
-                <div>
-
-                    <strong id="selectedName">
-                        Página
-                    </strong>
-
-                    <small>
-                        Objeto seleccionado
-                    </small>
-
-                </div>
-
-            </div>
-
-
-            <div class="property-section">
-
-                <div class="property-title">
-                    APARIENCIA
-                </div>
-
-
-                <label>
-                    Nombre
-
-                    <input
-                        id="propName"
-                        value="MiProyecto"
-                    >
-
-                </label>
-
-
-                <label>
-                    Texto
-
-                    <input
-                        id="propText"
-                        value="PluginDex"
-                    >
-
-                </label>
-
-
-                <label>
-                    Color
-
-                    <div class="color-input">
-
-                        <input
-                            id="propColor"
-                            type="color"
-                            value="#0000aa"
-                        >
-
-                        <input
-                            id="propColorText"
-                            value="#0000AA"
-                        >
-
-                    </div>
-
-                </label>
-
-
-                <label>
-                    Tamaño
-
-                    <input
-                        id="propSize"
-                        type="range"
-                        min="8"
-                        max="64"
-                        value="18"
-                    >
-
-                </label>
-
-
-                <label>
-                    Radio
-
-                    <input
-                        id="propRadius"
-                        type="range"
-                        min="0"
-                        max="40"
-                        value="8"
-                    >
-
-                </label>
-
-            </div>
-
-
-            <div class="property-section">
-
-                <div class="property-title">
-                    LIQUID GLASS
-                </div>
-
-
-                <label class="switch-row">
-
-                    <span>
-                        Activar cristal
-                    </span>
-
-                    <input
-                        id="glassToggle"
-                        type="checkbox"
-                        checked
-                    >
-
-                </label>
-
-
-                <label>
-                    Transparencia
-
-                    <input
-                        id="glassOpacity"
-                        type="range"
-                        min="0"
-                        max="100"
-                        value="72"
-                    >
-
-                </label>
-
-
-                <label>
-                    Desenfoque
-
-                    <input
-                        id="glassBlur"
-                        type="range"
-                        min="0"
-                        max="30"
-                        value="8"
-                    >
-
-                </label>
-
-            </div>
-
-
-            <div class="property-section">
-
-                <div class="property-title">
-                    FONDO
-                </div>
-
-
-                <label>
-                    Tipo
-
-                    <select id="backgroundType">
-
-                        <option value="solid">
-                            Color
-                        </option>
-
-                        <option value="gradient">
-                            Degradado
-                        </option>
-
-                        <option value="grid">
-                            Grid Pixel
-                        </option>
-
-                        <option value="dots">
-                            Puntos
-                        </option>
-
-                    </select>
-
-                </label>
-
-
-                <label>
-                    Color 1
-
-                    <input
-                        id="bgColor1"
-                        type="color"
-                        value="#c0c0c0"
-                    >
-
-                </label>
-
-
-                <label>
-                    Color 2
-
-                    <input
-                        id="bgColor2"
-                        type="color"
-                        value="#808080"
-                    >
-
-                </label>
-
-
-                <label>
-                    Intensidad
-
-                    <input
-                        id="bgIntensity"
-                        type="range"
-                        min="0"
-                        max="100"
-                        value="35"
-                    >
-
-                </label>
-
-            </div>
-
-
-            <div class="property-section">
-
-                <div class="property-title">
-                    DISEÑO
-                </div>
-
-
-                <label>
-                    Fuente
-
-                    <select id="fontSelect">
-
-                        <option value="pixel">
-                            Pixel
-                        </option>
-
-                        <option value="system">
-                            System
-                        </option>
-
-                        <option value="mono">
-                            Monospace
-                        </option>
-
-                    </select>
-
-                </label>
-
-
-                <label>
-                    Ancho máximo
-
-                    <select id="maxWidth">
-
-                        <option>900px</option>
-                        <option>1024px</option>
-                        <option>1200px</option>
-                        <option>1400px</option>
-
-                    </select>
-
-                </label>
-
-            </div>
-
-
-            <div class="property-section">
-
-                <div class="property-title">
-                    NAVEGACIÓN
-                </div>
-
-                <div class="tree">
-
-                    <div class="tree-folder">
-                        📁 MiProyecto
-                    </div>
-
-                    <div class="tree-file active">
-                        📄 index.pdx
-                    </div>
-
-                    <div class="tree-file">
-                        🎨 estilos.pdx
-                    </div>
-
-                    <div class="tree-file">
-                        ⚡ scripts.pdx
-                    </div>
-
-                    <div class="tree-folder">
-                        📁 assets
-                    </div>
-
-                </div>
-
-            </div>
-
-        </aside>
-
-    </main>
-
-
-    <!-- =========================================
-         STATUS BAR
-    ========================================== -->
-
-    <footer class="statusbar">
-
-        <span>
-            Ln 7, Col 1
-        </span>
-
-        <span>
-            PDL
-        </span>
-
-        <span>
-            UTF-8
-        </span>
-
-        <span>
-            <i class="status-dot"></i>
-            Motor listo
-        </span>
-
-        <span class="status-space"></span>
-
-        <span>
-            PluginDex Engine v0.1
-        </span>
-
-    </footer>
+</aside>
 
 </div>
 
 
-<!-- =========================================
-     BACKGROUND MODAL
-========================================== -->
+<!-- ================= STATUS ================= -->
+
+<footer class="statusbar">
+
+    <span>
+        PluginDex Engine
+    </span>
+
+    <span class="status-right">
+        Local • Sin conexión
+    </span>
+
+</footer>
+
+</div>
+
+
+<!-- ================= PREVIEW ================= -->
 
 <div
-    class="modal hidden"
-    id="backgroundModal"
+    id="previewModal"
+    class="modal"
 >
 
-    <div class="modal-window">
+    <div class="window">
 
-        <div class="modal-title">
-            Personalizar fondo
+        <div class="window-title">
 
-            <button id="closeBackground">
-                ×
+            <span>
+                PluginDex Preview
+            </span>
+
+            <button onclick="closePreview()">
+                X
             </button>
 
         </div>
 
-        <div class="modal-content">
-
-            <h3>
-                Fondo del proyecto
-            </h3>
-
-            <p>
-                Personaliza completamente el fondo
-                de tu página.
-            </p>
-
-            <label>
-                Color principal
-
-                <input
-                    type="color"
-                    id="modalBg1"
-                    value="#c0c0c0"
-                >
-
-            </label>
-
-            <label>
-                Color secundario
-
-                <input
-                    type="color"
-                    id="modalBg2"
-                    value="#808080"
-                >
-
-            </label>
-
-            <label>
-                Estilo
-
-                <select id="modalBgType">
-
-                    <option value="solid">
-                        Sólido
-                    </option>
-
-                    <option value="gradient">
-                        Degradado
-                    </option>
-
-                    <option value="grid">
-                        Pixel Grid
-                    </option>
-
-                    <option value="dots">
-                        Pixel Dots
-                    </option>
-
-                </select>
-
-            </label>
-
-            <button
-                class="modal-primary"
-                id="applyBackground"
-            >
-                Aplicar
-
-            </button>
-
-        </div>
+        <iframe
+            id="previewFrame"
+            style="
+                width:100%;
+                height:600px;
+                border:0;
+                background:white;
+            "
+        ></iframe>
 
     </div>
 
 </div>
 
 
-<script src="app.js"></script>
+<!-- ================= EXPORT ================= -->
+
+<div
+    id="exportModal"
+    class="modal"
+>
+
+    <div class="window">
+
+        <div class="window-title">
+
+            <span>
+                Código generado
+            </span>
+
+            <button onclick="closeExport()">
+                X
+            </button>
+
+        </div>
+
+        <div
+            id="generatedCode"
+            class="code"
+        ></div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* ==========================================
+   PLUGINDEX ENGINE
+========================================== */
+
+let selected = null;
+let elementCounter = 10;
+
+
+/* ==========================================
+   SELECCIONAR ELEMENTO
+========================================== */
+
+function selectElement(event, element){
+
+    event.stopPropagation();
+
+    if(selected){
+        selected.classList.remove("selected");
+    }
+
+    selected = element;
+
+    selected.classList.add("selected");
+
+    renderProperties();
+}
+
+
+/* ==========================================
+   SELECCIONAR PAGINA
+========================================== */
+
+function selectPage(event){
+
+    if(event.target !== event.currentTarget){
+        return;
+    }
+
+    if(selected){
+        selected.classList.remove("selected");
+        selected = null;
+    }
+
+    document.getElementById("properties").innerHTML = `
+
+        <div class="property">
+
+            <label>FONDO DE PÁGINA</label>
+
+            <input
+                type="color"
+                value="${rgbToHex(
+                    getComputedStyle(
+                        document.getElementById("page")
+                    ).backgroundColor
+                )}"
+                onchange="changePageBackground(this.value)"
+            >
+
+        </div>
+
+        <div class="property">
+
+            <label>FONDO DEL EDITOR</label>
+
+            <input
+                type="color"
+                value="#9b9b9b"
+                onchange="changeEditorBackground(this.value)"
+            >
+
+        </div>
+
+    `;
+}
+
+
+/* ==========================================
+   PROPIEDADES
+========================================== */
+
+function renderProperties(){
+
+    if(!selected) return;
+
+    const style =
+        getComputedStyle(selected);
+
+    document.getElementById("properties").innerHTML = `
+
+        <div class="property">
+
+            <label>TEXTO</label>
+
+            <input
+                value="${escapeHtml(
+                    selected.innerText
+                )}"
+                oninput="changeText(this.value)"
+            >
+
+        </div>
+
+
+        <div class="property">
+
+            <label>COLOR</label>
+
+            <input
+                type="color"
+                value="${rgbToHex(style.color)}"
+                onchange="changeColor(this.value)"
+            >
+
+        </div>
+
+
+        <div class="property">
+
+            <label>FONDO</label>
+
+            <input
+                type="color"
+                value="${rgbToHex(style.backgroundColor)}"
+                onchange="changeBackground(this.value)"
+            >
+
+        </div>
+
+
+        <div class="property">
+
+            <label>TAMAÑO</label>
+
+            <input
+                type="number"
+                value="${parseInt(style.fontSize)}"
+                oninput="changeSize(this.value)"
+            >
+
+        </div>
+
+
+        <div class="row">
+
+            <div class="property">
+
+                <label>BORDE</label>
+
+                <input
+                    type="number"
+                    value="${parseInt(style.borderWidth) || 0}"
+                    oninput="changeBorder(this.value)"
+                >
+
+            </div>
+
+            <div class="property">
+
+                <label>REDONDEO</label>
+
+                <input
+                    type="number"
+                    value="${parseInt(style.borderRadius) || 0}"
+                    oninput="changeRadius(this.value)"
+                >
+
+            </div>
+
+        </div>
+
+
+        <button onclick="deleteElement()">
+            Eliminar elemento
+        </button>
+
+    `;
+}
+
+
+/* ==========================================
+   CAMBIOS
+========================================== */
+
+function changeText(value){
+
+    if(selected){
+        selected.innerText = value;
+    }
+
+}
+
+function changeColor(value){
+
+    if(selected){
+        selected.style.color = value;
+    }
+
+}
+
+function changeBackground(value){
+
+    if(selected){
+        selected.style.background = value;
+    }
+
+}
+
+function changeSize(value){
+
+    if(selected){
+        selected.style.fontSize = value + "px";
+    }
+
+}
+
+function changeBorder(value){
+
+    if(selected){
+
+        selected.style.borderWidth =
+            value + "px";
+
+        selected.style.borderStyle =
+            "solid";
+
+    }
+
+}
+
+function changeRadius(value){
+
+    if(selected){
+
+        selected.style.borderRadius =
+            value + "px";
+
+    }
+
+}
+
+
+/* ==========================================
+   PAGINA
+========================================== */
+
+function changePageBackground(value){
+
+    document.getElementById(
+        "page"
+    ).style.background = value;
+
+}
+
+function changeEditorBackground(value){
+
+    document.querySelector(
+        ".editor"
+    ).style.background =
+        value;
+
+}
+
+
+/* ==========================================
+   GLASS
+========================================== */
+
+function toggleGlass(){
+
+    document
+        .getElementById("page")
+        .classList.toggle("glass");
+
+}
+
+
+/* ==========================================
+   DRAG & DROP
+========================================== */
+
+document
+.querySelectorAll(".component")
+.forEach(component => {
+
+    component.addEventListener(
+        "dragstart",
+        event => {
+
+            event.dataTransfer.setData(
+                "type",
+                component.dataset.type
+            );
+
+        }
+    );
+
+});
+
+
+const page =
+    document.getElementById("page");
+
+
+page.addEventListener(
+    "dragover",
+    event => {
+        event.preventDefault();
+    }
+);
+
+
+page.addEventListener(
+    "drop",
+    event => {
+
+        event.preventDefault();
+
+        const type =
+            event.dataTransfer.getData(
+                "type"
+            );
+
+        createElement(type);
+
+    }
+);
+
+
+/* ==========================================
+   CREAR ELEMENTOS
+========================================== */
+
+function createElement(type){
+
+    elementCounter++;
+
+    const el =
+        document.createElement("div");
+
+    el.className =
+        "element";
+
+    el.dataset.id =
+        elementCounter;
+
+    el.onclick =
+        event =>
+            selectElement(event,el);
+
+
+    if(type === "text"){
+
+        el.classList.add(
+            "text-element"
+        );
+
+        el.innerText =
+            "Nuevo texto";
+
+    }
+
+
+    if(type === "button"){
+
+        el.classList.add(
+            "button-element"
+        );
+
+        el.innerText =
+            "Nuevo botón";
+
+    }
+
+
+    if(type === "box"){
+
+        el.classList.add(
+            "box-element"
+        );
+
+        el.innerText =
+            "Caja";
+
+    }
+
+
+    if(type === "image"){
+
+        el.classList.add(
+            "image-element"
+        );
+
+        el.innerText =
+            "IMAGEN";
+
+    }
+
+
+    page.appendChild(el);
+
+    selectElement(
+        new Event("click"),
+        el
+    );
+
+}
+
+
+/* ==========================================
+   BLOQUES
+========================================== */
+
+function addLogic(type){
+
+    if(!selected){
+
+        alert(
+            "Selecciona primero un elemento."
+        );
+
+        return;
+
+    }
+
+
+    if(type === "click"){
+
+        selected.dataset.action =
+            "alert";
+
+        selected.dataset.message =
+            "¡Hola desde PluginDex!";
+
+        alert(
+            "Bloque añadido:\n\n" +
+            "AL HACER CLIC → MOSTRAR MENSAJE"
+        );
+
+    }
+
+
+    if(type === "text"){
+
+        selected.dataset.action =
+            "changeText";
+
+        selected.dataset.value =
+            "Texto cambiado";
+
+        alert(
+            "Bloque añadido:\n\n" +
+            "AL HACER CLIC → CAMBIAR TEXTO"
+        );
+
+    }
+
+
+    if(type === "color"){
+
+        selected.dataset.action =
+            "changeColor";
+
+        selected.dataset.value =
+            "#ff3333";
+
+        alert(
+            "Bloque añadido:\n\n" +
+            "AL HACER CLIC → CAMBIAR COLOR"
+        );
+
+    }
+
+}
+
+
+/* ==========================================
+   ELIMINAR
+========================================== */
+
+function deleteElement(){
+
+    if(!selected) return;
+
+    selected.remove();
+
+    selected = null;
+
+    document.getElementById(
+        "properties"
+    ).innerHTML = `
+
+        <div class="no-selection">
+            Selecciona un elemento
+            para editarlo.
+        </div>
+
+    `;
+
+}
+
+
+/* ==========================================
+   NUEVA PAGINA
+========================================== */
+
+function newPage(){
+
+    if(
+        !confirm(
+            "¿Crear una página nueva?"
+        )
+    ) return;
+
+    page.innerHTML = `
+
+        <div
+            class="element text-element"
+            data-id="1"
+            onclick="selectElement(event,this)"
+        >
+            Mi página
+        </div>
+
+    `;
+
+    selected = null;
+
+}
+
+
+/* ==========================================
+   PREVIEW
+========================================== */
+
+function preview(){
+
+    const html =
+        generateHTML();
+
+    document.getElementById(
+        "previewFrame"
+    ).srcdoc = html;
+
+    document.getElementById(
+        "previewModal"
+    ).classList.add("active");
+
+}
+
+function closePreview(){
+
+    document.getElementById(
+        "previewModal"
+    ).classList.remove("active");
+
+}
+
+
+/* ==========================================
+   EXPORTAR
+========================================== */
+
+function exportCode(){
+
+    const code =
+        generateHTML();
+
+    document.getElementById(
+        "generatedCode"
+    ).innerText = code;
+
+    document.getElementById(
+        "exportModal"
+    ).classList.add("active");
+
+}
+
+function closeExport(){
+
+    document.getElementById(
+        "exportModal"
+    ).classList.remove("active");
+
+}
+
+
+/* ==========================================
+   GENERADOR
+========================================== */
+
+function generateHTML(){
+
+    const clone =
+        page.cloneNode(true);
+
+    clone
+        .querySelectorAll(".selected")
+        .forEach(el =>
+            el.classList.remove("selected")
+        );
+
+
+    clone
+        .querySelectorAll("[onclick]")
+        .forEach(el =>
+            el.removeAttribute("onclick")
+        );
+
+
+    const pageStyle =
+        clone.getAttribute("style") || "";
+
+
+    return `<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1"
+>
+
+<title>Mi página PluginDex</title>
+
+<style>
+
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#9b9b9b;
+padding:30px;
+}
+
+.page{
+width:850px;
+max-width:100%;
+min-height:600px;
+margin:auto;
+background:#efefef;
+padding:20px;
+${pageStyle}
+}
+
+.element{
+position:relative;
+margin:8px;
+padding:8px;
+}
+
+.text-element{
+font-size:24px;
+}
+
+.button-element{
+display:inline-block;
+background:#315bb5;
+color:white;
+padding:9px 16px;
+cursor:pointer;
+}
+
+.box-element{
+min-height:100px;
+border:2px dashed #555;
+}
+
+.image-element{
+width:250px;
+height:150px;
+display:grid;
+place-items:center;
+background:#bbb;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="page">
+
+${clone.innerHTML}
+
+</div>
+
+<script>
+
+document
+.querySelectorAll("[data-action]")
+.forEach(el => {
+
+el.addEventListener(
+"click",
+() => {
+
+const action =
+el.dataset.action;
+
+if(action === "alert"){
+
+alert(
+el.dataset.message
+);
+
+}
+
+if(action === "changeText"){
+
+el.innerText =
+el.dataset.value;
+
+}
+
+if(action === "changeColor"){
+
+el.style.color =
+el.dataset.value;
+
+}
+
+});
+
+});
+
+<\/script>
+
+</body>
+
+</html>`;
+
+}
+
+
+/* ==========================================
+   UTILIDADES
+========================================== */
+
+function rgbToHex(rgb){
+
+    if(!rgb) return "#ffffff";
+
+    const values =
+        rgb
+        .match(/\d+/g);
+
+    if(!values) return "#ffffff";
+
+    return "#" +
+        values
+        .slice(0,3)
+        .map(x =>
+            Number(x)
+            .toString(16)
+            .padStart(2,"0")
+        )
+        .join("");
+
+}
+
+
+function escapeHtml(text){
+
+    return text
+        .replace(/"/g,"&quot;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;");
+
+}
+
+</script>
 
 </body>
 </html>
