@@ -1,0 +1,11 @@
+{
+    "name": "PluginDex",
+    "short_name": "PluginDex",
+    "description": "Motor visual offline para crear páginas web.",
+    "start_url": "./",
+    "display": "standalone",
+    "background_color": "#c0c0c0",
+    "theme_color": "#000080",
+    "lang": "es",
+    "icons": []
+}
