@@ -1,53 +1,22 @@
-/* =========================================================
-   PLUGINDEX
-   APP ENGINE
-   ========================================================= */
-
 "use strict";
 
+/*
+=========================================================
+ PLUGINDEX ENGINE
+ Motor principal
+ Optimizado para móviles y dispositivos de gama baja
+=========================================================
+*/
 
-/* =========================================================
-   HELPERS
-   ========================================================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
-const $ = (selector, root = document) =>
-    root.querySelector(selector);
-
-const $$ = (selector, root = document) =>
-    [...root.querySelectorAll(selector)];
-
-const clamp = (value, min, max) =>
-    Math.min(Math.max(value, min), max);
-
-const lerp = (a, b, amount) =>
-    a + (b - a) * amount;
-
-const sleep = ms =>
-    new Promise(resolve => setTimeout(resolve, ms));
-
-
-/* =========================================================
-   STORAGE
-   ========================================================= */
-
-const STORAGE_KEY = "plugindex-project-v2";
-
-
-/* =========================================================
-   STATE
-   ========================================================= */
+const STORAGE = "plugindex-project-v3";
 
 const state = {
-
     selected: null,
 
     zoom: 1,
-
-    history: [],
-
-    historyIndex: -1,
-
-    draggingElement: null,
 
     wallpaper: "black",
 
@@ -55,123 +24,113 @@ const state = {
 
     motion: true,
 
-    physical: new WeakMap()
+    history: [],
 
+    historyIndex: -1,
+
+    glass: new WeakMap(),
+
+    pointer: {
+        x: .5,
+        y: .5,
+        targetX: .5,
+        targetY: .5
+    }
 };
 
 
 /* =========================================================
-   DOM
-   ========================================================= */
+   ELEMENTOS PRINCIPALES
+========================================================= */
 
-const page =
-    $(".design-page");
+const page = $(".design-page");
+const canvas = $(".canvas-space");
+const inspector = $(".inspector");
+const toast = $(".toast");
 
-const canvas =
-    $(".canvas-space");
 
-const inspector =
-    $(".inspector");
+/* =========================================================
+   UTILIDADES
+========================================================= */
 
-const toast =
-    $(".toast");
+const clamp = (n, min, max) =>
+    Math.min(Math.max(n, min), max);
 
-const elementSheet =
-    $("#elementSheet");
-
-const backgroundSheet =
-    $("#backgroundSheet");
+const lerp = (a, b, t) =>
+    a + (b - a) * t;
 
 
 /* =========================================================
    TOAST
-   ========================================================= */
+========================================================= */
 
-let toastTimer;
+let toastTimeout = null;
 
-function showToast(message) {
+function showToast(text) {
 
     if (!toast) return;
 
-    toast.textContent = message;
+    toast.textContent = text;
 
     toast.classList.add("show");
 
-    clearTimeout(toastTimer);
+    clearTimeout(toastTimeout);
 
-    toastTimer = setTimeout(() => {
-
+    toastTimeout = setTimeout(() => {
         toast.classList.remove("show");
-
-    }, 1800);
+    }, 1700);
 }
 
 
 /* =========================================================
-   AUTOSAVE
-   ========================================================= */
+   GUARDAR
+========================================================= */
 
-let saveTimer;
+let saveTimeout;
 
 function saveProject() {
 
-    clearTimeout(saveTimer);
+    clearTimeout(saveTimeout);
 
-    saveTimer = setTimeout(() => {
+    saveTimeout = setTimeout(() => {
 
         const data = {
-
             html: page?.innerHTML || "",
-
-            wallpaper:
-                state.wallpaper,
-
-            smoke:
-                state.smoke,
-
-            motion:
-                state.motion,
-
-            zoom:
-                state.zoom
-
+            wallpaper: state.wallpaper,
+            smoke: state.smoke,
+            motion: state.motion,
+            zoom: state.zoom
         };
 
-        localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify(data)
-        );
+        try {
+            localStorage.setItem(
+                STORAGE,
+                JSON.stringify(data)
+            );
+        } catch (e) {
+            console.warn("No se pudo guardar.", e);
+        }
 
-        updateSaveStatus();
+        const status = $(".save-status");
 
-    }, 350);
+        if (status) {
+            status.textContent = "Guardado";
+        }
 
-}
-
-
-function updateSaveStatus() {
-
-    const status =
-        $(".save-status");
-
-    if (!status) return;
-
-    status.textContent =
-        "Guardado";
-
+    }, 250);
 }
 
 
 /* =========================================================
-   LOAD
-   ========================================================= */
+   CARGAR
+========================================================= */
 
 function loadProject() {
 
     try {
 
         const raw =
-            localStorage.getItem(STORAGE_KEY);
+            localStorage.getItem(STORAGE);
 
         if (!raw) return;
 
@@ -179,62 +138,45 @@ function loadProject() {
             JSON.parse(raw);
 
         if (data.html && page) {
-
-            page.innerHTML =
-                data.html;
-
+            page.innerHTML = data.html;
         }
 
         if (data.wallpaper) {
-
-            state.wallpaper =
-                data.wallpaper;
-
+            state.wallpaper = data.wallpaper;
         }
 
         if (typeof data.smoke === "boolean") {
-
-            state.smoke =
-                data.smoke;
-
+            state.smoke = data.smoke;
         }
 
         if (typeof data.motion === "boolean") {
-
-            state.motion =
-                data.motion;
-
+            state.motion = data.motion;
         }
 
-        if (data.zoom) {
-
-            state.zoom =
-                data.zoom;
-
+        if (typeof data.zoom === "number") {
+            state.zoom = data.zoom;
         }
 
-    } catch (error) {
+    } catch (e) {
 
         console.warn(
-            "No se pudo cargar el proyecto.",
-            error
+            "Proyecto corrupto o incompatible.",
+            e
         );
 
     }
-
 }
 
 
 /* =========================================================
-   HISTORY
-   ========================================================= */
+   HISTORIAL
+========================================================= */
 
 function snapshot() {
 
     if (!page) return;
 
-    const html =
-        page.innerHTML;
+    const html = page.innerHTML;
 
     state.history =
         state.history.slice(
@@ -244,19 +186,16 @@ function snapshot() {
 
     state.history.push(html);
 
-    if (state.history.length > 40) {
-
+    if (state.history.length > 30) {
         state.history.shift();
-
     }
 
     state.historyIndex =
         state.history.length - 1;
-
 }
 
 
-function restoreHistory(index) {
+function restore(index) {
 
     if (!page) return;
 
@@ -273,33 +212,24 @@ function restoreHistory(index) {
     state.historyIndex =
         index;
 
-    state.selected =
-        null;
+    state.selected = null;
 
     refreshElements();
 
     updateInspector();
 
     saveProject();
-
 }
 
 
 function undo() {
 
-    if (
-        state.historyIndex <= 0
-    ) {
-
-        showToast(
-            "No hay cambios anteriores"
-        );
-
+    if (state.historyIndex <= 0) {
+        showToast("No hay cambios anteriores");
         return;
-
     }
 
-    restoreHistory(
+    restore(
         state.historyIndex - 1
     );
 
@@ -312,16 +242,11 @@ function redo() {
         state.historyIndex >=
         state.history.length - 1
     ) {
-
-        showToast(
-            "No hay cambios posteriores"
-        );
-
+        showToast("No hay cambios posteriores");
         return;
-
     }
 
-    restoreHistory(
+    restore(
         state.historyIndex + 1
     );
 
@@ -330,117 +255,135 @@ function redo() {
 
 /* =========================================================
    WALLPAPER
-   ========================================================= */
+========================================================= */
 
 function applyWallpaper(name) {
 
-    state.wallpaper =
-        name;
+    state.wallpaper = name;
 
     document.body.dataset.wallpaper =
         name;
 
     saveProject();
 
-}
-
-
-function setupWallpaper() {
-
-    $$("[data-wallpaper]")
-        .forEach(button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    applyWallpaper(
-                        button.dataset.wallpaper
-                    );
-
-                    closeSheet(
-                        backgroundSheet
-                    );
-
-                }
-            );
-
-        });
-
+    showToast(
+        "Fondo cambiado"
+    );
 }
 
 
 /* =========================================================
    SMOKE
-   ========================================================= */
+========================================================= */
 
-function setupSmoke() {
+function setSmoke(enabled) {
 
-    const toggle =
-        $("[data-smoke-toggle]");
+    state.smoke = enabled;
 
-    if (!toggle) return;
-
-    toggle.addEventListener(
-        "click",
-        () => {
-
-            state.smoke =
-                !state.smoke;
-
-            document.body.classList.toggle(
-                "no-smoke",
-                !state.smoke
-            );
-
-            saveProject();
-
-        }
+    document.body.classList.toggle(
+        "no-smoke",
+        !enabled
     );
+
+    saveProject();
 
 }
 
 
 /* =========================================================
    MOTION
-   ========================================================= */
+========================================================= */
 
-function setupMotion() {
+function setMotion(enabled) {
 
-    const toggle =
-        $("[data-motion-toggle]");
+    state.motion = enabled;
 
-    if (!toggle) return;
-
-    toggle.addEventListener(
-        "click",
-        () => {
-
-            state.motion =
-                !state.motion;
-
-            document.body.classList.toggle(
-                "no-motion",
-                !state.motion
-            );
-
-            saveProject();
-
-        }
+    document.body.classList.toggle(
+        "no-motion",
+        !enabled
     );
+
+    saveProject();
 
 }
 
 
 /* =========================================================
-   PARALLAX GLOBAL
-   ========================================================= */
+   PARALLAX
+========================================================= */
 
-let pointerX = .5;
-let pointerY = .5;
+/*
+    IMPORTANTE:
 
-let targetX = .5;
-let targetY = .5;
+    Antes se actualizaban demasiadas propiedades.
+    Ahora solo modificamos variables CSS.
+*/
+
+let parallaxRunning = false;
+
+function startParallax() {
+
+    if (parallaxRunning) return;
+
+    parallaxRunning = true;
+
+    requestAnimationFrame(
+        parallaxLoop
+    );
+}
+
+
+function parallaxLoop() {
+
+    const p = state.pointer;
+
+    p.x =
+        lerp(
+            p.x,
+            p.targetX,
+            .055
+        );
+
+    p.y =
+        lerp(
+            p.y,
+            p.targetY,
+            .055
+        );
+
+    const dx =
+        (p.x - .5) * 18;
+
+    const dy =
+        (p.y - .5) * 18;
+
+    const root =
+        document.documentElement;
+
+    root.style.setProperty(
+        "--wall-x",
+        `${dx}px`
+    );
+
+    root.style.setProperty(
+        "--wall-y",
+        `${dy}px`
+    );
+
+    root.style.setProperty(
+        "--light-x",
+        `${50 + (p.x - .5) * 25}%`
+    );
+
+    root.style.setProperty(
+        "--light-y",
+        `${50 + (p.y - .5) * 25}%`
+    );
+
+    requestAnimationFrame(
+        parallaxLoop
+    );
+}
 
 
 function setupParallax() {
@@ -449,11 +392,11 @@ function setupParallax() {
         "pointermove",
         event => {
 
-            targetX =
+            state.pointer.targetX =
                 event.clientX /
                 window.innerWidth;
 
-            targetY =
+            state.pointer.targetY =
                 event.clientY /
                 window.innerHeight;
 
@@ -463,75 +406,19 @@ function setupParallax() {
         }
     );
 
-    animateParallax();
-
-}
-
-
-function animateParallax() {
-
-    pointerX =
-        lerp(
-            pointerX,
-            targetX,
-            .045
-        );
-
-    pointerY =
-        lerp(
-            pointerY,
-            targetY,
-            .045
-        );
-
-    const x =
-        (pointerX - .5) * 24;
-
-    const y =
-        (pointerY - .5) * 24;
-
-    document.documentElement.style
-        .setProperty(
-            "--wall-x",
-            `${x}px`
-        );
-
-    document.documentElement.style
-        .setProperty(
-            "--wall-y",
-            `${y}px`
-        );
-
-    document.documentElement.style
-        .setProperty(
-            "--light-x",
-            `${50 + (pointerX - .5) * 30}%`
-        );
-
-    document.documentElement.style
-        .setProperty(
-            "--light-y",
-            `${50 + (pointerY - .5) * 30}%`
-        );
-
-    requestAnimationFrame(
-        animateParallax
-    );
-
+    startParallax();
 }
 
 
 /* =========================================================
-   PHYSICAL GLASS ENGINE
-   ========================================================= */
+   GLASS ENGINE
+========================================================= */
 
-function makePhysicalGlass(element) {
+function createGlass(element) {
 
     if (!element) return;
 
-    if (
-        state.physical.has(element)
-    ) {
+    if (state.glass.has(element)) {
         return;
     }
 
@@ -553,11 +440,13 @@ function makePhysicalGlass(element) {
         shineY: 50,
 
         targetShineX: 50,
-        targetShineY: 50
+        targetShineY: 50,
+
+        active: false
 
     };
 
-    state.physical.set(
+    state.glass.set(
         element,
         data
     );
@@ -566,7 +455,7 @@ function makePhysicalGlass(element) {
         "physical-window"
     );
 
-    animateGlass(
+    glassFrame(
         element,
         data
     );
@@ -574,10 +463,7 @@ function makePhysicalGlass(element) {
 }
 
 
-function animateGlass(
-    element,
-    data
-) {
+function glassFrame(element, data) {
 
     data.x =
         lerp(
@@ -611,14 +497,14 @@ function animateGlass(
         lerp(
             data.shineX,
             data.targetShineX,
-            .1
+            .10
         );
 
     data.shineY =
         lerp(
             data.shineY,
             data.targetShineY,
-            .1
+            .10
         );
 
     element.style.setProperty(
@@ -647,30 +533,51 @@ function animateGlass(
     );
 
     requestAnimationFrame(
-        () => animateGlass(
+        () => glassFrame(
             element,
             data
         )
     );
-
 }
 
 
 /* =========================================================
    GLASS INTERACTION
-   ========================================================= */
+========================================================= */
 
-function setupGlassInteraction(element) {
+function setupGlass(element) {
 
-    if (!element) return;
+    createGlass(element);
 
-    makePhysicalGlass(
-        element
+    element.addEventListener(
+        "pointerenter",
+        () => {
+
+            const data =
+                state.glass.get(element);
+
+            if (!data) return;
+
+            data.active = true;
+
+            data.targetScale =
+                1.006;
+
+        },
+        {
+            passive: true
+        }
     );
+
 
     element.addEventListener(
         "pointermove",
         event => {
+
+            const data =
+                state.glass.get(element);
+
+            if (!data) return;
 
             const rect =
                 element.getBoundingClientRect();
@@ -683,13 +590,6 @@ function setupGlassInteraction(element) {
                 ((event.clientY - rect.top) /
                     rect.height) * 100;
 
-            const data =
-                state.physical.get(
-                    element
-                );
-
-            if (!data) return;
-
             data.targetShineX =
                 clamp(x, 0, 100);
 
@@ -698,9 +598,9 @@ function setupGlassInteraction(element) {
 
             data.targetRotation =
                 clamp(
-                    (x - 50) * .018,
-                    -1.2,
-                    1.2
+                    (x - 50) * .015,
+                    -1,
+                    1
                 );
 
         },
@@ -709,82 +609,54 @@ function setupGlassInteraction(element) {
         }
     );
 
-    element.addEventListener(
-        "pointerenter",
-        () => {
-
-            const data =
-                state.physical.get(
-                    element
-                );
-
-            if (!data) return;
-
-            data.targetScale =
-                1.006;
-
-        }
-    );
 
     element.addEventListener(
         "pointerleave",
         () => {
 
             const data =
-                state.physical.get(
-                    element
-                );
+                state.glass.get(element);
 
             if (!data) return;
 
-            data.targetScale =
-                1;
+            data.active = false;
 
-            data.targetRotation =
-                0;
+            data.targetScale = 1;
 
-            data.targetShineX =
-                50;
+            data.targetRotation = 0;
 
-            data.targetShineY =
-                50;
+            data.targetShineX = 50;
 
+            data.targetShineY = 50;
+
+        },
+        {
+            passive: true
         }
     );
-
 }
 
-
-/* =========================================================
-   INITIAL GLASS ELEMENTS
-   ========================================================= */
 
 function setupAllGlass() {
 
     $$(".glass")
-        .forEach(
-            setupGlassInteraction
-        );
+        .forEach(setupGlass);
 
 }
 
 
 /* =========================================================
-   ELEMENT SELECTION
-   ========================================================= */
+   SELECCIÓN
+========================================================= */
 
 function selectElement(element) {
 
     if (!element) return;
 
     $$(".page-element.selected")
-        .forEach(el => {
-
-            el.classList.remove(
-                "selected"
-            );
-
-        });
+        .forEach(el =>
+            el.classList.remove("selected")
+        );
 
     element.classList.add(
         "selected"
@@ -801,56 +673,32 @@ function selectElement(element) {
 function clearSelection() {
 
     $$(".page-element.selected")
-        .forEach(el => {
+        .forEach(el =>
+            el.classList.remove("selected")
+        );
 
-            el.classList.remove(
-                "selected"
-            );
-
-        });
-
-    state.selected =
-        null;
+    state.selected = null;
 
     updateInspector();
-
 }
 
 
 /* =========================================================
-   REFRESH ELEMENTS
-   ========================================================= */
+   ELEMENTOS
+========================================================= */
 
-function refreshElements() {
-
-    $$(".page-element")
-        .forEach(element => {
-
-            element.draggable = true;
-
-            setupElementEvents(
-                element
-            );
-
-        });
-
-}
-
-
-/* =========================================================
-   ELEMENT EVENTS
-   ========================================================= */
-
-function setupElementEvents(element) {
+function setupElement(element) {
 
     if (
-        element.dataset.pluginDexReady
+        element.dataset.pluginReady === "1"
     ) {
         return;
     }
 
-    element.dataset.pluginDexReady =
-        "true";
+    element.dataset.pluginReady = "1";
+
+    element.draggable = true;
+
 
     element.addEventListener(
         "click",
@@ -866,8 +714,6 @@ function setupElementEvents(element) {
     );
 
 
-    /* Doble click = editar texto */
-
     element.addEventListener(
         "dblclick",
         event => {
@@ -875,54 +721,51 @@ function setupElementEvents(element) {
             event.stopPropagation();
 
             if (
-                element.matches(
-                    "img"
-                )
+                element.dataset.type ===
+                "image"
             ) {
                 return;
             }
 
             const old =
-                element.textContent;
+                element.textContent.trim();
 
             const value =
                 prompt(
-                    "Editar contenido",
+                    "Editar texto",
                     old
                 );
 
             if (
-                value !== null &&
-                value.trim() !== ""
+                value === null ||
+                !value.trim()
             ) {
-
-                snapshot();
-
-                element.textContent =
-                    value;
-
-                saveProject();
-
+                return;
             }
+
+            snapshot();
+
+            element.textContent =
+                value;
+
+            saveProject();
 
         }
     );
 
 
-    /* Drag */
+    /* Drag desktop */
 
     element.addEventListener(
         "dragstart",
-        event => {
+        () => {
 
             state.draggingElement =
                 element;
 
-            element.style.opacity =
-                ".45";
-
-            event.dataTransfer.effectAllowed =
-                "move";
+            element.classList.add(
+                "is-dragging"
+            );
 
         }
     );
@@ -932,11 +775,12 @@ function setupElementEvents(element) {
         "dragend",
         () => {
 
-            element.style.opacity =
-                "";
-
             state.draggingElement =
                 null;
+
+            element.classList.remove(
+                "is-dragging"
+            );
 
         }
     );
@@ -973,12 +817,11 @@ function setupElementEvents(element) {
             const rect =
                 element.getBoundingClientRect();
 
-            const after =
+            if (
                 event.clientY >
                 rect.top +
-                rect.height / 2;
-
-            if (after) {
+                rect.height / 2
+            ) {
 
                 element.after(
                     source
@@ -1000,82 +843,156 @@ function setupElementEvents(element) {
 }
 
 
-/* =========================================================
-   INSPECTOR
-   ========================================================= */
+function refreshElements() {
 
-function updateInspector() {
-
-    if (!inspector) return;
-
-    if (!state.selected) {
-
-        inspector.classList.remove(
-            "has-selection"
-        );
-
-        return;
-
-    }
-
-    inspector.classList.add(
-        "has-selection"
-    );
-
-    const element =
-        state.selected;
-
-
-    const opacity =
-        element.dataset.opacity ||
-        "1";
-
-    const scale =
-        element.dataset.scale ||
-        "1";
-
-
-    const opacityInput =
-        $("[data-opacity]", inspector);
-
-    const scaleInput =
-        $("[data-scale]", inspector);
-
-
-    if (opacityInput) {
-
-        opacityInput.value =
-            opacity;
-
-    }
-
-    if (scaleInput) {
-
-        scaleInput.value =
-            scale;
-
-    }
-
-
-    $$(".color-chip", inspector)
-        .forEach(chip => {
-
-            chip.classList.toggle(
-                "active",
-                chip.dataset.color ===
-                getComputedStyle(
-                    element
-                ).color
-            );
-
-        });
+    $$(".page-element")
+        .forEach(setupElement);
 
 }
 
 
 /* =========================================================
-   OPACITY
-   ========================================================= */
+   CREAR ELEMENTOS
+========================================================= */
+
+function createElement(type) {
+
+    if (!page) return;
+
+    snapshot();
+
+    let element;
+
+    if (type === "heading") {
+
+        element =
+            document.createElement("h1");
+
+        element.className =
+            "page-element page-heading";
+
+        element.textContent =
+            "Nuevo título";
+
+    }
+
+
+    else if (type === "text") {
+
+        element =
+            document.createElement("p");
+
+        element.className =
+            "page-element page-text";
+
+        element.textContent =
+            "Nuevo texto";
+
+    }
+
+
+    else if (type === "button") {
+
+        element =
+            document.createElement("button");
+
+        element.className =
+            "page-element page-button";
+
+        element.textContent =
+            "Nuevo botón";
+
+    }
+
+
+    else if (type === "image") {
+
+        element =
+            document.createElement("div");
+
+        element.className =
+            "page-element page-image";
+
+        element.textContent =
+            "Imagen";
+
+    }
+
+
+    else {
+
+        return;
+
+    }
+
+    element.dataset.type =
+        type;
+
+    page.appendChild(
+        element
+    );
+
+    setupElement(
+        element
+    );
+
+    selectElement(
+        element
+    );
+
+    saveProject();
+
+    closeAllSheets();
+
+}
+
+
+/* =========================================================
+   INSPECTOR
+========================================================= */
+
+function updateInspector() {
+
+    if (!inspector) return;
+
+    const selected =
+        state.selected;
+
+    inspector.classList.toggle(
+        "has-selection",
+        !!selected
+    );
+
+    if (!selected) return;
+
+    const opacity =
+        $("[data-opacity]", inspector);
+
+    const scale =
+        $("[data-scale]", inspector);
+
+    if (opacity) {
+
+        opacity.value =
+            selected.dataset.opacity ||
+            "1";
+
+    }
+
+    if (scale) {
+
+        scale.value =
+            selected.dataset.scale ||
+            "1";
+
+    }
+
+}
+
+
+/* =========================================================
+   OPACIDAD
+========================================================= */
 
 function setupOpacity() {
 
@@ -1109,8 +1026,8 @@ function setupOpacity() {
 
 
 /* =========================================================
-   SCALE
-   ========================================================= */
+   ESCALA
+========================================================= */
 
 function setupScale() {
 
@@ -1144,8 +1061,8 @@ function setupScale() {
 
 
 /* =========================================================
-   COLORS
-   ========================================================= */
+   COLOR
+========================================================= */
 
 function setupColors() {
 
@@ -1161,15 +1078,10 @@ function setupColors() {
 
                     snapshot();
 
-                    const color =
+                    state.selected.style.color =
                         chip.dataset.color;
 
-                    state.selected.style.color =
-                        color;
-
                     saveProject();
-
-                    updateInspector();
 
                 }
             );
@@ -1180,163 +1092,42 @@ function setupColors() {
     const picker =
         $("[data-color-picker]");
 
-    if (!picker) return;
+    if (picker) {
 
-    picker.addEventListener(
-        "input",
-        () => {
+        picker.addEventListener(
+            "input",
+            () => {
 
-            if (!state.selected)
-                return;
+                if (!state.selected)
+                    return;
 
-            state.selected.style.color =
-                picker.value;
+                state.selected.style.color =
+                    picker.value;
 
-            saveProject();
+                saveProject();
 
-        }
-    );
-
-}
-
-
-/* =========================================================
-   ELEMENT CREATION
-   ========================================================= */
-
-function createElement(type) {
-
-    if (!page) return;
-
-    snapshot();
-
-    let element;
-
-    switch (type) {
-
-        case "heading":
-
-            element =
-                document.createElement(
-                    "h1"
-                );
-
-            element.className =
-                "page-element page-heading";
-
-            element.textContent =
-                "Nuevo título";
-
-            break;
-
-
-        case "text":
-
-            element =
-                document.createElement(
-                    "p"
-                );
-
-            element.className =
-                "page-element page-text";
-
-            element.textContent =
-                "Escribe algo aquí.";
-
-            break;
-
-
-        case "button":
-
-            element =
-                document.createElement(
-                    "button"
-                );
-
-            element.className =
-                "page-element page-button";
-
-            element.textContent =
-                "Nuevo botón";
-
-            break;
-
-
-        case "image":
-
-            element =
-                document.createElement(
-                    "div"
-                );
-
-            element.className =
-                "page-element page-image";
-
-            element.textContent =
-                "Imagen";
-
-            break;
-
-
-        default:
-
-            return;
+            }
+        );
 
     }
-
-    page.appendChild(
-        element
-    );
-
-    setupElementEvents(
-        element
-    );
-
-    selectElement(
-        element
-    );
-
-    saveProject();
-
-    closeSheet(
-        elementSheet
-    );
-
-}
-
-
-/* =========================================================
-   ELEMENT SHEET
-   ========================================================= */
-
-function setupElementCreation() {
-
-    $$("[data-create-element]")
-        .forEach(button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    createElement(
-                        button.dataset.createElement
-                    );
-
-                }
-            );
-
-        });
 
 }
 
 
 /* =========================================================
    SHEETS
-   ========================================================= */
+========================================================= */
 
-function openSheet(sheet) {
+function openSheet(id) {
+
+    const sheet =
+        typeof id === "string"
+            ? document.getElementById(id)
+            : id;
 
     if (!sheet) return;
+
+    closeAllSheets();
 
     sheet.classList.add(
         "open"
@@ -1357,193 +1148,229 @@ function closeSheet(sheet) {
         "open"
     );
 
-    if (
-        !$(".sheet.open")
-    ) {
-
-        document.body.classList.remove(
-            "sheet-open"
-        );
-
-    }
-
 }
 
 
-function setupSheets() {
+function closeAllSheets() {
 
-    $$("[data-open-sheet]")
-        .forEach(button => {
+    $$(".sheet.open")
+        .forEach(sheet =>
+            sheet.classList.remove("open")
+        );
 
-            button.addEventListener(
-                "click",
-                () => {
-
-                    const target =
-                        document.getElementById(
-                            button.dataset.openSheet
-                        );
-
-                    openSheet(
-                        target
-                    );
-
-                }
-            );
-
-        });
-
-
-    $$("[data-close-sheet]")
-        .forEach(button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    closeSheet(
-                        button.closest(
-                            ".sheet"
-                        )
-                    );
-
-                }
-            );
-
-        });
-
-
-    $$(".sheet-backdrop")
-        .forEach(backdrop => {
-
-            backdrop.addEventListener(
-                "click",
-                () => {
-
-                    closeSheet(
-                        backdrop.closest(
-                            ".sheet"
-                        )
-                    );
-
-                }
-            );
-
-        });
+    document.body.classList.remove(
+        "sheet-open"
+    );
 
 }
 
 
 /* =========================================================
-   SHEET TOUCH DRAG
-   ========================================================= */
+   SHEET BUTTONS
+========================================================= */
 
-function setupSheetDragging() {
+function setupSheets() {
 
-    $$(".sheet")
-        .forEach(sheet => {
+    /*
+        Event delegation.
+        Así no importa si los botones
+        se crean dinámicamente.
+    */
 
-            const handle =
-                $(".sheet-handle", sheet);
+    document.addEventListener(
+        "click",
+        event => {
 
-            if (!handle) return;
+            const open =
+                event.target.closest(
+                    "[data-open-sheet]"
+                );
 
-            let startY = 0;
+            if (open) {
 
-            let currentY = 0;
+                event.preventDefault();
 
-            let dragging = false;
+                openSheet(
+                    open.dataset.openSheet
+                );
+
+                return;
+            }
 
 
-            handle.addEventListener(
-                "pointerdown",
-                event => {
+            const close =
+                event.target.closest(
+                    "[data-close-sheet]"
+                );
 
-                    dragging = true;
+            if (close) {
 
-                    startY =
-                        event.clientY;
+                event.preventDefault();
 
-                    currentY =
-                        0;
+                closeSheet(
+                    close.closest(".sheet")
+                );
 
-                    handle.setPointerCapture(
-                        event.pointerId
-                    );
+                return;
+            }
 
-                }
+
+            const backdrop =
+                event.target.closest(
+                    ".sheet-backdrop"
+                );
+
+            if (backdrop) {
+
+                closeSheet(
+                    backdrop.closest(".sheet")
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   CREACIÓN DE ELEMENTOS
+========================================================= */
+
+function setupCreationButtons() {
+
+    document.addEventListener(
+        "click",
+        event => {
+
+            const button =
+                event.target.closest(
+                    "[data-create-element]"
+                );
+
+            if (!button) return;
+
+            event.preventDefault();
+
+            createElement(
+                button.dataset.createElement
             );
 
+        }
+    );
 
-            handle.addEventListener(
-                "pointermove",
-                event => {
+}
 
-                    if (!dragging)
-                        return;
 
-                    currentY =
-                        Math.max(
-                            0,
-                            event.clientY -
-                            startY
-                        );
+/* =========================================================
+   WALLPAPER BUTTONS
+========================================================= */
 
-                    sheet.style.transform =
-                        `translateY(${currentY}px)`;
+function setupWallpaperButtons() {
 
-                }
+    document.addEventListener(
+        "click",
+        event => {
+
+            const button =
+                event.target.closest(
+                    "[data-wallpaper]"
+                );
+
+            if (!button) return;
+
+            event.preventDefault();
+
+            applyWallpaper(
+                button.dataset.wallpaper
             );
 
+            closeAllSheets();
 
-            handle.addEventListener(
-                "pointerup",
-                event => {
+        }
+    );
 
-                    dragging = false;
+}
 
-                    handle.releasePointerCapture(
-                        event.pointerId
-                    );
 
-                    sheet.style.transform =
-                        "";
+/* =========================================================
+   TOGGLES
+========================================================= */
 
-                    if (
-                        currentY > 100
-                    ) {
+function setupToggles() {
 
-                        closeSheet(
-                            sheet
-                        );
+    document.addEventListener(
+        "click",
+        event => {
 
-                    }
+            const smoke =
+                event.target.closest(
+                    "[data-smoke-toggle]"
+                );
 
-                }
-            );
+            if (smoke) {
 
-        });
+                setSmoke(
+                    !state.smoke
+                );
+
+                return;
+            }
+
+
+            const motion =
+                event.target.closest(
+                    "[data-motion-toggle]"
+                );
+
+            if (motion) {
+
+                setMotion(
+                    !state.motion
+                );
+
+            }
+
+        }
+    );
 
 }
 
 
 /* =========================================================
    ZOOM
-   ========================================================= */
+========================================================= */
 
 function applyZoom() {
 
     if (!page) return;
 
-    page.style.transform =
-        `scale(${state.zoom})`;
+    page.style.setProperty(
+        "--page-scale",
+        state.zoom
+    );
 
-    const indicator =
+    /*
+       Si el CSS utiliza transform directamente,
+       conservamos compatibilidad.
+    */
+
+    if (
+        !page.dataset.customTransform
+    ) {
+
+        page.style.transform =
+            `scale(${state.zoom})`;
+
+    }
+
+    const display =
         $("[data-zoom-value]");
 
-    if (indicator) {
+    if (display) {
 
-        indicator.textContent =
+        display.textContent =
             `${Math.round(
                 state.zoom * 100
             )}%`;
@@ -1555,59 +1382,54 @@ function applyZoom() {
 
 function setupZoom() {
 
-    $$("[data-zoom]")
-        .forEach(button => {
+    document.addEventListener(
+        "click",
+        event => {
 
-            button.addEventListener(
-                "click",
-                () => {
+            const button =
+                event.target.closest(
+                    "[data-zoom]"
+                );
 
-                    const action =
-                        button.dataset.zoom;
+            if (!button) return;
 
-                    if (
-                        action === "in"
-                    ) {
+            const action =
+                button.dataset.zoom;
 
-                        state.zoom =
-                            clamp(
-                                state.zoom + .1,
-                                .4,
-                                2.5
-                            );
+            if (action === "in") {
 
-                    }
+                state.zoom =
+                    clamp(
+                        state.zoom + .1,
+                        .4,
+                        2.5
+                    );
 
-                    if (
-                        action === "out"
-                    ) {
+            }
 
-                        state.zoom =
-                            clamp(
-                                state.zoom - .1,
-                                .4,
-                                2.5
-                            );
+            else if (action === "out") {
 
-                    }
+                state.zoom =
+                    clamp(
+                        state.zoom - .1,
+                        .4,
+                        2.5
+                    );
 
-                    if (
-                        action === "reset"
-                    ) {
+            }
 
-                        state.zoom =
-                            1;
+            else if (action === "reset") {
 
-                    }
+                state.zoom = 1;
 
-                    applyZoom();
+            }
 
-                    saveProject();
+            applyZoom();
 
-                }
-            );
+            saveProject();
 
-        });
+        }
+    );
 
 
     canvas?.addEventListener(
@@ -1640,255 +1462,40 @@ function setupZoom() {
 
 /* =========================================================
    PREVIEW
-   ========================================================= */
-
-function setPreview(enabled) {
-
-    document.body.classList.toggle(
-        "preview-mode",
-        enabled
-    );
-
-}
-
+========================================================= */
 
 function setupPreview() {
 
-    $$("[data-preview]")
-        .forEach(button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    const enabled =
-                        !document.body.classList.contains(
-                            "preview-mode"
-                        );
-
-                    setPreview(
-                        enabled
-                    );
-
-                    showToast(
-                        enabled
-                            ? "Vista previa"
-                            : "Editor"
-                    );
-
-                }
-            );
-
-        });
-
-}
-
-
-/* =========================================================
-   NAVIGATION
-   ========================================================= */
-
-function setupNavigation() {
-
-    $$("[data-view]")
-        .forEach(button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    $$("[data-view]")
-                        .forEach(item =>
-                            item.classList.remove(
-                                "active"
-                            )
-                        );
-
-                    button.classList.add(
-                        "active"
-                    );
-
-                    const view =
-                        button.dataset.view;
-
-                    if (
-                        view === "code"
-                    ) {
-
-                        showToast(
-                            "Editor de código"
-                        );
-
-                    }
-
-                    if (
-                        view === "editor"
-                    ) {
-
-                        showToast(
-                            "Editor visual"
-                        );
-
-                    }
-
-                }
-            );
-
-        });
-
-}
-
-
-/* =========================================================
-   BACKGROUND BUTTON
-   ========================================================= */
-
-function setupBackgroundButton() {
-
-    $$("[data-background]")
-        .forEach(button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    openSheet(
-                        backgroundSheet
-                    );
-
-                }
-            );
-
-        });
-
-}
-
-
-/* =========================================================
-   SETTINGS / PROFILE
-   ========================================================= */
-
-function setupPlaceholders() {
-
-    $$("[data-settings]")
-        .forEach(button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    showToast(
-                        "Ajustes del proyecto"
-                    );
-
-                }
-            );
-
-        });
-
-
-    $$("[data-profile]")
-        .forEach(button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    showToast(
-                        "Perfil"
-                    );
-
-                }
-            );
-
-        });
-
-}
-
-
-/* =========================================================
-   KEYBOARD
-   ========================================================= */
-
-function setupKeyboard() {
-
     document.addEventListener(
-        "keydown",
+        "click",
         event => {
 
-            const modifier =
-                event.ctrlKey ||
-                event.metaKey;
-
-
-            if (
-                modifier &&
-                event.key.toLowerCase() === "z"
-            ) {
-
-                event.preventDefault();
-
-                if (event.shiftKey) {
-
-                    redo();
-
-                } else {
-
-                    undo();
-
-                }
-
-            }
-
-
-            if (
-                modifier &&
-                event.key.toLowerCase() === "y"
-            ) {
-
-                event.preventDefault();
-
-                redo();
-
-            }
-
-
-            if (
-                modifier &&
-                event.key.toLowerCase() === "s"
-            ) {
-
-                event.preventDefault();
-
-                saveProject();
-
-                showToast(
-                    "Proyecto guardado"
+            const button =
+                event.target.closest(
+                    "[data-preview]"
                 );
 
-            }
+            if (!button) return;
 
+            event.preventDefault();
 
-            if (
-                event.key === "Escape"
-            ) {
+            const enabled =
+                !document.body.classList.contains(
+                    "preview-mode"
+                );
 
-                if (
-                    document.body.classList.contains(
-                        "preview-mode"
-                    )
-                ) {
+            document.body.classList.toggle(
+                "preview-mode",
+                enabled
+            );
 
-                    setPreview(
-                        false
-                    );
+            clearSelection();
 
-                }
-
-                $$(".sheet.open")
-                    .forEach(closeSheet);
-
-            }
+            showToast(
+                enabled
+                    ? "Vista previa"
+                    : "Editor"
+            );
 
         }
     );
@@ -1897,8 +1504,100 @@ function setupKeyboard() {
 
 
 /* =========================================================
-   CANVAS CLICK
-   ========================================================= */
+   NAVEGACIÓN
+========================================================= */
+
+function setupNavigation() {
+
+    document.addEventListener(
+        "click",
+        event => {
+
+            const button =
+                event.target.closest(
+                    "[data-view]"
+                );
+
+            if (!button) return;
+
+            event.preventDefault();
+
+            $$("[data-view]")
+                .forEach(
+                    item =>
+                        item.classList.remove(
+                            "active"
+                        )
+                );
+
+            button.classList.add(
+                "active"
+            );
+
+            const view =
+                button.dataset.view;
+
+            document.body.dataset.view =
+                view;
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   GUARDAR MANUAL
+========================================================= */
+
+function setupSave() {
+
+    document.addEventListener(
+        "click",
+        event => {
+
+            const button =
+                event.target.closest(
+                    "[data-save]"
+                );
+
+            if (!button) return;
+
+            event.preventDefault();
+
+            localStorage.setItem(
+                STORAGE,
+                JSON.stringify({
+                    html:
+                        page?.innerHTML || "",
+
+                    wallpaper:
+                        state.wallpaper,
+
+                    smoke:
+                        state.smoke,
+
+                    motion:
+                        state.motion,
+
+                    zoom:
+                        state.zoom
+                })
+            );
+
+            showToast(
+                "Proyecto guardado"
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   CANVAS
+========================================================= */
 
 function setupCanvas() {
 
@@ -1910,6 +1609,9 @@ function setupCanvas() {
                 event.target === canvas ||
                 event.target.classList.contains(
                     "canvas-stage"
+                ) ||
+                event.target.classList.contains(
+                    "design-page"
                 )
             ) {
 
@@ -1924,140 +1626,175 @@ function setupCanvas() {
 
 
 /* =========================================================
-   SAVE BUTTON
-   ========================================================= */
+   TECLADO
+========================================================= */
 
-function setupSave() {
+function setupKeyboard() {
 
-    $$("[data-save]")
-        .forEach(button => {
+    document.addEventListener(
+        "keydown",
+        event => {
 
-            button.addEventListener(
-                "click",
-                () => {
+            const modifier =
+                event.ctrlKey ||
+                event.metaKey;
 
-                    snapshot();
+            if (
+                modifier &&
+                event.key.toLowerCase() === "z"
+            ) {
 
-                    localStorage.setItem(
-                        STORAGE_KEY,
-                        JSON.stringify({
-                            html:
-                                page?.innerHTML || "",
-                            wallpaper:
-                                state.wallpaper,
-                            smoke:
-                                state.smoke,
-                            motion:
-                                state.motion,
-                            zoom:
-                                state.zoom
-                        })
-                    );
+                event.preventDefault();
 
-                    showToast(
-                        "Proyecto guardado"
-                    );
+                event.shiftKey
+                    ? redo()
+                    : undo();
 
-                    updateSaveStatus();
+                return;
+            }
 
-                }
-            );
 
-        });
+            if (
+                modifier &&
+                event.key.toLowerCase() === "y"
+            ) {
+
+                event.preventDefault();
+
+                redo();
+
+                return;
+            }
+
+
+            if (
+                modifier &&
+                event.key.toLowerCase() === "s"
+            ) {
+
+                event.preventDefault();
+
+                localStorage.setItem(
+                    STORAGE,
+                    JSON.stringify({
+                        html:
+                            page?.innerHTML || "",
+                        wallpaper:
+                            state.wallpaper,
+                        smoke:
+                            state.smoke,
+                        motion:
+                            state.motion,
+                        zoom:
+                            state.zoom
+                    })
+                );
+
+                showToast(
+                    "Proyecto guardado"
+                );
+
+                return;
+            }
+
+
+            if (
+                event.key === "Escape"
+            ) {
+
+                closeAllSheets();
+
+                document.body.classList.remove(
+                    "preview-mode"
+                );
+
+                clearSelection();
+
+            }
+
+        }
+    );
 
 }
 
 
 /* =========================================================
-   MOBILE BACKDROP
-   ========================================================= */
+   OPTIMIZACIÓN DE DISPOSITIVO
+========================================================= */
 
-function setupMobileGestures() {
+function optimizeDevice() {
 
-    let startX = 0;
-    let startY = 0;
+    /*
+       No cambiamos el diseño.
 
-    document.addEventListener(
-        "pointerdown",
-        event => {
+       Solo evitamos efectos innecesarios
+       en dispositivos muy limitados.
+    */
 
-            startX =
-                event.clientX;
+    const cores =
+        navigator.hardwareConcurrency || 4;
 
-            startY =
-                event.clientY;
+    const memory =
+        navigator.deviceMemory || 4;
 
-        },
-        {
-            passive: true
-        }
-    );
+    const lowEnd =
+        cores <= 4 &&
+        memory <= 4;
 
 
-    document.addEventListener(
-        "pointerup",
-        event => {
+    if (lowEnd) {
 
-            const dx =
-                event.clientX -
-                startX;
+        document.body.classList.add(
+            "low-end-device"
+        );
 
-            const dy =
-                event.clientY -
-                startY;
+    }
 
 
-            /*
-             * Swipe horizontal hacia
-             * la derecha desde borde.
-             */
+    /*
+       Touch = menos parallax global.
+    */
 
-            if (
-                Math.abs(dx) > 120 &&
-                Math.abs(dx) >
-                Math.abs(dy) * 1.5 &&
-                startX < 35 &&
-                window.innerWidth < 800
-            ) {
+    if (
+        window.matchMedia(
+            "(pointer: coarse)"
+        ).matches
+    ) {
 
-                showToast(
-                    "Herramientas"
-                );
+        document.body.classList.add(
+            "touch-device"
+        );
 
-            }
-
-        },
-        {
-            passive: true
-        }
-    );
+    }
 
 }
 
 
 /* =========================================================
    RESIZE
-   ========================================================= */
+========================================================= */
+
+let resizeTimer;
 
 function setupResize() {
-
-    let timer;
 
     window.addEventListener(
         "resize",
         () => {
 
-            clearTimeout(timer);
-
-            timer = setTimeout(
-                () => {
-
-                    applyZoom();
-
-                },
-                100
+            clearTimeout(
+                resizeTimer
             );
 
+            resizeTimer =
+                setTimeout(
+                    applyZoom,
+                    100
+                );
+
+        },
+        {
+            passive: true
         }
     );
 
@@ -2065,8 +1802,8 @@ function setupResize() {
 
 
 /* =========================================================
-   INITIALIZATION
-   ========================================================= */
+   INICIO
+========================================================= */
 
 function init() {
 
@@ -2086,19 +1823,24 @@ function init() {
     );
 
 
+    optimizeDevice();
+
     refreshElements();
 
     snapshot();
 
-    setupWallpaper();
-
-    setupSmoke();
-
-    setupMotion();
 
     setupParallax();
 
     setupAllGlass();
+
+    setupSheets();
+
+    setupCreationButtons();
+
+    setupWallpaperButtons();
+
+    setupToggles();
 
     setupOpacity();
 
@@ -2106,31 +1848,20 @@ function init() {
 
     setupColors();
 
-    setupElementCreation();
-
-    setupSheets();
-
-    setupSheetDragging();
-
     setupZoom();
 
     setupPreview();
 
     setupNavigation();
 
-    setupBackgroundButton();
-
-    setupPlaceholders();
-
-    setupKeyboard();
+    setupSave();
 
     setupCanvas();
 
-    setupSave();
-
-    setupMobileGestures();
+    setupKeyboard();
 
     setupResize();
+
 
     applyZoom();
 
@@ -2140,8 +1871,7 @@ function init() {
 
 
 if (
-    document.readyState ===
-    "loading"
+    document.readyState === "loading"
 ) {
 
     document.addEventListener(
