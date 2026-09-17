@@ -3253,3 +3253,186 @@ body.preview-mode .design-page {
     }
 
 }
+
+/* =========================================================
+   PLUGINDEX — GRÁFICOS AUTOMÁTICOS
+========================================================= */
+
+:root {
+
+    --auto-glass-blur: 28px;
+    --auto-glass-saturation: 135%;
+
+    --auto-smoke-opacity: .28;
+    --auto-carbon-opacity: .22;
+    --auto-grain-opacity: .035;
+
+    --auto-shadow-strength: 1;
+}
+
+
+/* =========================================================
+   GLASS ADAPTATIVO
+========================================================= */
+
+.glass {
+
+    backdrop-filter:
+        blur(var(--auto-glass-blur))
+        saturate(var(--auto-glass-saturation));
+
+    -webkit-backdrop-filter:
+        blur(var(--auto-glass-blur))
+        saturate(var(--auto-glass-saturation));
+}
+
+
+/* =========================================================
+   FONDO ADAPTATIVO
+========================================================= */
+
+.smoke {
+    opacity: var(--auto-smoke-opacity);
+}
+
+.carbon {
+    opacity: var(--auto-carbon-opacity);
+}
+
+.grain {
+    opacity: var(--auto-grain-opacity);
+}
+
+
+/* =========================================================
+   SOMBRAS ADAPTATIVAS
+========================================================= */
+
+.glass {
+    box-shadow:
+        inset 0 1px rgba(255,255,255,.08),
+        inset 0 -1px rgba(0,0,0,.28),
+        0 20px 70px
+        rgba(
+            0,
+            0,
+            0,
+            calc(.38 * var(--auto-shadow-strength))
+        );
+}
+
+
+/* =========================================================
+   NIVEL 5 — REDUCIR HUMO
+========================================================= */
+
+body.auto-reduce-smoke .smoke {
+
+    animation-duration:
+        32s;
+
+}
+
+
+/* =========================================================
+   NIVEL 4 — AMBIENT
+========================================================= */
+
+body.auto-no-ambient .ambient-light {
+    opacity: .35;
+}
+
+
+/* =========================================================
+   NIVEL 3 — WALLPAPER MOTION
+========================================================= */
+
+body.auto-no-wallpaper-motion .wallpaper {
+
+    transform:
+        scale(1.04);
+
+    transition: none;
+}
+
+
+/* =========================================================
+   NIVEL 4 — REFLEJOS
+========================================================= */
+
+body.auto-reduce-reflections .glass::before {
+    opacity: .28;
+}
+
+body.auto-reduce-reflections .glass::after {
+    opacity: .65;
+}
+
+
+/* =========================================================
+   NIVEL 2 — ANIMACIÓN SECUNDARIA
+========================================================= */
+
+body.auto-reduce-animation .glass::before {
+    transition: none;
+}
+
+body.auto-reduce-animation .page-element {
+    transition:
+        opacity .15s ease;
+}
+
+
+/* =========================================================
+   NIVEL 1 — CRÍTICO
+========================================================= */
+
+body.auto-critical .grain,
+body.auto-critical .carbon,
+body.auto-critical .ambient-light {
+    display: none;
+}
+
+
+body.auto-critical .smoke-a,
+body.auto-critical .smoke-b,
+body.auto-critical .smoke-c {
+    display: none;
+}
+
+
+body.auto-critical .glass::before {
+    opacity: .18;
+}
+
+
+/* =========================================================
+   TOUCH
+========================================================= */
+
+.touch-device .wallpaper {
+    transform: scale(1.04);
+}
+
+.touch-device .ambient-light {
+    transition: none;
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+.reduced-motion .smoke-a,
+.reduced-motion .smoke-b,
+.reduced-motion .smoke-c {
+
+    animation: none !important;
+
+}
+
+.reduced-motion .ambient-light {
+
+    transition: none !important;
+
+}
