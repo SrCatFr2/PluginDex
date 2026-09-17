@@ -1,70 +1,147 @@
-* {
-    box-sizing: border-box;
-}
+/* =========================================================
+   PLUGINDEX
+   CHROME / AERO / LIQUID GLASS / VINTAGE BLACK
+   ========================================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap");
+
+
+/* =========================================================
+   VARIABLES
+   ========================================================= */
 
 :root {
 
-    --bg: #969696;
-    --panel: #c8c8c8;
-    --panel-light: #e4e4e4;
+    --black: #070708;
+    --black-2: #0d0d0f;
+    --black-3: #141416;
 
-    --white: #ffffff;
-    --dark: #454545;
-    --black: #171717;
+    --silver: #bfc0c2;
+    --silver-dark: #67686b;
 
-    --blue: #315ca8;
-    --blue-dark: #19396f;
+    --white: #f5f5f7;
 
-    --glass: rgba(255,255,255,.18);
+    --glass-1: rgba(255,255,255,.055);
+    --glass-2: rgba(255,255,255,.085);
+    --glass-3: rgba(255,255,255,.13);
+
+    --line: rgba(255,255,255,.14);
+    --line-soft: rgba(255,255,255,.07);
 
     --shadow:
-        2px 2px 0 #333;
+        0 25px 70px rgba(0,0,0,.55);
+
+    --chrome:
+        linear-gradient(
+            135deg,
+            #ffffff 0%,
+            #858589 16%,
+            #eeeeef 30%,
+            #535459 48%,
+            #d8d8da 67%,
+            #6d6e72 84%,
+            #f4f4f4 100%
+        );
 
     --font:
-        "Courier New",
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    --mono:
+        "Space Mono",
         monospace;
+
+}
+
+
+/* =========================================================
+   RESET
+   ========================================================= */
+
+* {
+
+    box-sizing: border-box;
+
+    margin: 0;
+
+    padding: 0;
+
 }
 
 
 html,
 body {
 
-    margin: 0;
-
     width: 100%;
     height: 100%;
 
     overflow: hidden;
 
+}
+
+
+body {
+
     font-family: var(--font);
 
-    color: #111;
+    color: var(--white);
 
-    background:
+    background: #050506;
 
-        radial-gradient(
-            rgba(255,255,255,.15) 1px,
-            transparent 1px
-        ),
+    -webkit-font-smoothing: antialiased;
 
-        #8e8e8e;
-
-    background-size: 7px 7px;
 }
 
 
 button,
 input,
-select,
-textarea {
+textarea,
+select {
 
     font-family: inherit;
+
 }
 
 
-/* ==========================================
+/* =========================================================
+   VINTAGE TEXTURE
+   ========================================================= */
+
+body::before {
+
+    content: "";
+
+    position: fixed;
+
+    inset: 0;
+
+    pointer-events: none;
+
+    z-index: 9999;
+
+    opacity: .08;
+
+    background-image:
+
+        repeating-linear-gradient(
+            0deg,
+            rgba(255,255,255,.15) 0px,
+            rgba(255,255,255,.15) 1px,
+            transparent 1px,
+            transparent 3px
+        );
+
+    mix-blend-mode: overlay;
+
+}
+
+
+/* =========================================================
    APP
-========================================== */
+   ========================================================= */
 
 #app {
 
@@ -72,91 +149,177 @@ textarea {
     height: 100%;
 
     display: flex;
+
     flex-direction: column;
+
+    background:
+
+        radial-gradient(
+            circle at 50% -20%,
+            rgba(255,255,255,.14),
+            transparent 38%
+        ),
+
+        radial-gradient(
+            circle at 0% 100%,
+            rgba(80,80,90,.13),
+            transparent 35%
+        ),
+
+        #080809;
+
 }
 
 
-/* ==========================================
-   TOPBAR
-========================================== */
+/* =========================================================
+   TOP BAR
+   ========================================================= */
 
 .topbar {
 
-    height: 55px;
+    position: relative;
+
+    height: 62px;
+
+    flex-shrink: 0;
 
     display: flex;
+
     align-items: center;
 
-    padding: 6px 9px;
+    padding: 0 18px;
+
+    background:
+
+        linear-gradient(
+            180deg,
+            rgba(255,255,255,.105),
+            rgba(255,255,255,.025)
+        );
+
+    border-bottom: 1px solid var(--line);
+
+    backdrop-filter: blur(28px) saturate(120%);
+
+    -webkit-backdrop-filter:
+        blur(28px)
+        saturate(120%);
+
+    box-shadow:
+
+        0 1px 0 rgba(255,255,255,.05),
+
+        0 15px 45px rgba(0,0,0,.25);
+
+}
+
+
+/* metallic highlight */
+
+.topbar::before {
+
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: 1px;
 
     background:
         linear-gradient(
-            #eeeeee,
-            #bdbdbd
+            90deg,
+            transparent,
+            rgba(255,255,255,.7),
+            transparent
         );
 
-    border-bottom: 2px solid #444;
+    opacity: .5;
 
-    box-shadow:
-        inset 0 1px white,
-        0 2px 5px rgba(0,0,0,.3);
-
-    flex-shrink: 0;
 }
 
+
+/* =========================================================
+   BRAND
+   ========================================================= */
 
 .brand {
 
     display: flex;
+
     align-items: center;
 
-    gap: 9px;
+    gap: 11px;
+
 }
 
 
 .brand-icon {
 
-    width: 34px;
-    height: 34px;
+    width: 35px;
+    height: 35px;
 
     display: grid;
+
     place-items: center;
 
-    color: white;
+    font-family: Georgia, serif;
 
-    font-size: 22px;
+    font-size: 19px;
+
     font-weight: bold;
 
-    background:
-        linear-gradient(
-            135deg,
-            #3f70c7,
-            #17356d
-        );
+    color: #050505;
 
-    border: 2px solid white;
+    background:
+        var(--chrome);
+
+    border-radius: 9px;
+
+    border: 1px solid rgba(255,255,255,.7);
 
     box-shadow:
-        2px 2px #333;
+
+        inset 0 1px rgba(255,255,255,.9),
+
+        inset 0 -2px rgba(0,0,0,.4),
+
+        0 4px 15px rgba(0,0,0,.4);
+
 }
 
 
 .brand-name {
 
-    font-size: 19px;
-    font-weight: bold;
+    font-size: 15px;
+
+    font-weight: 600;
+
+    letter-spacing: -.3px;
+
 }
 
 
 .brand-version {
 
-    font-size: 9px;
+    margin-top: 2px;
 
-    color: #555;
+    font-family: var(--mono);
 
-    margin-top: 1px;
+    font-size: 7px;
+
+    letter-spacing: 1.5px;
+
+    color: rgba(255,255,255,.4);
+
 }
 
+
+/* =========================================================
+   TOP MENU
+   ========================================================= */
 
 .top-menu {
 
@@ -164,76 +327,116 @@ textarea {
 
     display: flex;
 
+    align-items: center;
+
     gap: 5px;
+
 }
 
 
 .top-button {
 
-    min-height: 31px;
+    height: 34px;
 
-    padding: 5px 10px;
+    padding: 0 12px;
 
-    background: #d2d2d2;
+    color: rgba(255,255,255,.72);
 
-    border: 2px solid;
+    background:
 
-    border-color:
-        white
-        #555
-        #555
-        white;
+        linear-gradient(
+            180deg,
+            rgba(255,255,255,.075),
+            rgba(255,255,255,.025)
+        );
 
-    box-shadow: 1px 1px #222;
+    border: 1px solid var(--line);
+
+    border-radius: 7px;
+
+    font-family: var(--mono);
+
+    font-size: 8px;
+
+    letter-spacing: .7px;
 
     cursor: pointer;
 
-    font-size: 11px;
+    transition:
+        background .18s ease,
+        border .18s ease,
+        transform .18s ease,
+        box-shadow .18s ease;
+
+    box-shadow:
+
+        inset 0 1px rgba(255,255,255,.06);
+
 }
 
 
 .top-button:hover {
 
-    background: #e7e7e7;
+    color: white;
+
+    background:
+        rgba(255,255,255,.11);
+
+    border-color:
+        rgba(255,255,255,.25);
+
 }
 
 
 .top-button:active {
 
-    border-color:
-        #555
-        white
-        white
-        #555;
-
     transform:
-        translate(1px,1px);
+        translateY(1px);
 
-    box-shadow: none;
 }
 
 
 .run-button {
 
+    color: #050505;
+
     background:
+
         linear-gradient(
-            #416fc0,
-            #234d99
+            180deg,
+            #f5f5f5,
+            #a8a8aa
         );
 
-    color: white;
-
     border-color:
-        #91b0ec
-        #172e60
-        #172e60
-        #91b0ec;
+        rgba(255,255,255,.9);
+
+    box-shadow:
+
+        inset 0 1px white,
+
+        0 4px 16px rgba(255,255,255,.08);
+
 }
 
 
-/* ==========================================
+.run-button:hover {
+
+    color: #000;
+
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff,
+            #c9c9ca
+        );
+
+}
+
+
+/* =========================================================
    WORKSPACE
-========================================== */
+   ========================================================= */
 
 .workspace {
 
@@ -244,82 +447,106 @@ textarea {
     display: grid;
 
     grid-template-columns:
-        205px
-        minmax(400px,1fr)
-        255px;
+        220px
+        minmax(450px, 1fr)
+        260px;
+
 }
 
 
-/* ==========================================
-   PANELS
-========================================== */
+/* =========================================================
+   SIDE PANELS
+   ========================================================= */
 
 .left-panel,
 .right-panel {
 
     min-width: 0;
 
+    overflow-y: auto;
+
     background:
+
         linear-gradient(
-            90deg,
-            #d0d0d0,
-            #bdbdbd
+            180deg,
+            rgba(255,255,255,.045),
+            rgba(255,255,255,.015)
         );
 
-    overflow-y: auto;
+    backdrop-filter:
+        blur(24px);
+
+    -webkit-backdrop-filter:
+        blur(24px);
+
 }
 
 
 .left-panel {
 
-    border-right: 2px solid #444;
+    border-right:
+        1px solid var(--line-soft);
+
 }
 
 
 .right-panel {
 
-    border-left: 2px solid #444;
+    border-left:
+        1px solid var(--line-soft);
+
 }
 
+
+/* =========================================================
+   PANEL TITLE
+   ========================================================= */
 
 .panel-title {
 
-    height: 31px;
+    height: 39px;
 
     display: flex;
+
     align-items: center;
 
-    padding: 0 9px;
+    padding: 0 13px;
 
-    color: white;
+    color: rgba(255,255,255,.42);
 
-    font-size: 11px;
-    font-weight: bold;
+    font-family: var(--mono);
 
-    background:
-        linear-gradient(
-            90deg,
-            var(--blue-dark),
-            var(--blue)
-        );
+    font-size: 8px;
 
-    border-bottom: 2px solid #202020;
+    letter-spacing: 1.5px;
+
+    border-bottom:
+        1px solid var(--line-soft);
+
 }
 
 
-/* ==========================================
-   COMPONENTES
-========================================== */
+.logic-title {
+
+    margin-top: 12px;
+
+}
+
+
+/* =========================================================
+   COMPONENT LIST
+   ========================================================= */
 
 .component-list {
 
-    padding: 8px;
+    padding: 9px;
 
     display: flex;
 
     flex-direction: column;
 
-    gap: 6px;
+    gap: 5px;
+
 }
 
 
@@ -327,59 +554,99 @@ textarea {
 
     width: 100%;
 
+    min-height: 51px;
+
     display: flex;
 
     align-items: center;
 
-    gap: 9px;
+    gap: 11px;
+
+    padding: 7px;
 
     text-align: left;
 
-    padding: 8px;
+    color: rgba(255,255,255,.76);
 
     background:
+
         linear-gradient(
-            #e3e3e3,
-            #c9c9c9
+            135deg,
+            rgba(255,255,255,.065),
+            rgba(255,255,255,.018)
         );
 
-    border: 2px solid;
+    border:
+        1px solid
+        rgba(255,255,255,.09);
 
-    border-color:
-        white
-        #555
-        #555
-        white;
-
-    box-shadow: 1px 1px #222;
+    border-radius: 8px;
 
     cursor: pointer;
+
+    transition:
+        transform .18s ease,
+        background .18s ease,
+        border .18s ease;
+
 }
 
 
 .component-item:hover {
 
-    background: #ededed;
+    transform:
+        translateX(3px);
 
-    transform: translateX(2px);
+    background:
+        rgba(255,255,255,.09);
+
+    border-color:
+        rgba(255,255,255,.19);
+
+}
+
+
+.component-item:active {
+
+    transform:
+        translateX(3px)
+        scale(.985);
+
 }
 
 
 .component-icon {
 
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
+
+    flex-shrink: 0;
 
     display: grid;
+
     place-items: center;
 
-    background: #eeeeee;
+    border-radius: 7px;
 
-    border: 1px solid #777;
+    color: #080808;
+
+    background:
+        var(--chrome);
+
+    font-family: Georgia, serif;
+
+    font-size: 14px;
 
     font-weight: bold;
 
-    color: #234e99;
+    box-shadow:
+
+        inset 0 1px white,
+
+        inset 0 -1px rgba(0,0,0,.4),
+
+        0 3px 8px rgba(0,0,0,.3);
+
 }
 
 
@@ -387,7 +654,10 @@ textarea {
 
     display: block;
 
-    font-size: 12px;
+    font-size: 11px;
+
+    font-weight: 500;
+
 }
 
 
@@ -395,110 +665,176 @@ textarea {
 
     display: block;
 
-    margin-top: 2px;
+    margin-top: 3px;
 
-    font-size: 9px;
+    font-family: var(--mono);
 
-    color: #666;
+    font-size: 7px;
+
+    color: rgba(255,255,255,.34);
+
 }
 
 
-/* ==========================================
-   BLOQUES
-========================================== */
-
-.logic-title {
-
-    margin-top: 10px;
-}
-
+/* =========================================================
+   LOGIC BLOCKS
+   ========================================================= */
 
 .logic-list {
 
-    padding: 8px;
+    padding: 9px;
 
     display: flex;
 
     flex-direction: column;
 
-    gap: 6px;
+    gap: 5px;
+
 }
 
 
 .logic-item {
 
+    width: 100%;
+
+    padding: 10px;
+
     text-align: left;
 
-    padding: 8px;
+    border: 1px solid;
 
-    border: 2px solid;
+    border-radius: 7px;
 
-    border-color:
-        white
-        #555
-        #555
-        white;
+    font-family: var(--mono);
 
-    box-shadow: 1px 1px #222;
+    font-size: 7px;
+
+    letter-spacing: .4px;
 
     cursor: pointer;
 
-    font-size: 10px;
+    transition:
+        transform .15s ease,
+        filter .15s ease;
 
-    font-weight: bold;
 }
 
 
 .logic-item:hover {
 
-    filter: brightness(1.08);
+    transform:
+        translateX(3px);
 
-    transform: translateX(2px);
+    filter:
+        brightness(1.15);
+
 }
 
 
 .yellow {
-    background: #e8ce59;
+
+    color: #171200;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f4d75d,
+            #a58d26
+        );
+
+    border-color:
+        #fff0a0;
+
 }
 
 
 .blue {
-    background: #5e8ed4;
-    color: white;
+
+    color: #07101e;
+
+    background:
+        linear-gradient(
+            135deg,
+            #a8c8ff,
+            #526f9f
+        );
+
+    border-color:
+        #d5e4ff;
+
 }
 
 
 .green {
-    background: #66a56d;
-    color: white;
+
+    color: #06120a;
+
+    background:
+        linear-gradient(
+            135deg,
+            #a8dcae,
+            #547f5a
+        );
+
+    border-color:
+        #d5f0d5;
+
 }
 
 
 .purple {
-    background: #9872bd;
-    color: white;
+
+    color: #100716;
+
+    background:
+        linear-gradient(
+            135deg,
+            #d0a9ee,
+            #775993
+        );
+
+    border-color:
+        #ead5ff;
+
 }
 
 
-/* ==========================================
+/* =========================================================
    EDITOR
-========================================== */
+   ========================================================= */
 
 .editor-area {
 
     min-width: 0;
 
+    min-height: 0;
+
     display: flex;
 
     flex-direction: column;
 
-    background: #858585;
+    background:
+
+        radial-gradient(
+            circle at center,
+            rgba(255,255,255,.045),
+            transparent 55%
+        ),
+
+        #101011;
+
 }
 
 
+/* =========================================================
+   EDITOR TOOLBAR
+   ========================================================= */
+
 .editor-toolbar {
 
-    height: 31px;
+    height: 39px;
+
+    flex-shrink: 0;
 
     display: flex;
 
@@ -506,40 +842,76 @@ textarea {
 
     justify-content: space-between;
 
-    padding: 0 9px;
+    padding: 0 13px;
 
-    background: #c9c9c9;
+    color: rgba(255,255,255,.38);
 
-    border-bottom: 2px solid #555;
+    font-family: var(--mono);
 
-    font-size: 10px;
+    font-size: 8px;
 
-    flex-shrink: 0;
+    letter-spacing: 1px;
+
+    border-bottom:
+        1px solid var(--line-soft);
+
 }
 
+
+#zoomLabel {
+
+    padding: 4px 7px;
+
+    border:
+        1px solid
+        rgba(255,255,255,.1);
+
+    border-radius: 5px;
+
+    background:
+        rgba(255,255,255,.035);
+
+}
+
+
+/* =========================================================
+   CANVAS
+   ========================================================= */
 
 .canvas {
 
     flex: 1;
 
+    min-height: 0;
+
     overflow: auto;
 
-    padding: 35px;
+    padding: 50px;
 
-    background:
+    background-color: #101011;
 
-        radial-gradient(
-            #707070 1px,
+    background-image:
+
+        linear-gradient(
+            rgba(255,255,255,.035) 1px,
+            transparent 1px
+        ),
+
+        linear-gradient(
+            90deg,
+            rgba(255,255,255,.035) 1px,
             transparent 1px
         );
 
-    background-size: 12px 12px;
+    background-size:
+        24px 24px;
+
 }
 
 
-/* ==========================================
-   PAGINA
-========================================== */
+/* =========================================================
+   PAGE
+   ========================================================= */
 
 .page {
 
@@ -551,54 +923,123 @@ textarea {
 
     margin: auto;
 
-    padding: 30px;
+    padding: 40px;
 
-    background: #eeeeee;
+    overflow: hidden;
 
-    border: 3px solid;
+    color: #111;
 
-    border-color:
-        white
-        #3b3b3b
-        #3b3b3b
-        white;
+    background:
+
+        radial-gradient(
+            circle at 20% 0%,
+            rgba(255,255,255,.7),
+            transparent 35%
+        ),
+
+        #e9e9ea;
+
+    border:
+        1px solid
+        rgba(255,255,255,.9);
+
+    border-radius: 3px;
 
     box-shadow:
-        5px 5px #222,
-        0 15px 35px rgba(0,0,0,.3);
 
-    transition: .2s;
+        0 0 0 1px rgba(0,0,0,.5),
+
+        0 30px 70px rgba(0,0,0,.65);
+
+    transition:
+        background .3s ease,
+        box-shadow .3s ease;
+
 }
 
+
+/* =========================================================
+   LIQUID GLASS PAGE
+   ========================================================= */
 
 .page.glass {
 
+    color: white;
+
     background:
+
+        radial-gradient(
+            circle at 20% 0%,
+            rgba(255,255,255,.25),
+            transparent 35%
+        ),
+
         linear-gradient(
             135deg,
-            rgba(255,255,255,.48),
-            rgba(255,255,255,.15)
+            rgba(255,255,255,.13),
+            rgba(255,255,255,.025)
         );
 
-    backdrop-filter: blur(16px);
+    backdrop-filter:
+        blur(28px)
+        saturate(130%);
 
-    -webkit-backdrop-filter: blur(16px);
+    -webkit-backdrop-filter:
+        blur(28px)
+        saturate(130%);
 
-    border-color:
-        rgba(255,255,255,.9)
-        rgba(80,80,80,.5)
-        rgba(80,80,80,.5)
-        rgba(255,255,255,.9);
+    border:
+        1px solid
+        rgba(255,255,255,.3);
 
     box-shadow:
-        0 15px 45px rgba(0,0,0,.3),
-        inset 0 1px rgba(255,255,255,.8);
+
+        inset 0 1px rgba(255,255,255,.45),
+
+        inset 0 -1px rgba(0,0,0,.3),
+
+        0 35px 80px rgba(0,0,0,.65);
+
 }
 
 
-/* ==========================================
-   ELEMENTOS
-========================================== */
+/* =========================================================
+   PAGE LIGHT REFLECTION
+   ========================================================= */
+
+.page::before {
+
+    content: "";
+
+    position: absolute;
+
+    top: -50%;
+
+    left: -20%;
+
+    width: 70%;
+
+    height: 100%;
+
+    transform:
+        rotate(18deg);
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255,255,255,.13),
+            transparent
+        );
+
+    pointer-events: none;
+
+}
+
+
+/* =========================================================
+   ELEMENTS
+   ========================================================= */
 
 .pd-element {
 
@@ -612,7 +1053,16 @@ textarea {
 
     cursor: pointer;
 
-    outline: 1px dashed transparent;
+    outline:
+        1px solid
+        transparent;
+
+    border-radius: 4px;
+
+    transition:
+        outline .12s ease,
+        background .12s ease;
+
 }
 
 
@@ -620,7 +1070,8 @@ textarea {
 
     outline:
         1px dashed
-        rgba(49,92,168,.7);
+        rgba(40,100,255,.65);
+
 }
 
 
@@ -628,131 +1079,148 @@ textarea {
 
     outline:
         2px solid
-        #315ca8;
+        #5d8fff;
 
     background:
-        rgba(49,92,168,.08);
+        rgba(60,120,255,.08);
+
 }
 
 
-/* TITULO */
+/* =========================================================
+   ELEMENT TYPES
+   ========================================================= */
 
 .pd-title {
 
-    font-size: 36px;
+    font-size: 38px;
 
-    font-weight: bold;
+    font-weight: 700;
+
+    letter-spacing:
+        -1.8px;
+
 }
 
-
-/* TEXTO */
 
 .pd-text {
 
-    font-size: 18px;
+    font-size: 17px;
+
+    line-height: 1.5;
+
 }
 
-
-/* BOTON */
 
 .pd-button {
 
     display: inline-block;
 
+    padding:
+        10px 18px;
+
+    color: #080808;
+
     background:
         linear-gradient(
-            #4775c7,
-            #254d99
+            180deg,
+            #f8f8f8,
+            #9b9b9e
         );
 
-    color: white;
+    border:
+        1px solid
+        rgba(255,255,255,.95);
 
-    border: 3px solid;
-
-    border-color:
-        #8eafea
-        #172f61
-        #172f61
-        #8eafea;
+    border-radius: 7px;
 
     box-shadow:
-        2px 2px #222;
 
-    font-weight: bold;
+        inset 0 1px white,
+
+        inset 0 -1px rgba(0,0,0,.35),
+
+        0 5px 12px rgba(0,0,0,.25);
+
+    font-weight: 600;
 
     cursor: pointer;
+
 }
 
 
 .pd-button:hover {
 
-    filter: brightness(1.12);
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff,
+            #bcbcbc
+        );
+
 }
 
-
-/* CAJA */
 
 .pd-box {
 
     min-height: 120px;
 
     border:
-        2px dashed
-        #666;
+        1px dashed
+        rgba(0,0,0,.4);
 
     background:
-        rgba(255,255,255,.3);
+        rgba(255,255,255,.13);
+
 }
 
-
-/* IMAGEN */
 
 .pd-image {
 
     width: 260px;
+
     height: 160px;
 
     display: flex;
 
     align-items: center;
+
     justify-content: center;
 
+    color: rgba(0,0,0,.5);
+
     background:
+
         repeating-linear-gradient(
             45deg,
-            #b8b8b8,
-            #b8b8b8 8px,
-            #c5c5c5 8px,
-            #c5c5c5 16px
+            #b7b7b9 0,
+            #b7b7b9 4px,
+            #cacacd 4px,
+            #cacacd 8px
         );
 
-    border: 3px solid;
+    border:
+        1px solid
+        rgba(0,0,0,.35);
 
-    border-color:
-        white
-        #555
-        #555
-        white;
-
-    color: #555;
-
-    font-weight: bold;
 }
 
 
-/* ==========================================
-   PROPIEDADES
-========================================== */
+/* =========================================================
+   PROPERTIES
+   ========================================================= */
 
 .properties {
 
-    padding: 10px;
+    padding: 12px;
+
 }
 
 
 .property {
 
-    margin-bottom: 11px;
+    margin-bottom: 13px;
+
 }
 
 
@@ -760,13 +1228,17 @@ textarea {
 
     display: block;
 
-    margin-bottom: 4px;
+    margin-bottom: 5px;
 
-    font-size: 9px;
+    color:
+        rgba(255,255,255,.35);
 
-    font-weight: bold;
+    font-family: var(--mono);
 
-    color: #444;
+    font-size: 7px;
+
+    letter-spacing: 1px;
+
 }
 
 
@@ -775,36 +1247,48 @@ textarea {
 
     width: 100%;
 
-    padding: 7px;
+    height: 34px;
 
-    background: #f7f7f7;
+    padding: 0 9px;
 
-    border: 2px solid;
+    color: rgba(255,255,255,.85);
 
-    border-color:
-        #555
-        white
-        white
-        #555;
+    background:
+        rgba(0,0,0,.22);
+
+    border:
+        1px solid
+        rgba(255,255,255,.1);
+
+    border-radius: 6px;
 
     outline: none;
+
+    transition:
+        border .15s ease,
+        background .15s ease;
+
 }
 
 
 .property input:focus,
 .property select:focus {
 
-    outline:
-        1px solid
-        #315ca8;
+    background:
+        rgba(255,255,255,.06);
+
+    border-color:
+        rgba(120,160,255,.65);
+
 }
 
 
 .property input[type="color"] {
 
-    height: 34px;
+    padding: 3px;
 
-    padding: 2px;
+    cursor: pointer;
+
 }
 
 
@@ -813,10 +1297,10 @@ textarea {
     display: grid;
 
     grid-template-columns:
-        1fr
-        1fr;
+        1fr 1fr;
 
-    gap: 6px;
+    gap: 7px;
+
 }
 
 
@@ -824,29 +1308,45 @@ textarea {
 
     width: 100%;
 
-    padding: 8px;
+    height: 34px;
 
-    margin-top: 7px;
+    margin-top: 5px;
 
-    background: #c44747;
+    color: #ff9b9b;
 
-    color: white;
+    background:
+        rgba(255,50,50,.08);
 
-    border: 2px solid;
+    border:
+        1px solid
+        rgba(255,80,80,.2);
 
-    border-color:
-        #ffaaaa
-        #522020
-        #522020
-        #ffaaaa;
+    border-radius: 6px;
+
+    font-family: var(--mono);
+
+    font-size: 7px;
 
     cursor: pointer;
+
 }
 
 
+.delete-element:hover {
+
+    background:
+        rgba(255,50,50,.15);
+
+}
+
+
+/* =========================================================
+   EMPTY PROPERTIES
+   ========================================================= */
+
 .empty-properties {
 
-    min-height: 180px;
+    min-height: 230px;
 
     display: flex;
 
@@ -856,43 +1356,74 @@ textarea {
 
     justify-content: center;
 
+    gap: 7px;
+
     text-align: center;
 
-    gap: 6px;
+    color:
+        rgba(255,255,255,.28);
 
-    color: #666;
 }
 
 
 .empty-properties strong {
 
-    color: #333;
+    color:
+        rgba(255,255,255,.5);
 
-    font-size: 12px;
+    font-size: 11px;
+
+    font-weight: 500;
+
 }
 
 
 .empty-properties span {
 
-    font-size: 9px;
+    max-width: 150px;
+
+    font-family: var(--mono);
+
+    font-size: 7px;
+
+    line-height: 1.6;
+
 }
 
 
 .empty-icon {
 
-    font-size: 32px;
+    width: 45px;
+    height: 45px;
 
-    color: #777;
+    display: grid;
+
+    place-items: center;
+
+    margin-bottom: 5px;
+
+    border:
+        1px solid
+        rgba(255,255,255,.1);
+
+    border-radius: 50%;
+
+    color:
+        rgba(255,255,255,.35);
+
+    background:
+        rgba(255,255,255,.035);
+
 }
 
 
-/* ==========================================
-   STATUSBAR
-========================================== */
+/* =========================================================
+   STATUS BAR
+   ========================================================= */
 
 .statusbar {
 
-    height: 24px;
+    height: 25px;
 
     flex-shrink: 0;
 
@@ -900,29 +1431,45 @@ textarea {
 
     align-items: center;
 
-    gap: 20px;
+    gap: 16px;
 
-    padding: 0 8px;
+    padding: 0 10px;
 
-    background: #c9c9c9;
+    color:
+        rgba(255,255,255,.3);
 
-    border-top: 2px solid white;
+    background:
+        rgba(0,0,0,.25);
 
-    font-size: 9px;
+    border-top:
+        1px solid
+        rgba(255,255,255,.06);
 
-    color: #444;
+    font-family: var(--mono);
+
+    font-size: 7px;
+
 }
 
 
 .statusbar span:last-child {
 
     margin-left: auto;
+
 }
 
 
-/* ==========================================
-   MODALES
-========================================== */
+#status {
+
+    color:
+        rgba(180,220,255,.7);
+
+}
+
+
+/* =========================================================
+   MODALS
+   ========================================================= */
 
 .modal {
 
@@ -939,15 +1486,21 @@ textarea {
     justify-content: center;
 
     background:
-        rgba(0,0,0,.65);
+        rgba(0,0,0,.68);
 
-    backdrop-filter: blur(3px);
+    backdrop-filter:
+        blur(16px);
+
+    -webkit-backdrop-filter:
+        blur(16px);
+
 }
 
 
 .hidden {
 
     display: none;
+
 }
 
 
@@ -963,24 +1516,31 @@ textarea {
 
     flex-direction: column;
 
-    background: #cfcfcf;
+    overflow: hidden;
 
-    border: 3px solid;
+    background:
+        rgba(20,20,22,.82);
 
-    border-color:
-        white
-        #333
-        #333
-        white;
+    border:
+        1px solid
+        rgba(255,255,255,.16);
+
+    border-radius: 12px;
+
+    backdrop-filter:
+        blur(35px);
 
     box-shadow:
-        8px 8px rgba(0,0,0,.5);
+        var(--shadow);
+
 }
 
 
 .modal-header {
 
-    height: 35px;
+    height: 42px;
+
+    flex-shrink: 0;
 
     display: flex;
 
@@ -988,47 +1548,64 @@ textarea {
 
     justify-content: space-between;
 
-    padding: 0 8px;
+    padding: 0 12px;
+
+    color:
+        rgba(255,255,255,.65);
 
     background:
-        linear-gradient(
-            90deg,
-            #193d89,
-            #416fc1
-        );
+        rgba(255,255,255,.045);
 
-    color: white;
+    border-bottom:
+        1px solid
+        rgba(255,255,255,.08);
 
-    font-size: 11px;
+    font-family: var(--mono);
 
-    font-weight: bold;
+    font-size: 8px;
+
+    letter-spacing: 1px;
+
 }
 
 
 .close-button {
 
-    width: 25px;
-    height: 25px;
+    width: 27px;
+    height: 27px;
 
-    padding: 0;
+    color:
+        rgba(255,255,255,.65);
 
-    background: #d4d4d4;
+    background:
+        rgba(255,255,255,.06);
 
-    border: 2px solid;
+    border:
+        1px solid
+        rgba(255,255,255,.12);
 
-    border-color:
-        white
-        #555
-        #555
-        white;
+    border-radius: 6px;
 
     cursor: pointer;
 
-    font-size: 16px;
+    font-size: 17px;
 
-    line-height: 18px;
 }
 
+
+.close-button:hover {
+
+    background:
+        rgba(255,255,255,.12);
+
+    color: white;
+
+}
+
+
+/* =========================================================
+   PREVIEW
+   ========================================================= */
 
 #previewFrame {
 
@@ -1039,12 +1616,13 @@ textarea {
     border: 0;
 
     background: white;
+
 }
 
 
-/* ==========================================
+/* =========================================================
    EXPORT
-========================================== */
+   ========================================================= */
 
 .export-body {
 
@@ -1054,9 +1632,10 @@ textarea {
 
     flex-direction: column;
 
-    gap: 8px;
+    gap: 9px;
 
     padding: 10px;
+
 }
 
 
@@ -1066,113 +1645,191 @@ textarea {
 
     resize: none;
 
-    padding: 12px;
+    padding: 14px;
 
-    background: #181818;
+    color:
+        #d7d7d7;
 
-    color: #e5e5e5;
+    background:
+        #070708;
 
-    border: 2px solid #444;
+    border:
+        1px solid
+        rgba(255,255,255,.1);
 
-    font-family:
-        "Courier New",
-        monospace;
-
-    font-size: 12px;
+    border-radius: 7px;
 
     outline: none;
+
+    font-family:
+        var(--mono);
+
+    font-size: 11px;
+
+    line-height: 1.6;
+
 }
 
 
 .copy-button {
 
-    padding: 9px;
+    height: 37px;
 
-    background: #315ca8;
+    color: #070707;
 
-    color: white;
+    background:
+        linear-gradient(
+            180deg,
+            #eeeeef,
+            #969699
+        );
 
-    border: 2px solid;
+    border:
+        1px solid white;
 
-    border-color:
-        #89a9e7
-        #172f61
-        #172f61
-        #89a9e7;
+    border-radius: 7px;
+
+    font-family: var(--mono);
+
+    font-size: 8px;
 
     cursor: pointer;
+
 }
 
 
-/* ==========================================
-   RESPONSIVE
-========================================== */
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
 
-@media(max-width:900px) {
+::-webkit-scrollbar {
+
+    width: 7px;
+    height: 7px;
+
+}
+
+
+::-webkit-scrollbar-track {
+
+    background:
+        rgba(0,0,0,.2);
+
+}
+
+
+::-webkit-scrollbar-thumb {
+
+    background:
+        linear-gradient(
+            #555,
+            #222
+        );
+
+    border:
+        1px solid
+        rgba(255,255,255,.1);
+
+    border-radius: 10px;
+
+}
+
+
+::-webkit-scrollbar-thumb:hover {
+
+    background:
+        linear-gradient(
+            #777,
+            #333
+        );
+
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media(max-width:950px) {
 
     .workspace {
 
         grid-template-columns:
-            170px
+            185px
             1fr;
+
     }
 
     .right-panel {
 
         display: none;
-    }
 
-    .top-button {
-
-        padding:
-            5px 7px;
-    }
-
-    .top-menu {
-
-        gap: 3px;
     }
 
 }
 
 
-@media(max-width:650px) {
+@media(max-width:700px) {
 
     .topbar {
 
-        height: 48px;
+        height: 55px;
+
+        padding:
+            0 10px;
+
     }
+
 
     .brand-version {
 
         display: none;
+
     }
 
-    .brand-name {
 
-        font-size: 16px;
+    .top-button {
+
+        padding:
+            0 8px;
+
     }
 
-    .top-menu button:nth-child(3) {
+
+    .top-menu
+    .top-button:nth-child(3) {
 
         display: none;
+
     }
+
 
     .workspace {
 
         grid-template-columns:
-            135px
             1fr;
+
     }
+
+
+    .left-panel {
+
+        display: none;
+
+    }
+
 
     .canvas {
 
-        padding: 15px;
+        padding: 20px;
+
     }
+
 
     .page {
 
-        width: 700px;
+        width: 850px;
+
     }
 
 }
