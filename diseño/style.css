@@ -3436,3 +3436,436 @@ body.auto-critical .glass::before {
     transition: none !important;
 
 }
+/* =========================================================
+   PLUGINDEX — WINDOW SYSTEM
+========================================================= */
+
+.physical-window {
+
+    --window-x: 0px;
+    --window-y: 0px;
+
+    position: absolute;
+
+    transform:
+        translate3d(
+            var(--window-x),
+            var(--window-y),
+            0
+        );
+
+    transform-origin: center center;
+
+    will-change: transform;
+
+    touch-action: none;
+
+    transition:
+        transform .55s cubic-bezier(.16,1,.3,1),
+        box-shadow .45s ease,
+        opacity .35s ease;
+
+}
+
+
+/* =========================================================
+   VENTANA ACTIVA
+========================================================= */
+
+.physical-window.window-active {
+
+    box-shadow:
+        inset 0 1px rgba(255,255,255,.09),
+        inset 0 -1px rgba(0,0,0,.3),
+        0 30px 85px rgba(0,0,0,.42);
+
+}
+
+
+/* =========================================================
+   DRAG
+========================================================= */
+
+.window-drag-handle {
+
+    cursor: grab;
+
+    touch-action: none;
+
+    user-select: none;
+}
+
+
+.window-drag-handle:active {
+
+    cursor: grabbing;
+
+}
+
+
+.physical-window.is-moving {
+
+    transition: none !important;
+
+    user-select: none;
+
+    box-shadow:
+        inset 0 1px rgba(255,255,255,.12),
+        0 38px 100px rgba(0,0,0,.55),
+        0 0 0 1px rgba(255,255,255,.08);
+
+}
+
+
+/* =========================================================
+   REST
+========================================================= */
+
+.physical-window.is-resting {
+
+    transition:
+        transform .65s cubic-bezier(.16,1,.3,1),
+        box-shadow .55s ease;
+
+}
+
+
+/* =========================================================
+   SNAP PREVIEW
+========================================================= */
+
+.physical-window.snap-preview {
+
+    box-shadow:
+        0 0 0 1px rgba(255,255,255,.35),
+        0 0 35px rgba(255,255,255,.08),
+        0 35px 100px rgba(0,0,0,.5);
+
+}
+
+
+/* =========================================================
+   RESIZE
+========================================================= */
+
+.window-resize-handle {
+
+    position: absolute;
+
+    z-index: 50;
+
+    pointer-events: auto;
+
+}
+
+
+.resize-n {
+    top: -5px;
+    left: 12px;
+    right: 12px;
+    height: 10px;
+    cursor: ns-resize;
+}
+
+
+.resize-s {
+    bottom: -5px;
+    left: 12px;
+    right: 12px;
+    height: 10px;
+    cursor: ns-resize;
+}
+
+
+.resize-e {
+    right: -5px;
+    top: 12px;
+    bottom: 12px;
+    width: 10px;
+    cursor: ew-resize;
+}
+
+
+.resize-w {
+    left: -5px;
+    top: 12px;
+    bottom: 12px;
+    width: 10px;
+    cursor: ew-resize;
+}
+
+
+.resize-ne {
+
+    top: -6px;
+    right: -6px;
+
+    width: 16px;
+    height: 16px;
+
+    cursor: nesw-resize;
+
+}
+
+
+.resize-nw {
+
+    top: -6px;
+    left: -6px;
+
+    width: 16px;
+    height: 16px;
+
+    cursor: nwse-resize;
+
+}
+
+
+.resize-se {
+
+    right: -6px;
+    bottom: -6px;
+
+    width: 18px;
+    height: 18px;
+
+    cursor: nwse-resize;
+
+}
+
+
+.resize-sw {
+
+    left: -6px;
+    bottom: -6px;
+
+    width: 18px;
+    height: 18px;
+
+    cursor: nesw-resize;
+
+}
+
+
+/* =========================================================
+   REDIMENSIONANDO
+========================================================= */
+
+.physical-window.is-resizing {
+
+    transition: none !important;
+
+    user-select: none;
+
+}
+
+
+.physical-window.is-resizing .window-resize-handle {
+
+    cursor: grabbing;
+
+}
+
+
+/* =========================================================
+   MINIMIZADA
+========================================================= */
+
+.physical-window.window-minimized {
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transform:
+        translate3d(
+            var(--window-x),
+            calc(var(--window-y) + 25px),
+            0
+        )
+        scale(.92);
+
+}
+
+
+/* =========================================================
+   CERRADA
+========================================================= */
+
+.physical-window.window-closed {
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transform:
+        translate3d(
+            var(--window-x),
+            calc(var(--window-y) + 18px),
+            0
+        )
+        scale(.96);
+
+}
+
+
+/* =========================================================
+   ACCIONES
+========================================================= */
+
+.window-actions {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 3px;
+
+}
+
+
+.window-action {
+
+    width: 31px;
+    height: 31px;
+
+    border-radius: 10px;
+
+    display: grid;
+    place-items: center;
+
+    color: var(--dim);
+
+    transition:
+        transform .35s cubic-bezier(.16,1,.3,1),
+        background .3s ease,
+        color .3s ease;
+
+}
+
+
+.window-action svg {
+
+    width: 14px;
+    height: 14px;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 1.6;
+
+    stroke-linecap: round;
+
+}
+
+
+.window-action:hover {
+
+    color: var(--white);
+
+    background:
+        rgba(255,255,255,.07);
+
+}
+
+
+.window-action:active {
+
+    transform: scale(.82);
+
+}
+
+
+/* =========================================================
+   MÓVIL
+========================================================= */
+
+@media (max-width: 700px) {
+
+    .physical-window {
+
+        position: fixed;
+
+        transform:
+            translate3d(0,0,0);
+
+        will-change: transform;
+
+        transition:
+            transform .55s cubic-bezier(.16,1,.3,1),
+            opacity .35s ease;
+
+    }
+
+
+    .window-resize-handle {
+
+        display: none;
+
+    }
+
+
+    .window-drag-handle {
+
+        cursor: default;
+
+    }
+
+
+    .physical-window.is-moving {
+
+        transition: none !important;
+
+    }
+
+
+    .physical-window.window-minimized {
+
+        transform:
+            translate3d(
+                0,
+                30px,
+                0
+            )
+            scale(.94);
+
+    }
+
+}
+
+
+/* =========================================================
+   TOUCH
+========================================================= */
+
+@media (pointer: coarse) {
+
+    .window-resize-handle {
+
+        /*
+           En móvil el resize se controla
+           con el handle del sheet.
+        */
+
+        display: none;
+
+    }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .physical-window {
+
+        transition:
+            opacity .01ms linear !important;
+
+    }
+
+}
