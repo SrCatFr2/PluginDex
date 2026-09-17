@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="theme-color"
+        content="#c0c0c0"
+    >
+
+    <meta
+        name="description"
+        content="PluginDex - Motor visual para crear páginas web."
+    >
+
+    <title>PluginDex</title>
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div id="app">
+
+    <!-- =========================================
+         TOP BAR
+    ========================================== -->
+
+    <header class="topbar">
+
+        <div class="window-title">
+
+            <div class="pixel-logo">
+                PD
+            </div>
+
+            <div>
+                <strong>PluginDex</strong>
+                <span>MiProyecto.pdx</span>
+            </div>
+
+        </div>
+
+        <nav class="main-menu">
+
+            <button>Archivo</button>
+            <button>Editar</button>
+            <button>Ver</button>
+            <button>Proyecto</button>
+            <button>Herramientas</button>
+            <button>Ayuda</button>
+
+        </nav>
+
+        <div class="window-buttons">
+
+            <button>_</button>
+            <button>□</button>
+            <button>×</button>
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================================
+         TOOLBAR
+    ========================================== -->
+
+    <section class="toolbar">
+
+        <button
+            class="tool-button"
+            id="newProject"
+        >
+            <span>📄</span>
+            Nuevo
+        </button>
+
+        <button
+            class="tool-button"
+            id="saveProject"
+        >
+            <span>💾</span>
+            Guardar
+        </button>
+
+        <button
+            class="tool-button"
+            id="exportProject"
+        >
+            <span>📦</span>
+            Exportar
+        </button>
+
+        <div class="toolbar-separator"></div>
+
+        <button
+            class="tool-button active"
+            id="previewButton"
+        >
+            🖥 Vista previa
+        </button>
+
+        <button
+            class="tool-button"
+            id="compileButton"
+        >
+            ⚙ Compilar
+        </button>
+
+        <div class="toolbar-space"></div>
+
+        <div class="engine-status">
+
+            <span class="status-dot"></span>
+
+            <div>
+                <strong>PluginDex Engine</strong>
+                <small>Offline</small>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================
+         WORKSPACE
+    ========================================== -->
+
+    <main class="workspace">
+
+
+        <!-- =====================================
+             LEFT PANEL
+        ====================================== -->
+
+        <aside class="left-panel">
+
+            <div class="panel-header">
+                <span>COMPONENTES</span>
+                <button>×</button>
+            </div>
+
+            <div class="component-search">
+
+                <input
+                    id="componentSearch"
+                    type="text"
+                    placeholder="Buscar componente..."
+                >
+
+            </div>
+
+
+            <div class="component-group">
+
+                <div class="group-title">
+                    BÁSICOS
+                </div>
+
+                <button
+                    class="component"
+                    data-component="text"
+                >
+                    <span>▤</span>
+                    Texto
+                </button>
+
+                <button
+                    class="component"
+                    data-component="title"
+                >
+                    <span>T</span>
+                    Título
+                </button>
+
+                <button
+                    class="component"
+                    data-component="button"
+                >
+                    <span>▣</span>
+                    Botón
+                </button>
+
+                <button
+                    class="component"
+                    data-component="image"
+                >
+                    <span>▧</span>
+                    Imagen
+                </button>
+
+                <button
+                    class="component"
+                    data-component="container"
+                >
+                    <span>□</span>
+                    Contenedor
+                </button>
+
+                <button
+                    class="component"
+                    data-component="divider"
+                >
+                    <span>━</span>
+                    Separador
+                </button>
+
+            </div>
+
+
+            <div class="component-group">
+
+                <div class="group-title">
+                    INTERFAZ
+                </div>
+
+                <button
+                    class="component"
+                    data-component="card"
+                >
+                    <span>▣</span>
+                    Tarjeta
+                </button>
+
+                <button
+                    class="component"
+                    data-component="navbar"
+                >
+                    <span>☰</span>
+                    Navegación
+                </button>
+
+                <button
+                    class="component"
+                    data-component="input"
+                >
+                    <span>▭</span>
+                    Input
+                </button>
+
+                <button
+                    class="component"
+                    data-component="badge"
+                >
+                    <span>●</span>
+                    Badge
+                </button>
+
+            </div>
+
+
+            <div class="component-group">
+
+                <div class="group-title">
+                    LAYOUT
+                </div>
+
+                <button
+                    class="component"
+                    data-component="grid"
+                >
+                    <span>▦</span>
+                    Grid
+                </button>
+
+                <button
+                    class="component"
+                    data-component="columns"
+                >
+                    <span>▥</span>
+                    Columnas
+                </button>
+
+            </div>
+
+
+            <div class="left-bottom">
+
+                <button id="backgroundButton">
+                    🎨 Fondo
+                </button>
+
+                <button id="blocksButton">
+                    🧩 Bloques
+                </button>
+
+            </div>
+
+        </aside>
+
+
+        <!-- =====================================
+             CENTER
+        ====================================== -->
+
+        <section class="center">
+
+
+            <!-- tabs -->
+
+            <div class="editor-tabs">
+
+                <button class="tab active">
+                    <span>📄</span>
+                    index.pdx
+                    <b>×</b>
+                </button>
+
+                <button class="tab">
+                    <span>🎨</span>
+                    estilos.pdx
+                    <b>×</b>
+                </button>
+
+                <button class="tab">
+                    <span>⚡</span>
+                    scripts.pdx
+                    <b>×</b>
+                </button>
+
+                <button
+                    class="new-tab"
+                    title="Nuevo archivo"
+                >
+                    +
+                </button>
+
+            </div>
+
+
+            <!-- preview toolbar -->
+
+            <div class="preview-toolbar">
+
+                <button id="backPreview">
+                    ◀
+                </button>
+
+                <button id="forwardPreview">
+                    ▶
+                </button>
+
+                <button id="refreshPreview">
+                    ↻
+                </button>
+
+                <div class="address">
+
+                    <span>🔒</span>
+
+                    <input
+                        value="plugin://preview/index"
+                        readonly
+                    >
+
+                </div>
+
+                <button id="deviceDesktop">
+                    🖥
+                </button>
+
+                <button id="deviceMobile">
+                    📱
+                </button>
+
+            </div>
+
+
+            <!-- actual preview -->
+
+            <div class="preview-area">
+
+                <div
+                    id="previewCanvas"
+                    class="preview-canvas"
+                >
+
+                    <div
+                        id="website"
+                        class="website"
+                    >
+
+                        <header class="site-header">
+
+                            <div class="site-logo">
+                                PluginDex
+                            </div>
+
+                            <nav>
+                                <a>Inicio</a>
+                                <a>Proyectos</a>
+                                <a>Comunidad</a>
+                                <a>Ayuda</a>
+                            </nav>
+
+                        </header>
+
+
+                        <section class="hero">
+
+                            <div>
+
+                                <div class="pixel-label">
+                                    PLUGINDEX ENGINE
+                                </div>
+
+                                <h1>
+                                    Crea la web
+                                    <br>
+                                    a tu manera.
+                                </h1>
+
+                                <p>
+                                    Un motor visual para construir
+                                    páginas web sin complicarte.
+                                </p>
+
+                                <button
+                                    class="hero-button"
+                                >
+                                    Comenzar
+                                </button>
+
+                            </div>
+
+                            <div class="retro-computer">
+
+                                <div class="monitor">
+
+                                    <div class="monitor-screen">
+                                        PD_
+                                    </div>
+
+                                </div>
+
+                                <div class="computer-base">
+                                    ▰ ▰ ▰ ▰
+                                </div>
+
+                            </div>
+
+                        </section>
+
+
+                        <section class="site-grid">
+
+                            <div class="site-card">
+
+                                <h3>
+                                    Últimos proyectos
+                                </h3>
+
+                                <a>Mi Portfolio</a>
+                                <a>Mi tienda</a>
+                                <a>Landing Page</a>
+                                <a>Proyecto Retro</a>
+
+                            </div>
+
+                            <div class="site-card">
+
+                                <h3>
+                                    Recursos
+                                </h3>
+
+                                <a>Documentación</a>
+                                <a>Componentes</a>
+                                <a>Plugins</a>
+                                <a>Ejemplos</a>
+
+                            </div>
+
+                            <div class="site-card">
+
+                                <h3>
+                                    Comunidad
+                                </h3>
+
+                                <p>
+                                    Comparte tus proyectos
+                                    creados con PluginDex.
+                                </p>
+
+                                <button>
+                                    Entrar →
+                                </button>
+
+                            </div>
+
+                        </section>
+
+
+                        <footer>
+
+                            PluginDex © 2026
+
+                            <span>
+                                Motor web local
+                            </span>
+
+                        </footer>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- bottom editor -->
+
+            <section class="bottom-editor">
+
+                <div class="bottom-tabs">
+
+                    <button class="bottom-tab active">
+                        Código PDL
+                    </button>
+
+                    <button class="bottom-tab">
+                        Bloques
+                    </button>
+
+                    <button class="bottom-tab">
+                        Consola
+                    </button>
+
+                </div>
+
+
+                <div class="bottom-content">
+
+
+                    <!-- PDL -->
+
+                    <div class="code-editor">
+
+                        <div
+                            class="line-numbers"
+                            id="lineNumbers"
+                        >
+                            1
+                            <br>
+                            2
+                            <br>
+                            3
+                            <br>
+                            4
+                            <br>
+                            5
+                            <br>
+                            6
+                            <br>
+                            7
+                        </div>
+
+                        <textarea
+                            id="pdlEditor"
+                            spellcheck="false"
+                        >page "MiProyecto" {
+
+    title "Bienvenido a PluginDex"
+
+    text "Crea páginas web fácilmente."
+
+    button "Comenzar"
+}</textarea>
+
+                    </div>
+
+
+                    <!-- BLOCKS -->
+
+                    <div
+                        class="blocks-editor"
+                        id="blocksEditor"
+                    >
+
+                        <div class="block event">
+                            CUANDO
+                            <select>
+                                <option>se haga clic</option>
+                                <option>cargue la página</option>
+                            </select>
+                        </div>
+
+                        <div class="block action">
+                            CAMBIAR TEXTO DE
+                            <select>
+                                <option>Título</option>
+                                <option>Botón</option>
+                            </select>
+                        </div>
+
+                        <div class="block value">
+                            A
+                            <input
+                                value="Hola mundo"
+                            >
+                        </div>
+
+                    </div>
+
+
+                    <!-- CONSOLE -->
+
+                    <div
+                        class="console"
+                        id="console"
+                    >
+
+                        <div>
+                            [PluginDex] Motor iniciado.
+                        </div>
+
+                        <div>
+                            [PluginDex] Proyecto cargado.
+                        </div>
+
+                        <div class="success">
+                            [PluginDex] Sin errores.
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </section>
+
+
+        <!-- =====================================
+             RIGHT PANEL
+        ====================================== -->
+
+        <aside class="right-panel">
+
+
+            <div class="panel-header">
+
+                <span>PROPIEDADES</span>
+
+                <button>×</button>
+
+            </div>
+
+
+            <div class="selected-object">
+
+                <span class="object-icon">
+                    □
+                </span>
+
+                <div>
+
+                    <strong id="selectedName">
+                        Página
+                    </strong>
+
+                    <small>
+                        Objeto seleccionado
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <div class="property-section">
+
+                <div class="property-title">
+                    APARIENCIA
+                </div>
+
+
+                <label>
+                    Nombre
+
+                    <input
+                        id="propName"
+                        value="MiProyecto"
+                    >
+
+                </label>
+
+
+                <label>
+                    Texto
+
+                    <input
+                        id="propText"
+                        value="PluginDex"
+                    >
+
+                </label>
+
+
+                <label>
+                    Color
+
+                    <div class="color-input">
+
+                        <input
+                            id="propColor"
+                            type="color"
+                            value="#0000aa"
+                        >
+
+                        <input
+                            id="propColorText"
+                            value="#0000AA"
+                        >
+
+                    </div>
+
+                </label>
+
+
+                <label>
+                    Tamaño
+
+                    <input
+                        id="propSize"
+                        type="range"
+                        min="8"
+                        max="64"
+                        value="18"
+                    >
+
+                </label>
+
+
+                <label>
+                    Radio
+
+                    <input
+                        id="propRadius"
+                        type="range"
+                        min="0"
+                        max="40"
+                        value="8"
+                    >
+
+                </label>
+
+            </div>
+
+
+            <div class="property-section">
+
+                <div class="property-title">
+                    LIQUID GLASS
+                </div>
+
+
+                <label class="switch-row">
+
+                    <span>
+                        Activar cristal
+                    </span>
+
+                    <input
+                        id="glassToggle"
+                        type="checkbox"
+                        checked
+                    >
+
+                </label>
+
+
+                <label>
+                    Transparencia
+
+                    <input
+                        id="glassOpacity"
+                        type="range"
+                        min="0"
+                        max="100"
+                        value="72"
+                    >
+
+                </label>
+
+
+                <label>
+                    Desenfoque
+
+                    <input
+                        id="glassBlur"
+                        type="range"
+                        min="0"
+                        max="30"
+                        value="8"
+                    >
+
+                </label>
+
+            </div>
+
+
+            <div class="property-section">
+
+                <div class="property-title">
+                    FONDO
+                </div>
+
+
+                <label>
+                    Tipo
+
+                    <select id="backgroundType">
+
+                        <option value="solid">
+                            Color
+                        </option>
+
+                        <option value="gradient">
+                            Degradado
+                        </option>
+
+                        <option value="grid">
+                            Grid Pixel
+                        </option>
+
+                        <option value="dots">
+                            Puntos
+                        </option>
+
+                    </select>
+
+                </label>
+
+
+                <label>
+                    Color 1
+
+                    <input
+                        id="bgColor1"
+                        type="color"
+                        value="#c0c0c0"
+                    >
+
+                </label>
+
+
+                <label>
+                    Color 2
+
+                    <input
+                        id="bgColor2"
+                        type="color"
+                        value="#808080"
+                    >
+
+                </label>
+
+
+                <label>
+                    Intensidad
+
+                    <input
+                        id="bgIntensity"
+                        type="range"
+                        min="0"
+                        max="100"
+                        value="35"
+                    >
+
+                </label>
+
+            </div>
+
+
+            <div class="property-section">
+
+                <div class="property-title">
+                    DISEÑO
+                </div>
+
+
+                <label>
+                    Fuente
+
+                    <select id="fontSelect">
+
+                        <option value="pixel">
+                            Pixel
+                        </option>
+
+                        <option value="system">
+                            System
+                        </option>
+
+                        <option value="mono">
+                            Monospace
+                        </option>
+
+                    </select>
+
+                </label>
+
+
+                <label>
+                    Ancho máximo
+
+                    <select id="maxWidth">
+
+                        <option>900px</option>
+                        <option>1024px</option>
+                        <option>1200px</option>
+                        <option>1400px</option>
+
+                    </select>
+
+                </label>
+
+            </div>
+
+
+            <div class="property-section">
+
+                <div class="property-title">
+                    NAVEGACIÓN
+                </div>
+
+                <div class="tree">
+
+                    <div class="tree-folder">
+                        📁 MiProyecto
+                    </div>
+
+                    <div class="tree-file active">
+                        📄 index.pdx
+                    </div>
+
+                    <div class="tree-file">
+                        🎨 estilos.pdx
+                    </div>
+
+                    <div class="tree-file">
+                        ⚡ scripts.pdx
+                    </div>
+
+                    <div class="tree-folder">
+                        📁 assets
+                    </div>
+
+                </div>
+
+            </div>
+
+        </aside>
+
+    </main>
+
+
+    <!-- =========================================
+         STATUS BAR
+    ========================================== -->
+
+    <footer class="statusbar">
+
+        <span>
+            Ln 7, Col 1
+        </span>
+
+        <span>
+            PDL
+        </span>
+
+        <span>
+            UTF-8
+        </span>
+
+        <span>
+            <i class="status-dot"></i>
+            Motor listo
+        </span>
+
+        <span class="status-space"></span>
+
+        <span>
+            PluginDex Engine v0.1
+        </span>
+
+    </footer>
+
+</div>
+
+
+<!-- =========================================
+     BACKGROUND MODAL
+========================================== -->
+
+<div
+    class="modal hidden"
+    id="backgroundModal"
+>
+
+    <div class="modal-window">
+
+        <div class="modal-title">
+            Personalizar fondo
+
+            <button id="closeBackground">
+                ×
+            </button>
+
+        </div>
+
+        <div class="modal-content">
+
+            <h3>
+                Fondo del proyecto
+            </h3>
+
+            <p>
+                Personaliza completamente el fondo
+                de tu página.
+            </p>
+
+            <label>
+                Color principal
+
+                <input
+                    type="color"
+                    id="modalBg1"
+                    value="#c0c0c0"
+                >
+
+            </label>
+
+            <label>
+                Color secundario
+
+                <input
+                    type="color"
+                    id="modalBg2"
+                    value="#808080"
+                >
+
+            </label>
+
+            <label>
+                Estilo
+
+                <select id="modalBgType">
+
+                    <option value="solid">
+                        Sólido
+                    </option>
+
+                    <option value="gradient">
+                        Degradado
+                    </option>
+
+                    <option value="grid">
+                        Pixel Grid
+                    </option>
+
+                    <option value="dots">
+                        Pixel Dots
+                    </option>
+
+                </select>
+
+            </label>
+
+            <button
+                class="modal-primary"
+                id="applyBackground"
+            >
+                Aplicar
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="app.js"></script>
+
+</body>
+</html>
