@@ -2,468 +2,687 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-
     <meta
         name="viewport"
-        content="width=device-width, initial-scale=1.0"
+        content="width=device-width, initial-scale=1, viewport-fit=cover"
     >
 
     <title>PluginDex</title>
 
-    <link
-        rel="stylesheet"
-        href="diseño/style.css"
-    >
+    <link rel="stylesheet" href="diseño/style.css">
 </head>
 
 <body>
 
-<div id="app">
+    <!-- =========================================================
+         AMBIENTE
+    ========================================================== -->
 
-    <!-- =========================================
-         BARRA SUPERIOR
-    ========================================== -->
+    <div class="environment" aria-hidden="true">
+        <div class="wallpaper"></div>
+        <div class="smoke smoke-a"></div>
+        <div class="smoke smoke-b"></div>
+        <div class="smoke smoke-c"></div>
+        <div class="ambient-light"></div>
+        <div class="carbon"></div>
+        <div class="grain"></div>
+    </div>
 
-    <header class="topbar">
 
-        <div class="brand">
+    <!-- =========================================================
+         APLICACIÓN
+    ========================================================== -->
 
-            <div class="brand-icon">
-                P
-            </div>
+    <main class="app" id="app">
 
-            <div>
+        <!-- =====================================================
+             TOP BAR
+        ====================================================== -->
+
+        <header class="topbar glass">
+
+            <div class="brand">
+                <div class="brand-mark">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+
                 <div class="brand-name">
-                    PluginDex
-                </div>
-
-                <div class="brand-version">
-                    WEB ENGINE 1.0
+                    <strong>PluginDex</strong>
+                    <small>Studio</small>
                 </div>
             </div>
 
-        </div>
+
+            <nav class="top-navigation" aria-label="Navegación">
+
+                <button class="nav-item active" data-view="editor">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 18V6A1.5 1.5 0 0 1 5 4.5Z"/>
+                        <path d="M7 8h10M7 12h6M7 16h8"/>
+                    </svg>
+
+                    <span>Editor</span>
+                </button>
 
 
-        <div class="top-menu">
+                <button class="nav-item" data-view="code">
 
-            <button
-                class="top-button"
-                id="newProject"
-            >
-                NUEVO
-            </button>
+                    <svg viewBox="0 0 24 24">
+                        <path d="m8.5 7-4 5 4 5"/>
+                        <path d="m15.5 7 4 5-4 5"/>
+                        <path d="m13.5 4-3 16"/>
+                    </svg>
 
-            <button
-                class="top-button"
-                id="saveProject"
-            >
-                GUARDAR
-            </button>
+                    <span>Código</span>
 
-            <button
-                class="top-button"
-                id="loadProject"
-            >
-                ABRIR
-            </button>
+                </button>
 
-            <button
-                class="top-button run-button"
-                id="runProject"
-            >
-                ▶ EJECUTAR
-            </button>
-
-            <button
-                class="top-button"
-                id="exportProject"
-            >
-                EXPORTAR
-            </button>
-
-        </div>
-
-    </header>
+            </nav>
 
 
-    <!-- =========================================
-         ÁREA PRINCIPAL
-    ========================================== -->
-
-    <main class="workspace">
-
-
-        <!-- =====================================
-             PANEL IZQUIERDO
-        ====================================== -->
-
-        <aside class="left-panel">
-
-            <div class="panel-title">
-                COMPONENTES
-            </div>
-
-
-            <div class="component-list">
-
+            <div class="top-actions">
 
                 <button
-                    class="component-item"
-                    data-component="text"
+                    class="icon-button"
+                    id="previewButton"
+                    aria-label="Vista previa"
+                    title="Vista previa"
                 >
-
-                    <span class="component-icon">
-                        T
-                    </span>
-
-                    <span>
-                        <strong>Texto</strong>
-                        <small>Texto normal</small>
-                    </span>
-
+                    <svg viewBox="0 0 24 24">
+                        <path d="M3.5 12s3.2-6 8.5-6 8.5 6 8.5 6-3.2 6-8.5 6-8.5-6-8.5-6Z"/>
+                        <circle cx="12" cy="12" r="2.5"/>
+                    </svg>
                 </button>
 
 
                 <button
-                    class="component-item"
-                    data-component="button"
+                    class="icon-button"
+                    id="settingsButton"
+                    aria-label="Configuración"
+                    title="Configuración"
                 >
-
-                    <span class="component-icon">
-                        ▣
-                    </span>
-
-                    <span>
-                        <strong>Botón</strong>
-                        <small>Botón interactivo</small>
-                    </span>
-
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 8.3a3.7 3.7 0 1 0 0 7.4 3.7 3.7 0 0 0 0-7.4Z"/>
+                        <path d="m19.2 13.4 1.1.8-1.7 2.9-1.3-.5a7.7 7.7 0 0 1-1.5.9l-.2 1.4h-3.4l-.2-1.4a7.7 7.7 0 0 1-1.5-.9l-1.3.5-1.7-2.9 1.1-.8a7 7 0 0 1 0-1.8l-1.1-.8 1.7-2.9 1.3.5a7.7 7.7 0 0 1 1.5-.9l.2-1.4h3.4l.2 1.4a7.7 7.7 0 0 1 1.5.9l1.3-.5 1.7 2.9-1.1.8a7 7 0 0 1 0 1.8Z"/>
+                    </svg>
                 </button>
 
 
                 <button
-                    class="component-item"
-                    data-component="box"
+                    class="profile-button"
+                    id="profileButton"
+                    aria-label="Perfil"
                 >
-
-                    <span class="component-icon">
-                        □
-                    </span>
-
-                    <span>
-                        <strong>Caja</strong>
-                        <small>Contenedor</small>
-                    </span>
-
-                </button>
-
-
-                <button
-                    class="component-item"
-                    data-component="image"
-                >
-
-                    <span class="component-icon">
-                        ▧
-                    </span>
-
-                    <span>
-                        <strong>Imagen</strong>
-                        <small>Imagen</small>
-                    </span>
-
-                </button>
-
-
-                <button
-                    class="component-item"
-                    data-component="title"
-                >
-
-                    <span class="component-icon">
-                        H
-                    </span>
-
-                    <span>
-                        <strong>Título</strong>
-                        <small>Título grande</small>
-                    </span>
-
+                    <span class="profile-avatar">P</span>
                 </button>
 
             </div>
 
-
-            <!-- =================================
-                 BLOQUES
-            ================================== -->
-
-            <div class="panel-title logic-title">
-                BLOQUES
-            </div>
+        </header>
 
 
-            <div class="logic-list">
+        <!-- =====================================================
+             WORKSPACE
+        ====================================================== -->
+
+        <section class="workspace">
 
 
-                <button
-                    class="logic-item yellow"
-                    data-block="click"
-                >
-                    ⚡ AL HACER CLIC
-                </button>
+            <!-- =================================================
+                 LEFT FLOATING TOOL DOCK
+            ================================================== -->
 
+            <aside class="tool-dock glass" id="toolDock">
 
-                <button
-                    class="logic-item blue"
-                    data-block="text"
-                >
-                    T CAMBIAR TEXTO
-                </button>
+                <div class="dock-top">
 
-
-                <button
-                    class="logic-item green"
-                    data-block="color"
-                >
-                    ● CAMBIAR COLOR
-                </button>
-
-
-                <button
-                    class="logic-item purple"
-                    data-block="hide"
-                >
-                    ◐ MOSTRAR / OCULTAR
-                </button>
-
-            </div>
-
-        </aside>
-
-
-        <!-- =====================================
-             EDITOR
-        ====================================== -->
-
-        <section class="editor-area">
-
-            <div class="editor-toolbar">
-
-                <span>
-                    PROYECTO / PÁGINA
-                </span>
-
-                <span id="zoomLabel">
-                    100%
-                </span>
-
-            </div>
-
-
-            <div
-                id="canvas"
-                class="canvas"
-            >
-
-                <div
-                    id="page"
-                    class="page"
-                >
-
-                    <div
-                        class="pd-element pd-title selected"
-                        data-id="element-1"
-                        data-type="title"
+                    <button
+                        class="dock-button active"
+                        data-tool="elements"
+                        title="Elementos"
                     >
-                        Mi página
-                    </div>
-
-
-                    <div
-                        class="pd-element pd-text"
-                        data-id="element-2"
-                        data-type="text"
-                    >
-                        Bienvenido a PluginDex.
-                    </div>
+                        <svg viewBox="0 0 24 24">
+                            <rect x="4" y="4" width="6" height="6" rx="1"/>
+                            <rect x="14" y="4" width="6" height="6" rx="1"/>
+                            <rect x="4" y="14" width="6" height="6" rx="1"/>
+                            <rect x="14" y="14" width="6" height="6" rx="1"/>
+                        </svg>
+                    </button>
 
 
                     <button
-                        class="pd-element pd-button"
-                        data-id="element-3"
-                        data-type="button"
+                        class="dock-button"
+                        data-tool="layers"
+                        title="Capas"
                     >
-                        Haz clic
+                        <svg viewBox="0 0 24 24">
+                            <path d="m12 4 8 4-8 4-8-4 8-4Z"/>
+                            <path d="m4 12 8 4 8-4"/>
+                            <path d="m4 16 8 4 8-4"/>
+                        </svg>
+                    </button>
+
+
+                    <button
+                        class="dock-button"
+                        data-tool="design"
+                        title="Diseño"
+                    >
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4.5h12a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 18V6A1.5 1.5 0 0 1 6 4.5Z"/>
+                            <path d="M8 15.5 15.5 8"/>
+                            <circle cx="9" cy="9" r="1.2"/>
+                        </svg>
                     </button>
 
                 </div>
+
+
+                <div class="dock-divider"></div>
+
+
+                <button
+                    class="dock-button"
+                    id="addElementButton"
+                    title="Añadir elemento"
+                >
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                </button>
+
+
+                <div class="dock-bottom">
+
+                    <button
+                        class="dock-button"
+                        id="backgroundButton"
+                        title="Fondo"
+                    >
+                        <svg viewBox="0 0 24 24">
+                            <rect x="4" y="4" width="16" height="16" rx="3"/>
+                            <circle cx="9" cy="9" r="1.5"/>
+                            <path d="m5 17 4-4 3 3 3-4 4 5"/>
+                        </svg>
+                    </button>
+
+                </div>
+
+            </aside>
+
+
+
+            <!-- =================================================
+                 MAIN CANVAS
+            ================================================== -->
+
+            <section class="canvas-space" id="canvasSpace">
+
+                <div class="canvas-toolbar glass">
+
+                    <div class="canvas-tool-group">
+
+                        <button class="mini-button" id="undoButton" title="Deshacer">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M9 7 4 12l5 5"/>
+                                <path d="M5 12h8a6 6 0 0 1 6 6"/>
+                            </svg>
+                        </button>
+
+                        <button class="mini-button" id="redoButton" title="Rehacer">
+                            <svg viewBox="0 0 24 24">
+                                <path d="m15 7 5 5-5 5"/>
+                                <path d="M19 12h-8a6 6 0 0 0-6 6"/>
+                            </svg>
+                        </button>
+
+                    </div>
+
+
+                    <div class="canvas-center-info">
+
+                        <span class="status-dot"></span>
+
+                        <span id="documentStatus">
+                            Sin guardar
+                        </span>
+
+                    </div>
+
+
+                    <div class="canvas-tool-group">
+
+                        <button class="zoom-button" id="zoomOut">
+                            −
+                        </button>
+
+                        <span id="zoomValue">100%</span>
+
+                        <button class="zoom-button" id="zoomIn">
+                            +
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- EL ÁREA QUE EL USUARIO EDITA -->
+
+                <div class="canvas-stage" id="canvasStage">
+
+                    <div class="page-shadow"></div>
+
+                    <article
+                        class="design-page"
+                        id="designPage"
+                        tabindex="0"
+                    >
+
+                        <div
+                            class="page-element page-heading"
+                            data-element="heading"
+                            draggable="true"
+                        >
+                            Tu página
+                        </div>
+
+
+                        <div
+                            class="page-element page-text"
+                            data-element="text"
+                            draggable="true"
+                        >
+                            Empieza a construir algo.
+                        </div>
+
+
+                        <button
+                            class="page-element page-button"
+                            data-element="button"
+                            draggable="true"
+                        >
+                            Comenzar
+                        </button>
+
+                    </article>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =================================================
+                 FLOATING INSPECTOR
+            ================================================== -->
+
+            <aside
+                class="inspector glass"
+                id="inspector"
+                aria-hidden="true"
+            >
+
+                <div class="inspector-header">
+
+                    <div>
+                        <small>Elemento</small>
+                        <strong id="selectedElementName">
+                            Nada seleccionado
+                        </strong>
+                    </div>
+
+                    <button
+                        class="close-button"
+                        id="closeInspector"
+                        aria-label="Cerrar inspector"
+                    >
+                        <svg viewBox="0 0 24 24">
+                            <path d="m7 7 10 10M17 7 7 17"/>
+                        </svg>
+                    </button>
+
+                </div>
+
+
+                <div class="inspector-content">
+
+                    <section class="inspector-section">
+
+                        <div class="section-label">
+                            Apariencia
+                        </div>
+
+
+                        <label class="property">
+
+                            <span>Opacidad</span>
+
+                            <output id="opacityOutput">100%</output>
+
+                            <input
+                                type="range"
+                                id="opacityControl"
+                                min="0"
+                                max="100"
+                                value="100"
+                            >
+
+                        </label>
+
+
+                        <label class="property">
+
+                            <span>Tamaño</span>
+
+                            <output id="sizeOutput">100%</output>
+
+                            <input
+                                type="range"
+                                id="sizeControl"
+                                min="50"
+                                max="150"
+                                value="100"
+                            >
+
+                        </label>
+
+                    </section>
+
+
+                    <section class="inspector-section">
+
+                        <div class="section-label">
+                            Color
+                        </div>
+
+                        <div class="color-row">
+
+                            <button
+                                class="color-chip active"
+                                data-color="#ffffff"
+                            ></button>
+
+                            <button
+                                class="color-chip"
+                                data-color="#b7bcc5"
+                            ></button>
+
+                            <button
+                                class="color-chip"
+                                data-color="#6f7580"
+                            ></button>
+
+                            <button
+                                class="color-chip"
+                                data-color="#17191d"
+                            ></button>
+
+                            <button
+                                class="color-chip custom-color"
+                                id="customColorButton"
+                            >
+                                +
+                            </button>
+
+                        </div>
+
+                    </section>
+
+                </div>
+
+            </aside>
+
+        </section>
+
+
+
+        <!-- =====================================================
+             MOBILE DOCK
+        ====================================================== -->
+
+        <nav class="mobile-dock glass">
+
+            <button class="mobile-dock-item active" data-mobile="elements">
+
+                <svg viewBox="0 0 24 24">
+                    <rect x="4" y="4" width="6" height="6" rx="1"/>
+                    <rect x="14" y="4" width="6" height="6" rx="1"/>
+                    <rect x="4" y="14" width="6" height="6" rx="1"/>
+                    <rect x="14" y="14" width="6" height="6" rx="1"/>
+                </svg>
+
+                <span>Elementos</span>
+
+            </button>
+
+
+            <button class="mobile-dock-item" data-mobile="add">
+
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+
+                <span>Añadir</span>
+
+            </button>
+
+
+            <button class="mobile-dock-item" data-mobile="design">
+
+                <svg viewBox="0 0 24 24">
+                    <path d="M6 4.5h12a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 18V6A1.5 1.5 0 0 1 6 4.5Z"/>
+                    <path d="M8 15.5 15.5 8"/>
+                    <circle cx="9" cy="9" r="1.2"/>
+                </svg>
+
+                <span>Diseño</span>
+
+            </button>
+
+
+            <button class="mobile-dock-item" data-mobile="code">
+
+                <svg viewBox="0 0 24 24">
+                    <path d="m8.5 7-4 5 4 5"/>
+                    <path d="m15.5 7 4 5-4 5"/>
+                    <path d="m13.5 4-3 16"/>
+                </svg>
+
+                <span>Código</span>
+
+            </button>
+
+        </nav>
+
+
+
+        <!-- =====================================================
+             ADD ELEMENT SHEET
+        ====================================================== -->
+
+        <div class="sheet-backdrop" id="sheetBackdrop"></div>
+
+        <section
+            class="element-sheet glass"
+            id="elementSheet"
+            aria-hidden="true"
+        >
+
+            <div class="sheet-handle"></div>
+
+            <div class="sheet-header">
+                <div>
+                    <small>Crear</small>
+                    <h2>Elemento</h2>
+                </div>
+
+                <button class="close-button" id="closeSheet">
+                    <svg viewBox="0 0 24 24">
+                        <path d="m7 7 10 10M17 7 7 17"/>
+                    </svg>
+                </button>
+            </div>
+
+
+            <div class="element-grid">
+
+                <button class="element-card" data-create="heading">
+                    <span class="element-icon">
+                        T
+                    </span>
+                    <strong>Título</strong>
+                    <small>Texto principal</small>
+                </button>
+
+
+                <button class="element-card" data-create="text">
+                    <span class="element-icon">
+                        Aa
+                    </span>
+                    <strong>Texto</strong>
+                    <small>Contenido</small>
+                </button>
+
+
+                <button class="element-card" data-create="button">
+                    <span class="element-icon">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="4" y="7" width="16" height="10" rx="3"/>
+                        </svg>
+                    </span>
+                    <strong>Botón</strong>
+                    <small>Acción</small>
+                </button>
+
+
+                <button class="element-card" data-create="image">
+                    <span class="element-icon">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="4" y="5" width="16" height="14" rx="2"/>
+                            <circle cx="9" cy="10" r="1.5"/>
+                            <path d="m5 17 4-4 3 3 3-4 4 5"/>
+                        </svg>
+                    </span>
+                    <strong>Imagen</strong>
+                    <small>Contenido visual</small>
+                </button>
 
             </div>
 
         </section>
 
 
-        <!-- =====================================
-             PANEL DERECHO
-        ====================================== -->
 
-        <aside class="right-panel">
+        <!-- =====================================================
+             BACKGROUND SHEET
+        ====================================================== -->
 
-            <div class="panel-title">
-                PROPIEDADES
+        <section
+            class="background-sheet glass"
+            id="backgroundSheet"
+            aria-hidden="true"
+        >
+
+            <div class="sheet-handle"></div>
+
+            <div class="sheet-header">
+
+                <div>
+                    <small>Personalización</small>
+                    <h2>Ambiente</h2>
+                </div>
+
+                <button class="close-button" id="closeBackground">
+                    <svg viewBox="0 0 24 24">
+                        <path d="m7 7 10 10M17 7 7 17"/>
+                    </svg>
+                </button>
+
             </div>
 
 
-            <div
-                id="properties"
-                class="properties"
-            >
+            <div class="background-options">
 
-                <div class="empty-properties">
+                <div class="option-title">
+                    Wallpaper
+                </div>
 
-                    <div class="empty-icon">
-                        ◈
-                    </div>
+                <div class="wallpaper-grid">
 
-                    <strong>
-                        Ningún elemento
-                    </strong>
+                    <button
+                        class="wallpaper-choice active"
+                        data-wallpaper="black"
+                    ></button>
 
-                    <span>
-                        Selecciona algo en la página.
-                    </span>
+                    <button
+                        class="wallpaper-choice"
+                        data-wallpaper="silver"
+                    ></button>
+
+                    <button
+                        class="wallpaper-choice"
+                        data-wallpaper="blue"
+                    ></button>
+
+                    <button
+                        class="wallpaper-choice"
+                        data-wallpaper="violet"
+                    ></button>
 
                 </div>
 
+
+                <label class="property">
+
+                    <span>Humo</span>
+
+                    <input
+                        type="range"
+                        id="smokeControl"
+                        min="0"
+                        max="100"
+                        value="65"
+                    >
+
+                </label>
+
+
+                <label class="property">
+
+                    <span>Movimiento</span>
+
+                    <input
+                        type="range"
+                        id="motionControl"
+                        min="0"
+                        max="100"
+                        value="45"
+                    >
+
+                </label>
+
             </div>
 
-        </aside>
+        </section>
+
+
+
+        <!-- =====================================================
+             TOAST
+        ====================================================== -->
+
+        <div class="toast glass" id="toast">
+            <span class="toast-indicator"></span>
+            <span id="toastText">Guardado</span>
+        </div>
 
     </main>
 
 
-    <!-- =========================================
-         BARRA INFERIOR
-    ========================================== -->
-
-    <footer class="statusbar">
-
-        <span id="status">
-            ● LISTO
-        </span>
-
-        <span>
-            PluginDex Engine
-        </span>
-
-        <span>
-            OFFLINE MODE
-        </span>
-
-    </footer>
-
-</div>
-
-
-<!-- =========================================
-     PREVIEW
-========================================== -->
-
-<div
-    id="previewModal"
-    class="modal hidden"
->
-
-    <div class="modal-window preview-window">
-
-        <div class="modal-header">
-
-            <span>
-                PluginDex Preview
-            </span>
-
-            <button
-                class="close-button"
-                id="closePreview"
-            >
-                ×
-            </button>
-
-        </div>
-
-        <iframe
-            id="previewFrame"
-        ></iframe>
-
-    </div>
-
-</div>
-
-
-<!-- =========================================
-     EXPORTACIÓN
-========================================== -->
-
-<div
-    id="exportModal"
-    class="modal hidden"
->
-
-    <div class="modal-window export-window">
-
-        <div class="modal-header">
-
-            <span>
-                EXPORTAR PROYECTO
-            </span>
-
-            <button
-                class="close-button"
-                id="closeExport"
-            >
-                ×
-            </button>
-
-        </div>
-
-
-        <div class="export-body">
-
-            <textarea
-                id="exportCode"
-                readonly
-            ></textarea>
-
-            <button
-                id="copyCode"
-                class="copy-button"
-            >
-                COPIAR CÓDIGO
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- =========================================
-     SCRIPTS
-========================================== -->
-
-<script src="sistema/proyecto.js"></script>
-<script src="sistema/almacenamiento.js"></script>
-<script src="sistema/engine.js"></script>
-
-<script src="funciones/utilidades.js"></script>
-<script src="funciones/elementos.js"></script>
-<script src="funciones/exportador.js"></script>
-
-<script src="editor/bloques.js"></script>
-<script src="editor/editor.js"></script>
+    <script src="funciones/app.js"></script>
 
 </body>
 </html>
