@@ -2843,3 +2843,413 @@ body[data-wallpaper="violet"] {
     transition:
         transform .8s cubic-bezier(.16,1,.3,1);
 }
+/* =========================================================
+   PLUGINDEX PERFORMANCE ENGINE
+========================================================= */
+
+/*
+   No bajamos la calidad visual.
+   Reducimos cuánto trabajo tiene que hacer
+   el navegador para producirla.
+*/
+
+.wallpaper,
+.smoke-a,
+.smoke-b,
+.smoke-c,
+.ambient-light,
+.carbon,
+.grain {
+    position: fixed;
+    pointer-events: none;
+
+    contain: strict;
+
+    transform: translate3d(
+        var(--wall-x, 0px),
+        var(--wall-y, 0px),
+        0
+    );
+
+    will-change: transform;
+}
+
+
+/* =========================================================
+   HUMO
+========================================================= */
+
+.smoke-a,
+.smoke-b,
+.smoke-c {
+    isolation: isolate;
+
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+
+    transform-style: preserve-3d;
+}
+
+
+/*
+   En dispositivos táctiles el humo sigue existiendo,
+   pero no necesita reaccionar al dedo.
+*/
+
+.touch-device .smoke-a,
+.touch-device .smoke-b,
+.touch-device .smoke-c {
+    animation-duration: 18s;
+}
+
+
+/* =========================================================
+   CARBONO
+========================================================= */
+
+.carbon {
+    contain: strict;
+
+    background-repeat: repeat;
+
+    backface-visibility: hidden;
+
+    opacity: .20;
+
+    /*
+       Evitamos filtros caros sobre la textura.
+    */
+
+    filter: none;
+}
+
+
+/* =========================================================
+   GRAIN
+========================================================= */
+
+.grain {
+    pointer-events: none;
+
+    mix-blend-mode: soft-light;
+
+    /*
+       El grano no necesita actualizarse.
+    */
+
+    will-change: auto;
+}
+
+
+/* =========================================================
+   LIQUID GLASS
+========================================================= */
+
+.glass {
+    contain: paint;
+
+    isolation: isolate;
+
+    backface-visibility: hidden;
+
+    -webkit-backface-visibility: hidden;
+
+    /*
+       Una sola superficie de blur.
+       Evitamos meter blur dentro de blur.
+    */
+
+    backdrop-filter:
+        blur(24px)
+        saturate(125%);
+
+    -webkit-backdrop-filter:
+        blur(24px)
+        saturate(125%);
+}
+
+
+/*
+   Reflejo separado.
+   No utilizamos filter: blur() aquí.
+*/
+
+.glass::before {
+    transform:
+        translate3d(
+            calc(
+                (var(--shine-x, 50%) - 50%) * .04
+            ),
+            calc(
+                (var(--shine-y, 50%) - 50%) * .04
+            ),
+            0
+        );
+
+    will-change: transform;
+
+    contain: paint;
+}
+
+
+.glass::after {
+    contain: paint;
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   VENTANAS
+========================================================= */
+
+.physical-window {
+    contain: layout paint;
+
+    backface-visibility: hidden;
+
+    -webkit-backface-visibility: hidden;
+
+    transform:
+        translate3d(
+            var(--glass-x, 0px),
+            var(--glass-y, 0px),
+            0
+        )
+        rotate(
+            var(--glass-rotation, 0deg)
+        )
+        scale(
+            var(--glass-scale, 1)
+        );
+}
+
+
+/* =========================================================
+   DISPOSITIVOS DE GAMA BAJA
+========================================================= */
+
+/*
+   IMPORTANTE:
+   Esto NO cambia el diseño.
+
+   Conserva:
+   - vidrio
+   - carbono
+   - humo
+   - reflejos
+   - sombras
+   - estética
+
+   Solo reduce trabajo secundario.
+*/
+
+.low-end-device .glass {
+    backdrop-filter:
+        blur(20px)
+        saturate(120%);
+
+    -webkit-backdrop-filter:
+        blur(20px)
+        saturate(120%);
+}
+
+
+.low-end-device .glass::before {
+    opacity: .38;
+}
+
+
+.low-end-device .ambient-light {
+    opacity: .72;
+}
+
+
+.low-end-device .grain {
+    opacity: .45;
+}
+
+
+.low-end-device .carbon {
+    opacity: .16;
+}
+
+
+/* =========================================================
+   TOUCH
+========================================================= */
+
+.touch-device button,
+.touch-device [data-action],
+.touch-device [data-open-sheet],
+.touch-device [data-create-element],
+.touch-device [data-wallpaper] {
+    min-height: 44px;
+
+    touch-action: manipulation;
+
+    -webkit-tap-highlight-color:
+        transparent;
+}
+
+
+/*
+   Evitamos hover persistente en teléfonos.
+*/
+
+@media (hover: none) {
+
+    .glass:hover {
+        transform: none;
+    }
+
+    button:hover {
+        transform: none;
+    }
+
+}
+
+
+/* =========================================================
+   ANIMACIONES GPU
+========================================================= */
+
+.page-element,
+button,
+.sheet,
+.toast,
+.design-page {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+
+/* =========================================================
+   MENOS TRABAJO CUANDO UNA HOJA ESTÁ CERRADA
+========================================================= */
+
+.sheet:not(.open) {
+    visibility: hidden;
+
+    pointer-events: none;
+}
+
+
+.sheet.open {
+    visibility: visible;
+    pointer-events: auto;
+}
+
+
+/* =========================================================
+   PREVIEW
+========================================================= */
+
+body.preview-mode {
+    cursor: default;
+}
+
+
+body.preview-mode .page-element {
+    pointer-events: none;
+}
+
+
+body.preview-mode .design-page {
+    box-shadow:
+        0 35px 100px rgba(0,0,0,.5);
+}
+
+
+/* =========================================================
+   DRAG
+========================================================= */
+
+.page-element.is-dragging {
+    opacity: .45;
+
+    transform:
+        scale(.985);
+
+    cursor: grabbing;
+}
+
+
+/* =========================================================
+   SELECCIÓN
+========================================================= */
+
+.page-element.selected {
+    outline:
+        1px solid
+        rgba(255,255,255,.55);
+
+    outline-offset: 7px;
+
+    box-shadow:
+        0 0 0 1px
+        rgba(255,255,255,.07),
+        0 12px 35px
+        rgba(0,0,0,.22);
+}
+
+
+.page-element.selected::before {
+    content: "";
+
+    position: absolute;
+
+    inset: -9px;
+
+    pointer-events: none;
+
+    border-radius: inherit;
+
+    border:
+        1px solid
+        rgba(255,255,255,.12);
+
+    opacity: .65;
+
+    animation:
+        selectionPulse
+        2.8s ease-in-out infinite;
+}
+
+
+@keyframes selectionPulse {
+
+    0%,
+    100% {
+        opacity: .25;
+    }
+
+    50% {
+        opacity: .75;
+    }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (
+    prefers-reduced-motion: reduce
+) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration:
+            .001ms !important;
+
+        animation-iteration-count:
+            1 !important;
+
+        transition-duration:
+            .001ms !important;
+    }
+
+}
