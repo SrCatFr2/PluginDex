@@ -2680,3 +2680,166 @@ svg {
         scroll-behavior: auto !important;
     }
 }
+/* =========================================================
+   WALLPAPER PRESETS
+   ========================================================= */
+
+body[data-wallpaper="black"] {
+    --wallpaper-base:
+        radial-gradient(
+            circle at 50% 20%,
+            #202020 0%,
+            #0b0b0b 42%,
+            #030303 100%
+        );
+}
+
+body[data-wallpaper="silver"] {
+    --wallpaper-base:
+        radial-gradient(
+            circle at 50% 15%,
+            #454545 0%,
+            #151515 45%,
+            #030303 100%
+        );
+}
+
+body[data-wallpaper="blue"] {
+    --wallpaper-base:
+        radial-gradient(
+            circle at 45% 15%,
+            #172333 0%,
+            #080d14 48%,
+            #020304 100%
+        );
+}
+
+body[data-wallpaper="violet"] {
+    --wallpaper-base:
+        radial-gradient(
+            circle at 55% 15%,
+            #241c2c 0%,
+            #0d090f 48%,
+            #030303 100%
+        );
+}
+
+.wallpaper {
+    background:
+        var(--wallpaper-base),
+        #020202;
+
+    transform:
+        translate3d(
+            var(--wall-x, 0px),
+            var(--wall-y, 0px),
+            0
+        ) scale(1.04);
+
+    transition:
+        background 1s ease;
+}
+
+
+/* =========================================================
+   SMOKE
+   ========================================================= */
+
+.no-smoke .smoke-a,
+.no-smoke .smoke-b,
+.no-smoke .smoke-c {
+    opacity: 0 !important;
+}
+
+.no-motion .smoke-a,
+.no-motion .smoke-b,
+.no-motion .smoke-c {
+    animation: none !important;
+}
+
+.no-motion .ambient-light {
+    transition: none !important;
+}
+
+
+/* =========================================================
+   GLASS — MÁS PROFUNDO
+   ========================================================= */
+
+.glass {
+    background:
+        radial-gradient(
+            600px circle at var(--shine-x) var(--shine-y),
+            rgba(255,255,255,.08),
+            transparent 45%
+        ),
+        linear-gradient(
+            135deg,
+            rgba(255,255,255,.095),
+            rgba(255,255,255,.025) 45%,
+            rgba(0,0,0,.3)
+        );
+
+    border: 1px solid rgba(255,255,255,.09);
+
+    box-shadow:
+        inset 0 1px rgba(255,255,255,.08),
+        inset 0 -1px rgba(0,0,0,.28),
+        0 20px 70px rgba(0,0,0,.38);
+
+    backdrop-filter:
+        blur(28px)
+        saturate(135%);
+
+    -webkit-backdrop-filter:
+        blur(28px)
+        saturate(135%);
+}
+
+
+/* =========================================================
+   CARBON
+   ========================================================= */
+
+.carbon {
+    opacity: .22;
+    background-image:
+        linear-gradient(
+            135deg,
+            rgba(255,255,255,.025) 25%,
+            transparent 25%,
+            transparent 50%,
+            rgba(255,255,255,.025) 50%,
+            rgba(255,255,255,.025) 75%,
+            transparent 75%
+        );
+
+    background-size:
+        7px 7px;
+
+    transform:
+        translate3d(
+            calc(var(--wall-x, 0px) * -.25),
+            calc(var(--wall-y, 0px) * -.25),
+            0
+        )
+        scale(1.05);
+}
+
+
+/* =========================================================
+   AMBIENT LIGHT
+   ========================================================= */
+
+.ambient-light {
+    transform:
+        translate3d(
+            calc(var(--light-x, 50%) - 50%),
+            calc(var(--light-y, 50%) - 50%),
+            0
+        )
+        scale(1.2);
+
+    transition:
+        transform .8s cubic-bezier(.16,1,.3,1);
+}
