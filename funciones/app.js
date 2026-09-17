@@ -1,1886 +1,2696 @@
-"use strict";
+/* =============================================================
+   PLUGINDEX
+   APP ENGINE
+   funciones/app.js
+============================================================= */
 
-/*
-=========================================================
- PLUGINDEX ENGINE
- Motor principal
- Optimizado para móviles y dispositivos de gama baja
-=========================================================
-*/
+(() => {
 
-const $ = (s, r = document) => r.querySelector(s);
-const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+    "use strict";
 
-const STORAGE = "plugindex-project-v3";
 
-const state = {
-    selected: null,
+    /* =========================================================
+       DOM
+    ========================================================= */
 
-    zoom: 1,
+    const $ = (selector, root = document) =>
+        root.querySelector(selector);
 
-    wallpaper: "black",
+    const $$ = (selector, root = document) =>
+        [...root.querySelectorAll(selector)];
 
-    smoke: true,
 
-    motion: true,
+    const app = $("#app");
+    const workspace = $("#workspace");
 
-    history: [],
+    const designPage = $("#designPage");
+    const canvasStage = $("#canvasStage");
 
-    historyIndex: -1,
+    const zoomValue = $("#zoomValue");
 
-    glass: new WeakMap(),
+    const inspector = $("#inspector");
+    const inspectorEmpty = $("#inspectorEmpty");
+    const inspectorProperties = $("#inspectorProperties");
 
-    pointer: {
-        x: .5,
-        y: .5,
-        targetX: .5,
-        targetY: .5
-    }
-};
+    const selectedElementName = $("#selectedElementName");
 
+    const opacityRange = $("#opacityRange");
+    const opacityValue = $("#opacityValue");
 
-/* =========================================================
-   ELEMENTOS PRINCIPALES
-========================================================= */
+    const scaleRange = $("#scaleRange");
+    const scaleValue = $("#scaleValue");
 
-const page = $(".design-page");
-const canvas = $(".canvas-space");
-const inspector = $(".inspector");
-const toast = $(".toast");
+    const customColor = $("#customColor");
 
+    const smokeToggle = $("#smokeToggle");
+    const motionToggle = $("#motionToggle");
 
-/* =========================================================
-   UTILIDADES
-========================================================= */
+    const wallpaper = $("#wallpaper");
 
-const clamp = (n, min, max) =>
-    Math.min(Math.max(n, min), max);
+    const toast = $("#toast");
+    const toastText = $("#toastText");
 
-const lerp = (a, b, t) =>
-    a + (b - a) * t;
 
+    /* =========================================================
+       ESTADO
+    ========================================================= */
 
-/* =========================================================
-   TOAST
-========================================================= */
+    const state = {
 
-let toastTimeout = null;
+        selected: null,
 
-function showToast(text) {
+        zoom: 1,
 
-    if (!toast) return;
+        wallpaper: "black",
 
-    toast.textContent = text;
+        smoke: true,
 
-    toast.classList.add("show");
+        motion: true,
 
-    clearTimeout(toastTimeout);
+        preview: false,
 
-    toastTimeout = setTimeout(() => {
-        toast.classList.remove("show");
-    }, 1700);
-}
+        history: [],
 
+        historyIndex: -1,
 
-/* =========================================================
-   GUARDAR
-========================================================= */
+        historyLock: false,
 
-let saveTimeout;
+        saveTimer: null,
 
-function saveProject() {
+        toastTimer: null,
 
-    clearTimeout(saveTimeout);
-
-    saveTimeout = setTimeout(() => {
-
-        const data = {
-            html: page?.innerHTML || "",
-            wallpaper: state.wallpaper,
-            smoke: state.smoke,
-            motion: state.motion,
-            zoom: state.zoom
-        };
-
-        try {
-            localStorage.setItem(
-                STORAGE,
-                JSON.stringify(data)
-            );
-        } catch (e) {
-            console.warn("No se pudo guardar.", e);
-        }
-
-        const status = $(".save-status");
-
-        if (status) {
-            status.textContent = "Guardado";
-        }
-
-    }, 250);
-}
-
-
-/* =========================================================
-   CARGAR
-========================================================= */
-
-function loadProject() {
-
-    try {
-
-        const raw =
-            localStorage.getItem(STORAGE);
-
-        if (!raw) return;
-
-        const data =
-            JSON.parse(raw);
-
-        if (data.html && page) {
-            page.innerHTML = data.html;
-        }
-
-        if (data.wallpaper) {
-            state.wallpaper = data.wallpaper;
-        }
-
-        if (typeof data.smoke === "boolean") {
-            state.smoke = data.smoke;
-        }
-
-        if (typeof data.motion === "boolean") {
-            state.motion = data.motion;
-        }
-
-        if (typeof data.zoom === "number") {
-            state.zoom = data.zoom;
-        }
-
-    } catch (e) {
-
-        console.warn(
-            "Proyecto corrupto o incompatible.",
-            e
-        );
-
-    }
-}
-
-
-/* =========================================================
-   HISTORIAL
-========================================================= */
-
-function snapshot() {
-
-    if (!page) return;
-
-    const html = page.innerHTML;
-
-    state.history =
-        state.history.slice(
-            0,
-            state.historyIndex + 1
-        );
-
-    state.history.push(html);
-
-    if (state.history.length > 30) {
-        state.history.shift();
-    }
-
-    state.historyIndex =
-        state.history.length - 1;
-}
-
-
-function restore(index) {
-
-    if (!page) return;
-
-    if (
-        index < 0 ||
-        index >= state.history.length
-    ) {
-        return;
-    }
-
-    page.innerHTML =
-        state.history[index];
-
-    state.historyIndex =
-        index;
-
-    state.selected = null;
-
-    refreshElements();
-
-    updateInspector();
-
-    saveProject();
-}
-
-
-function undo() {
-
-    if (state.historyIndex <= 0) {
-        showToast("No hay cambios anteriores");
-        return;
-    }
-
-    restore(
-        state.historyIndex - 1
-    );
-
-}
-
-
-function redo() {
-
-    if (
-        state.historyIndex >=
-        state.history.length - 1
-    ) {
-        showToast("No hay cambios posteriores");
-        return;
-    }
-
-    restore(
-        state.historyIndex + 1
-    );
-
-}
-
-
-/* =========================================================
-   WALLPAPER
-========================================================= */
-
-function applyWallpaper(name) {
-
-    state.wallpaper = name;
-
-    document.body.dataset.wallpaper =
-        name;
-
-    saveProject();
-
-    showToast(
-        "Fondo cambiado"
-    );
-}
-
-
-/* =========================================================
-   SMOKE
-========================================================= */
-
-function setSmoke(enabled) {
-
-    state.smoke = enabled;
-
-    document.body.classList.toggle(
-        "no-smoke",
-        !enabled
-    );
-
-    saveProject();
-
-}
-
-
-/* =========================================================
-   MOTION
-========================================================= */
-
-function setMotion(enabled) {
-
-    state.motion = enabled;
-
-    document.body.classList.toggle(
-        "no-motion",
-        !enabled
-    );
-
-    saveProject();
-
-}
-
-
-/* =========================================================
-   PARALLAX
-========================================================= */
-
-/*
-    IMPORTANTE:
-
-    Antes se actualizaban demasiadas propiedades.
-    Ahora solo modificamos variables CSS.
-*/
-
-let parallaxRunning = false;
-
-function startParallax() {
-
-    if (parallaxRunning) return;
-
-    parallaxRunning = true;
-
-    requestAnimationFrame(
-        parallaxLoop
-    );
-}
-
-
-function parallaxLoop() {
-
-    const p = state.pointer;
-
-    p.x =
-        lerp(
-            p.x,
-            p.targetX,
-            .055
-        );
-
-    p.y =
-        lerp(
-            p.y,
-            p.targetY,
-            .055
-        );
-
-    const dx =
-        (p.x - .5) * 18;
-
-    const dy =
-        (p.y - .5) * 18;
-
-    const root =
-        document.documentElement;
-
-    root.style.setProperty(
-        "--wall-x",
-        `${dx}px`
-    );
-
-    root.style.setProperty(
-        "--wall-y",
-        `${dy}px`
-    );
-
-    root.style.setProperty(
-        "--light-x",
-        `${50 + (p.x - .5) * 25}%`
-    );
-
-    root.style.setProperty(
-        "--light-y",
-        `${50 + (p.y - .5) * 25}%`
-    );
-
-    requestAnimationFrame(
-        parallaxLoop
-    );
-}
-
-
-function setupParallax() {
-
-    window.addEventListener(
-        "pointermove",
-        event => {
-
-            state.pointer.targetX =
-                event.clientX /
-                window.innerWidth;
-
-            state.pointer.targetY =
-                event.clientY /
-                window.innerHeight;
-
-        },
-        {
-            passive: true
-        }
-    );
-
-    startParallax();
-}
-
-
-/* =========================================================
-   GLASS ENGINE
-========================================================= */
-
-function createGlass(element) {
-
-    if (!element) return;
-
-    if (state.glass.has(element)) {
-        return;
-    }
-
-    const data = {
-
-        x: 0,
-        y: 0,
-
-        targetX: 0,
-        targetY: 0,
-
-        rotation: 0,
-        targetRotation: 0,
-
-        scale: 1,
-        targetScale: 1,
-
-        shineX: 50,
-        shineY: 50,
-
-        targetShineX: 50,
-        targetShineY: 50,
-
-        active: false
+        elementCounter: 10
 
     };
 
-    state.glass.set(
-        element,
-        data
-    );
 
-    element.classList.add(
-        "physical-window"
-    );
+    /* =========================================================
+       CONSTANTES
+    ========================================================= */
 
-    glassFrame(
-        element,
-        data
-    );
+    const STORAGE_KEY = "plugindex-project-v4";
 
-}
+    const ZOOM_MIN = 0.5;
+    const ZOOM_MAX = 2;
 
 
-function glassFrame(element, data) {
+    /* =========================================================
+       UTILIDADES
+    ========================================================= */
 
-    data.x =
-        lerp(
-            data.x,
-            data.targetX,
-            .12
+    function clamp(value, min, max) {
+        return Math.min(
+            Math.max(value, min),
+            max
         );
-
-    data.y =
-        lerp(
-            data.y,
-            data.targetY,
-            .12
-        );
-
-    data.rotation =
-        lerp(
-            data.rotation,
-            data.targetRotation,
-            .12
-        );
-
-    data.scale =
-        lerp(
-            data.scale,
-            data.targetScale,
-            .12
-        );
-
-    data.shineX =
-        lerp(
-            data.shineX,
-            data.targetShineX,
-            .10
-        );
-
-    data.shineY =
-        lerp(
-            data.shineY,
-            data.targetShineY,
-            .10
-        );
-
-    element.style.setProperty(
-        "--glass-x",
-        `${data.x}px`
-    );
-
-    element.style.setProperty(
-        "--glass-y",
-        `${data.y}px`
-    );
-
-    element.style.setProperty(
-        "--glass-scale",
-        data.scale
-    );
-
-    element.style.setProperty(
-        "--shine-x",
-        `${data.shineX}%`
-    );
-
-    element.style.setProperty(
-        "--shine-y",
-        `${data.shineY}%`
-    );
-
-    requestAnimationFrame(
-        () => glassFrame(
-            element,
-            data
-        )
-    );
-}
-
-
-/* =========================================================
-   GLASS INTERACTION
-========================================================= */
-
-function setupGlass(element) {
-
-    createGlass(element);
-
-    element.addEventListener(
-        "pointerenter",
-        () => {
-
-            const data =
-                state.glass.get(element);
-
-            if (!data) return;
-
-            data.active = true;
-
-            data.targetScale =
-                1.006;
-
-        },
-        {
-            passive: true
-        }
-    );
-
-
-    element.addEventListener(
-        "pointermove",
-        event => {
-
-            const data =
-                state.glass.get(element);
-
-            if (!data) return;
-
-            const rect =
-                element.getBoundingClientRect();
-
-            const x =
-                ((event.clientX - rect.left) /
-                    rect.width) * 100;
-
-            const y =
-                ((event.clientY - rect.top) /
-                    rect.height) * 100;
-
-            data.targetShineX =
-                clamp(x, 0, 100);
-
-            data.targetShineY =
-                clamp(y, 0, 100);
-
-            data.targetRotation =
-                clamp(
-                    (x - 50) * .015,
-                    -1,
-                    1
-                );
-
-        },
-        {
-            passive: true
-        }
-    );
-
-
-    element.addEventListener(
-        "pointerleave",
-        () => {
-
-            const data =
-                state.glass.get(element);
-
-            if (!data) return;
-
-            data.active = false;
-
-            data.targetScale = 1;
-
-            data.targetRotation = 0;
-
-            data.targetShineX = 50;
-
-            data.targetShineY = 50;
-
-        },
-        {
-            passive: true
-        }
-    );
-}
-
-
-function setupAllGlass() {
-
-    $$(".glass")
-        .forEach(setupGlass);
-
-}
-
-
-/* =========================================================
-   SELECCIÓN
-========================================================= */
-
-function selectElement(element) {
-
-    if (!element) return;
-
-    $$(".page-element.selected")
-        .forEach(el =>
-            el.classList.remove("selected")
-        );
-
-    element.classList.add(
-        "selected"
-    );
-
-    state.selected =
-        element;
-
-    updateInspector();
-
-}
-
-
-function clearSelection() {
-
-    $$(".page-element.selected")
-        .forEach(el =>
-            el.classList.remove("selected")
-        );
-
-    state.selected = null;
-
-    updateInspector();
-}
-
-
-/* =========================================================
-   ELEMENTOS
-========================================================= */
-
-function setupElement(element) {
-
-    if (
-        element.dataset.pluginReady === "1"
-    ) {
-        return;
     }
 
-    element.dataset.pluginReady = "1";
 
-    element.draggable = true;
+    function escapeHTML(value) {
+
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+
+    }
 
 
-    element.addEventListener(
-        "click",
-        event => {
+    function getElementId(element) {
 
-            event.stopPropagation();
+        return element?.dataset?.elementId || null;
+
+    }
+
+
+    function getElements() {
+
+        return $$(".page-element", designPage);
+
+    }
+
+
+    function getSelected() {
+
+        return state.selected;
+
+    }
+
+
+    /* =========================================================
+       TOAST
+    ========================================================= */
+
+    function showToast(message) {
+
+        if (!toast || !toastText) return;
+
+        toastText.textContent = message;
+
+        toast.classList.add("visible");
+
+        clearTimeout(state.toastTimer);
+
+        state.toastTimer = setTimeout(() => {
+
+            toast.classList.remove("visible");
+
+        }, 1800);
+
+    }
+
+
+    /* =========================================================
+       PROYECTO
+    ========================================================= */
+
+    function serializeProject() {
+
+        return {
+
+            version: 4,
+
+            zoom: state.zoom,
+
+            wallpaper: state.wallpaper,
+
+            smoke: state.smoke,
+
+            motion: state.motion,
+
+            elementCounter: state.elementCounter,
+
+            elements: getElements().map(element => {
+
+                const editable =
+                    $(".editable-text", element);
+
+                const computed =
+                    getComputedStyle(element);
+
+                return {
+
+                    id: element.dataset.elementId,
+
+                    type: element.dataset.elementType,
+
+                    text: editable
+                        ? editable.textContent.trim()
+                        : "",
+
+                    x:
+                        parseFloat(
+                            element.style.getPropertyValue(
+                                "--element-x"
+                            )
+                        ) || 0,
+
+                    y:
+                        parseFloat(
+                            element.style.getPropertyValue(
+                                "--element-y"
+                            )
+                        ) || 0,
+
+                    opacity:
+                        parseFloat(
+                            element.style.opacity ||
+                            computed.opacity ||
+                            "1"
+                        ),
+
+                    scale:
+                        parseFloat(
+                            element.dataset.scale ||
+                            "1"
+                        ),
+
+                    color:
+                        element.dataset.color ||
+                        null
+
+                };
+
+            })
+
+        };
+
+    }
+
+
+    function saveProject(silent = false) {
+
+        try {
+
+            localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify(
+                    serializeProject()
+                )
+            );
+
+            if (!silent) {
+
+                showToast(
+                    "Proyecto guardado"
+                );
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "[PluginDex] Error guardando proyecto:",
+                error
+            );
+
+            showToast(
+                "No se pudo guardar"
+            );
+
+        }
+
+    }
+
+
+    function scheduleSave() {
+
+        clearTimeout(
+            state.saveTimer
+        );
+
+        state.saveTimer = setTimeout(() => {
+
+            saveProject(true);
+
+        }, 450);
+
+    }
+
+
+    function loadProject() {
+
+        try {
+
+            const raw =
+                localStorage.getItem(
+                    STORAGE_KEY
+                );
+
+            if (!raw) return false;
+
+            const data =
+                JSON.parse(raw);
+
+            if (!data || typeof data !== "object") {
+                return false;
+            }
+
+
+            if (
+                Number.isFinite(data.zoom)
+            ) {
+
+                state.zoom = clamp(
+                    data.zoom,
+                    ZOOM_MIN,
+                    ZOOM_MAX
+                );
+
+            }
+
+
+            if (typeof data.wallpaper === "string") {
+
+                state.wallpaper =
+                    data.wallpaper;
+
+            }
+
+
+            if (typeof data.smoke === "boolean") {
+
+                state.smoke =
+                    data.smoke;
+
+            }
+
+
+            if (typeof data.motion === "boolean") {
+
+                state.motion =
+                    data.motion;
+
+            }
+
+
+            if (
+                Number.isFinite(
+                    data.elementCounter
+                )
+            ) {
+
+                state.elementCounter =
+                    data.elementCounter;
+
+            }
+
+
+            if (Array.isArray(data.elements)) {
+
+                restoreElements(
+                    data.elements
+                );
+
+            }
+
+
+            return true;
+
+        } catch (error) {
+
+            console.warn(
+                "[PluginDex] Proyecto inválido:",
+                error
+            );
+
+            return false;
+
+        }
+
+    }
+
+
+    function restoreElements(elements) {
+
+        getElements().forEach(
+            element => element.remove()
+        );
+
+        elements.forEach(data => {
+
+            createElement(
+                data.type,
+                {
+                    id: data.id,
+                    text: data.text,
+                    x: data.x,
+                    y: data.y,
+                    opacity: data.opacity,
+                    scale: data.scale,
+                    color: data.color
+                },
+                false
+            );
+
+        });
+
+    }
+
+
+    /* =========================================================
+       HISTORIAL
+    ========================================================= */
+
+    function captureHistory() {
+
+        if (state.historyLock) {
+            return;
+        }
+
+        const snapshot =
+            JSON.stringify(
+                serializeProject()
+            );
+
+
+        if (
+            state.history[
+                state.historyIndex
+            ] === snapshot
+        ) {
+            return;
+        }
+
+
+        state.history =
+            state.history.slice(
+                0,
+                state.historyIndex + 1
+            );
+
+
+        state.history.push(
+            snapshot
+        );
+
+
+        if (
+            state.history.length > 50
+        ) {
+
+            state.history.shift();
+
+        }
+
+
+        state.historyIndex =
+            state.history.length - 1;
+
+    }
+
+
+    function restoreSnapshot(snapshot) {
+
+        if (!snapshot) return;
+
+        try {
+
+            const data =
+                JSON.parse(snapshot);
+
+            state.historyLock = true;
+
+            state.zoom =
+                clamp(
+                    Number(data.zoom) || 1,
+                    ZOOM_MIN,
+                    ZOOM_MAX
+                );
+
+            state.wallpaper =
+                data.wallpaper || "black";
+
+            state.smoke =
+                data.smoke !== false;
+
+            state.motion =
+                data.motion !== false;
+
+            state.elementCounter =
+                Number(
+                    data.elementCounter
+                ) || 10;
+
+
+            restoreElements(
+                Array.isArray(data.elements)
+                    ? data.elements
+                    : []
+            );
+
+
+            applyZoom();
+
+            applyWallpaper();
+
+            applySmoke();
+
+            applyMotion();
+
+            selectElement(null);
+
+        } catch (error) {
+
+            console.error(
+                "[PluginDex] Error restaurando:",
+                error
+            );
+
+        } finally {
+
+            state.historyLock = false;
+
+        }
+
+    }
+
+
+    function undo() {
+
+        if (
+            state.historyIndex <= 0
+        ) {
+
+            showToast(
+                "Nada que deshacer"
+            );
+
+            return;
+
+        }
+
+
+        state.historyIndex--;
+
+        restoreSnapshot(
+            state.history[
+                state.historyIndex
+            ]
+        );
+
+        scheduleSave();
+
+    }
+
+
+    function redo() {
+
+        if (
+            state.historyIndex >=
+            state.history.length - 1
+        ) {
+
+            showToast(
+                "Nada que rehacer"
+            );
+
+            return;
+
+        }
+
+
+        state.historyIndex++;
+
+        restoreSnapshot(
+            state.history[
+                state.historyIndex
+            ]
+        );
+
+        scheduleSave();
+
+    }
+
+
+    /* =========================================================
+       ZOOM
+    ========================================================= */
+
+    function applyZoom() {
+
+        if (!canvasStage) return;
+
+        canvasStage.style.setProperty(
+            "--canvas-zoom",
+            state.zoom
+        );
+
+
+        if (zoomValue) {
+
+            zoomValue.textContent =
+                `${Math.round(
+                    state.zoom * 100
+                )}%`;
+
+        }
+
+    }
+
+
+    function setZoom(value) {
+
+        state.zoom =
+            clamp(
+                Number(value),
+                ZOOM_MIN,
+                ZOOM_MAX
+            );
+
+        applyZoom();
+
+    }
+
+
+    function zoomIn() {
+
+        setZoom(
+            state.zoom + 0.1
+        );
+
+    }
+
+
+    function zoomOut() {
+
+        setZoom(
+            state.zoom - 0.1
+        );
+
+    }
+
+
+    function resetZoom() {
+
+        setZoom(1);
+
+    }
+
+
+    /* =========================================================
+       WALLPAPER
+    ========================================================= */
+
+    const wallpaperPresets = {
+
+        black: {
+
+            background:
+                "radial-gradient(circle at 50% 30%, rgba(255,255,255,.055), transparent 34%), linear-gradient(135deg,#020203,#08090b 52%,#020203)"
+
+        },
+
+        silver: {
+
+            background:
+                "radial-gradient(circle at 30% 25%, rgba(255,255,255,.12), transparent 30%), linear-gradient(135deg,#08090b,#1a1d21 48%,#050506)"
+
+        },
+
+        blue: {
+
+            background:
+                "radial-gradient(circle at 30% 20%, rgba(80,120,255,.16), transparent 32%), linear-gradient(135deg,#020307,#080d18 55%,#020204)"
+
+        },
+
+        violet: {
+
+            background:
+                "radial-gradient(circle at 65% 20%, rgba(145,90,255,.15), transparent 30%), linear-gradient(135deg,#050307,#100918 55%,#020203)"
+
+        }
+
+    };
+
+
+    function applyWallpaper() {
+
+        const preset =
+            wallpaperPresets[
+                state.wallpaper
+            ] ||
+            wallpaperPresets.black;
+
+
+        if (wallpaper) {
+
+            wallpaper.style.background =
+                preset.background;
+
+        }
+
+
+        $$("[data-wallpaper]").forEach(
+            button => {
+
+                button.classList.toggle(
+                    "active",
+                    button.dataset.wallpaper ===
+                    state.wallpaper
+                );
+
+            }
+        );
+
+    }
+
+
+    function setWallpaper(name) {
+
+        if (
+            !wallpaperPresets[name]
+        ) {
+            return;
+        }
+
+
+        state.wallpaper =
+            name;
+
+        applyWallpaper();
+
+        captureHistory();
+
+        scheduleSave();
+
+    }
+
+
+    /* =========================================================
+       HUMO
+    ========================================================= */
+
+    function applySmoke() {
+
+        document.body.classList.toggle(
+            "smoke-disabled",
+            !state.smoke
+        );
+
+
+        if (smokeToggle) {
+
+            smokeToggle.checked =
+                state.smoke;
+
+        }
+
+    }
+
+
+    function setSmoke(enabled) {
+
+        state.smoke =
+            Boolean(enabled);
+
+        applySmoke();
+
+        captureHistory();
+
+        scheduleSave();
+
+    }
+
+
+    /* =========================================================
+       MOVIMIENTO
+    ========================================================= */
+
+    function applyMotion() {
+
+        document.body.classList.toggle(
+            "motion-disabled",
+            !state.motion
+        );
+
+
+        if (motionToggle) {
+
+            motionToggle.checked =
+                state.motion;
+
+        }
+
+
+        if (
+            window.PluginDexOptimization
+        ) {
+
+            window.PluginDexOptimization
+                .setEffects({
+                    motion: state.motion
+                });
+
+        }
+
+    }
+
+
+    function setMotion(enabled) {
+
+        state.motion =
+            Boolean(enabled);
+
+        applyMotion();
+
+        captureHistory();
+
+        scheduleSave();
+
+    }
+
+
+    /* =========================================================
+       SELECCIÓN
+    ========================================================= */
+
+    function selectElement(element) {
+
+        getElements().forEach(
+            item => {
+
+                item.classList.toggle(
+                    "selected",
+                    item === element
+                );
+
+            }
+        );
+
+
+        state.selected =
+            element || null;
+
+
+        if (!element) {
+
+            showEmptyInspector();
+
+            updateLayerSelection(
+                null
+            );
+
+            return;
+
+        }
+
+
+        showInspector(
+            element
+        );
+
+        updateLayerSelection(
+            element
+        );
+
+    }
+
+
+    function showEmptyInspector() {
+
+        if (inspector) {
+
+            inspector.classList.remove(
+                "visible"
+            );
+
+        }
+
+
+        if (inspectorEmpty) {
+
+            inspectorEmpty.hidden =
+                false;
+
+        }
+
+
+        if (inspectorProperties) {
+
+            inspectorProperties.hidden =
+                true;
+
+        }
+
+    }
+
+
+    function showInspector(element) {
+
+        if (inspector) {
+
+            inspector.classList.add(
+                "visible"
+            );
+
+        }
+
+
+        if (inspectorEmpty) {
+
+            inspectorEmpty.hidden =
+                true;
+
+        }
+
+
+        if (inspectorProperties) {
+
+            inspectorProperties.hidden =
+                false;
+
+        }
+
+
+        const type =
+            element.dataset.elementType ||
+            "element";
+
+
+        const names = {
+
+            heading: "Título",
+
+            text: "Texto",
+
+            button: "Botón",
+
+            image: "Imagen"
+
+        };
+
+
+        if (selectedElementName) {
+
+            selectedElementName.textContent =
+                names[type] ||
+                "Elemento";
+
+        }
+
+
+        const opacity =
+            parseFloat(
+                element.style.opacity ||
+                "1"
+            );
+
+
+        const scale =
+            parseFloat(
+                element.dataset.scale ||
+                "1"
+            );
+
+
+        if (opacityRange) {
+
+            opacityRange.value =
+                Math.round(
+                    opacity * 100
+                );
+
+        }
+
+
+        if (opacityValue) {
+
+            opacityValue.textContent =
+                `${Math.round(
+                    opacity * 100
+                )}%`;
+
+        }
+
+
+        if (scaleRange) {
+
+            scaleRange.value =
+                Math.round(
+                    scale * 100
+                );
+
+        }
+
+
+        if (scaleValue) {
+
+            scaleValue.textContent =
+                `${Math.round(
+                    scale * 100
+                )}%`;
+
+        }
+
+
+        updateColorButtons(
+            element.dataset.color
+        );
+
+    }
+
+
+    function updateColorButtons(color) {
+
+        $$(".color-chip").forEach(
+            chip => {
+
+                chip.classList.toggle(
+                    "active",
+                    chip.dataset.color ===
+                    color
+                );
+
+            }
+        );
+
+
+        if (
+            customColor &&
+            color
+        ) {
+
+            try {
+
+                customColor.value =
+                    color;
+
+            } catch {
+
+                // Color inválido.
+            }
+
+        }
+
+    }
+
+
+    /* =========================================================
+       CAPAS
+    ========================================================= */
+
+    function updateLayerSelection(
+        element
+    ) {
+
+        const id =
+            getElementId(element);
+
+
+        $$("[data-layer-select]").forEach(
+            layer => {
+
+                layer.classList.toggle(
+                    "active",
+                    layer.dataset.layerSelect ===
+                    id
+                );
+
+            }
+        );
+
+    }
+
+
+    function selectLayer(id) {
+
+        const element =
+            getElements().find(
+                item =>
+                    item.dataset.elementId ===
+                    id
+            );
+
+
+        if (element) {
 
             selectElement(
                 element
             );
 
         }
-    );
+
+    }
 
 
-    element.addEventListener(
-        "dblclick",
-        event => {
+    /* =========================================================
+       ELEMENTOS
+    ========================================================= */
 
-            event.stopPropagation();
+    function nextElementId(type) {
 
-            if (
-                element.dataset.type ===
-                "image"
-            ) {
-                return;
-            }
+        state.elementCounter++;
 
-            const old =
-                element.textContent.trim();
+        return `${type}-${state.elementCounter}`;
 
-            const value =
-                prompt(
-                    "Editar texto",
-                    old
-                );
+    }
 
-            if (
-                value === null ||
-                !value.trim()
-            ) {
-                return;
-            }
 
-            snapshot();
+    function getDefaultText(type) {
 
-            element.textContent =
-                value;
+        const texts = {
 
-            saveProject();
+            heading:
+                "Nuevo título",
+
+            text:
+                "Nuevo texto",
+
+            button:
+                "Botón",
+
+            image:
+                "Imagen"
+
+        };
+
+
+        return (
+            texts[type] ||
+            "Elemento"
+        );
+
+    }
+
+
+    function createElement(
+        type,
+        options = {},
+        record = true
+    ) {
+
+        const validTypes = [
+            "heading",
+            "text",
+            "button",
+            "image"
+        ];
+
+
+        if (
+            !validTypes.includes(type)
+        ) {
+
+            return null;
 
         }
-    );
 
 
-    /* Drag desktop */
+        const id =
+            options.id ||
+            nextElementId(type);
 
-    element.addEventListener(
-        "dragstart",
-        () => {
 
-            state.draggingElement =
-                element;
+        const element =
+            document.createElement(
+                type === "button"
+                    ? "button"
+                    : "div"
+            );
 
-            element.classList.add(
-                "is-dragging"
+
+        element.className =
+            `page-element page-${type}`;
+
+
+        element.dataset.element =
+            "";
+
+        element.dataset.elementId =
+            id;
+
+        element.dataset.elementType =
+            type;
+
+
+        element.style.setProperty(
+            "--element-x",
+            `${Number(
+                options.x ?? 100
+            )}px`
+        );
+
+
+        element.style.setProperty(
+            "--element-y",
+            `${Number(
+                options.y ?? 100
+            )}px`
+        );
+
+
+        const opacity =
+            Number(
+                options.opacity ?? 1
+            );
+
+
+        const scale =
+            Number(
+                options.scale ?? 1
+            );
+
+
+        element.style.opacity =
+            clamp(
+                opacity,
+                0.2,
+                1
+            );
+
+
+        element.dataset.scale =
+            clamp(
+                scale,
+                0.5,
+                1.8
+            );
+
+
+        if (options.color) {
+
+            element.dataset.color =
+                options.color;
+
+        }
+
+
+        if (
+            type === "image"
+        ) {
+
+            element.innerHTML = `
+
+                <div class="generated-image-placeholder">
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                    >
+                        <rect
+                            x="4"
+                            y="5"
+                            width="16"
+                            height="14"
+                            rx="2"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                        />
+
+                        <circle
+                            cx="9"
+                            cy="10"
+                            r="1.5"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                        />
+
+                        <path
+                            d="m5 17 4-4 3 3 2-2 5 5"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+
+                    <span>
+                        ${escapeHTML(
+                            options.text ||
+                            "Imagen"
+                        )}
+                    </span>
+
+                </div>
+
+            `;
+
+        } else {
+
+            const span =
+                document.createElement(
+                    "span"
+                );
+
+            span.className =
+                "editable-text";
+
+            span.textContent =
+                options.text ||
+                getDefaultText(type);
+
+
+            element.appendChild(
+                span
             );
 
         }
-    );
 
 
-    element.addEventListener(
-        "dragend",
-        () => {
+        designPage.appendChild(
+            element
+        );
 
-            state.draggingElement =
-                null;
 
-            element.classList.remove(
-                "is-dragging"
+        setupElement(
+            element
+        );
+
+
+        if (record) {
+
+            captureHistory();
+
+            scheduleSave();
+
+        }
+
+
+        return element;
+
+    }
+
+
+    function setupElement(element) {
+
+        if (
+            element.dataset.initialized ===
+            "true"
+        ) {
+
+            return;
+
+        }
+
+
+        element.dataset.initialized =
+            "true";
+
+
+        element.addEventListener(
+            "pointerdown",
+            event => {
+
+                if (
+                    event.button !== 0 &&
+                    event.pointerType ===
+                    "mouse"
+                ) {
+                    return;
+                }
+
+
+                if (
+                    event.target.closest(
+                        "button"
+                    ) &&
+                    element.tagName !==
+                    "BUTTON"
+                ) {
+                    return;
+                }
+
+
+                event.stopPropagation();
+
+                selectElement(
+                    element
+                );
+
+            }
+        );
+
+
+        element.addEventListener(
+            "dblclick",
+            event => {
+
+                event.stopPropagation();
+
+                editElementText(
+                    element
+                );
+
+            }
+        );
+
+    }
+
+
+    function editElementText(element) {
+
+        const editable =
+            $(".editable-text", element);
+
+
+        if (!editable) {
+            return;
+        }
+
+
+        const current =
+            editable.textContent.trim();
+
+
+        const next =
+            window.prompt(
+                "Editar texto",
+                current
+            );
+
+
+        if (
+            next === null
+        ) {
+
+            return;
+
+        }
+
+
+        editable.textContent =
+            next;
+
+
+        captureHistory();
+
+        scheduleSave();
+
+        showToast(
+            "Texto actualizado"
+        );
+
+    }
+
+
+    /* =========================================================
+       INSPECTOR
+    ========================================================= */
+
+    function updateSelectedOpacity(
+        value
+    ) {
+
+        const element =
+            getSelected();
+
+
+        if (!element) return;
+
+
+        const opacity =
+            clamp(
+                Number(value) / 100,
+                0.2,
+                1
+            );
+
+
+        element.style.opacity =
+            opacity;
+
+
+        if (opacityValue) {
+
+            opacityValue.textContent =
+                `${Math.round(
+                    opacity * 100
+                )}%`;
+
+        }
+
+
+        scheduleSave();
+
+    }
+
+
+    function updateSelectedScale(
+        value
+    ) {
+
+        const element =
+            getSelected();
+
+
+        if (!element) return;
+
+
+        const scale =
+            clamp(
+                Number(value) / 100,
+                0.5,
+                1.8
+            );
+
+
+        element.dataset.scale =
+            scale;
+
+
+        element.style.setProperty(
+            "--element-scale",
+            scale
+        );
+
+
+        if (scaleValue) {
+
+            scaleValue.textContent =
+                `${Math.round(
+                    scale * 100
+                )}%`;
+
+        }
+
+
+        scheduleSave();
+
+    }
+
+
+    function updateSelectedColor(
+        color
+    ) {
+
+        const element =
+            getSelected();
+
+
+        if (!element) return;
+
+
+        element.dataset.color =
+            color;
+
+
+        element.style.setProperty(
+            "--element-color",
+            color
+        );
+
+
+        const type =
+            element.dataset.elementType;
+
+
+        if (
+            type === "heading" ||
+            type === "text"
+        ) {
+
+            element.style.color =
+                color;
+
+        }
+
+
+        if (
+            type === "button"
+        ) {
+
+            element.style.setProperty(
+                "--button-color",
+                color
             );
 
         }
-    );
 
 
-    element.addEventListener(
-        "dragover",
-        event => {
-
-            event.preventDefault();
-
-        }
-    );
+        updateColorButtons(
+            color
+        );
 
 
-    element.addEventListener(
-        "drop",
-        event => {
+        captureHistory();
 
-            event.preventDefault();
+        scheduleSave();
 
-            const source =
-                state.draggingElement;
+    }
 
-            if (
-                !source ||
-                source === element
-            ) {
-                return;
+
+    /* =========================================================
+       EVENTOS GENERALES
+    ========================================================= */
+
+    function setupGlobalEvents() {
+
+
+        /* -----------------------------------------------------
+           ACCIONES
+        ----------------------------------------------------- */
+
+        document.addEventListener(
+            "click",
+            event => {
+
+                const action =
+                    event.target.closest(
+                        "[data-action]"
+                    );
+
+
+                if (!action) {
+                    return;
+                }
+
+
+                const value =
+                    action.dataset.action;
+
+
+                switch (value) {
+
+                    case "add":
+
+                        if (
+                            window.PluginDexWindows
+                        ) {
+
+                            window.PluginDexWindows
+                                .open("elements");
+
+                        }
+
+                        break;
+
+
+                    case "undo":
+
+                        undo();
+
+                        break;
+
+
+                    case "redo":
+
+                        redo();
+
+                        break;
+
+
+                    case "zoom-in":
+
+                        zoomIn();
+
+                        break;
+
+
+                    case "zoom-out":
+
+                        zoomOut();
+
+                        break;
+
+
+                    case "zoom-reset":
+
+                        resetZoom();
+
+                        break;
+
+
+                    case "save":
+
+                        saveProject();
+
+                        break;
+
+
+                    case "reset-layout":
+
+                        if (
+                            window.PluginDexWindows
+                        ) {
+
+                            window.PluginDexWindows
+                                .reset();
+
+                        }
+
+                        break;
+
+
+                    case "preview":
+
+                        togglePreview();
+
+                        break;
+
+                }
+
             }
+        );
 
-            snapshot();
 
-            const rect =
-                element.getBoundingClientRect();
+        /* -----------------------------------------------------
+           CREAR ELEMENTOS
+        ----------------------------------------------------- */
 
-            if (
-                event.clientY >
-                rect.top +
-                rect.height / 2
-            ) {
+        document.addEventListener(
+            "click",
+            event => {
 
-                element.after(
-                    source
+                const button =
+                    event.target.closest(
+                        "[data-create-element]"
+                    );
+
+
+                if (!button) {
+                    return;
+                }
+
+
+                const type =
+                    button.dataset.createElement;
+
+
+                const element =
+                    createElement(
+                        type
+                    );
+
+
+                if (element) {
+
+                    selectElement(
+                        element
+                    );
+
+                    showToast(
+                        `${type} añadido`
+                    );
+
+                }
+
+            }
+        );
+
+
+        /* -----------------------------------------------------
+           CAPAS
+        ----------------------------------------------------- */
+
+        document.addEventListener(
+            "click",
+            event => {
+
+                const layer =
+                    event.target.closest(
+                        "[data-layer-select]"
+                    );
+
+
+                if (!layer) {
+                    return;
+                }
+
+
+                selectLayer(
+                    layer.dataset.layerSelect
                 );
 
-            } else {
+            }
+        );
 
-                element.before(
-                    source
+
+        /* -----------------------------------------------------
+           WALLPAPER
+        ----------------------------------------------------- */
+
+        document.addEventListener(
+            "click",
+            event => {
+
+                const button =
+                    event.target.closest(
+                        "[data-wallpaper]"
+                    );
+
+
+                if (!button) {
+                    return;
+                }
+
+
+                setWallpaper(
+                    button.dataset.wallpaper
                 );
 
             }
+        );
 
-            saveProject();
 
-        }
-    );
+        /* -----------------------------------------------------
+           OPACIDAD
+        ----------------------------------------------------- */
 
-}
+        if (opacityRange) {
 
+            opacityRange.addEventListener(
+                "input",
+                event => {
 
-function refreshElements() {
-
-    $$(".page-element")
-        .forEach(setupElement);
-
-}
-
-
-/* =========================================================
-   CREAR ELEMENTOS
-========================================================= */
-
-function createElement(type) {
-
-    if (!page) return;
-
-    snapshot();
-
-    let element;
-
-    if (type === "heading") {
-
-        element =
-            document.createElement("h1");
-
-        element.className =
-            "page-element page-heading";
-
-        element.textContent =
-            "Nuevo título";
-
-    }
-
-
-    else if (type === "text") {
-
-        element =
-            document.createElement("p");
-
-        element.className =
-            "page-element page-text";
-
-        element.textContent =
-            "Nuevo texto";
-
-    }
-
-
-    else if (type === "button") {
-
-        element =
-            document.createElement("button");
-
-        element.className =
-            "page-element page-button";
-
-        element.textContent =
-            "Nuevo botón";
-
-    }
-
-
-    else if (type === "image") {
-
-        element =
-            document.createElement("div");
-
-        element.className =
-            "page-element page-image";
-
-        element.textContent =
-            "Imagen";
-
-    }
-
-
-    else {
-
-        return;
-
-    }
-
-    element.dataset.type =
-        type;
-
-    page.appendChild(
-        element
-    );
-
-    setupElement(
-        element
-    );
-
-    selectElement(
-        element
-    );
-
-    saveProject();
-
-    closeAllSheets();
-
-}
-
-
-/* =========================================================
-   INSPECTOR
-========================================================= */
-
-function updateInspector() {
-
-    if (!inspector) return;
-
-    const selected =
-        state.selected;
-
-    inspector.classList.toggle(
-        "has-selection",
-        !!selected
-    );
-
-    if (!selected) return;
-
-    const opacity =
-        $("[data-opacity]", inspector);
-
-    const scale =
-        $("[data-scale]", inspector);
-
-    if (opacity) {
-
-        opacity.value =
-            selected.dataset.opacity ||
-            "1";
-
-    }
-
-    if (scale) {
-
-        scale.value =
-            selected.dataset.scale ||
-            "1";
-
-    }
-
-}
-
-
-/* =========================================================
-   OPACIDAD
-========================================================= */
-
-function setupOpacity() {
-
-    const input =
-        $("[data-opacity]");
-
-    if (!input) return;
-
-    input.addEventListener(
-        "input",
-        () => {
-
-            if (!state.selected)
-                return;
-
-            const value =
-                input.value;
-
-            state.selected.style.opacity =
-                value;
-
-            state.selected.dataset.opacity =
-                value;
-
-            saveProject();
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   ESCALA
-========================================================= */
-
-function setupScale() {
-
-    const input =
-        $("[data-scale]");
-
-    if (!input) return;
-
-    input.addEventListener(
-        "input",
-        () => {
-
-            if (!state.selected)
-                return;
-
-            const value =
-                input.value;
-
-            state.selected.style.transform =
-                `scale(${value})`;
-
-            state.selected.dataset.scale =
-                value;
-
-            saveProject();
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   COLOR
-========================================================= */
-
-function setupColors() {
-
-    $$(".color-chip")
-        .forEach(chip => {
-
-            chip.addEventListener(
-                "click",
-                () => {
-
-                    if (!state.selected)
-                        return;
-
-                    snapshot();
-
-                    state.selected.style.color =
-                        chip.dataset.color;
-
-                    saveProject();
+                    updateSelectedOpacity(
+                        event.target.value
+                    );
 
                 }
             );
 
-        });
+
+            opacityRange.addEventListener(
+                "change",
+                () => {
+
+                    captureHistory();
+
+                }
+            );
+
+        }
 
 
-    const picker =
-        $("[data-color-picker]");
+        /* -----------------------------------------------------
+           ESCALA
+        ----------------------------------------------------- */
 
-    if (picker) {
+        if (scaleRange) {
 
-        picker.addEventListener(
-            "input",
-            () => {
+            scaleRange.addEventListener(
+                "input",
+                event => {
 
-                if (!state.selected)
+                    updateSelectedScale(
+                        event.target.value
+                    );
+
+                }
+            );
+
+
+            scaleRange.addEventListener(
+                "change",
+                () => {
+
+                    captureHistory();
+
+                }
+            );
+
+        }
+
+
+        /* -----------------------------------------------------
+           COLOR
+        ----------------------------------------------------- */
+
+        document.addEventListener(
+            "click",
+            event => {
+
+                const chip =
+                    event.target.closest(
+                        ".color-chip"
+                    );
+
+
+                if (!chip) {
+                    return;
+                }
+
+
+                updateSelectedColor(
+                    chip.dataset.color
+                );
+
+            }
+        );
+
+
+        if (customColor) {
+
+            customColor.addEventListener(
+                "input",
+                event => {
+
+                    updateSelectedColor(
+                        event.target.value
+                    );
+
+                }
+            );
+
+        }
+
+
+        /* -----------------------------------------------------
+           HUMO
+        ----------------------------------------------------- */
+
+        if (smokeToggle) {
+
+            smokeToggle.addEventListener(
+                "change",
+                event => {
+
+                    setSmoke(
+                        event.target.checked
+                    );
+
+                }
+            );
+
+        }
+
+
+        /* -----------------------------------------------------
+           MOVIMIENTO
+        ----------------------------------------------------- */
+
+        if (motionToggle) {
+
+            motionToggle.addEventListener(
+                "change",
+                event => {
+
+                    setMotion(
+                        event.target.checked
+                    );
+
+                }
+            );
+
+        }
+
+
+        /* -----------------------------------------------------
+           CLICK EN CANVAS
+        ----------------------------------------------------- */
+
+        if (designPage) {
+
+            designPage.addEventListener(
+                "pointerdown",
+                event => {
+
+                    if (
+                        event.target ===
+                        designPage
+                    ) {
+
+                        selectElement(
+                            null
+                        );
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        /* -----------------------------------------------------
+           WHEEL ZOOM
+        ----------------------------------------------------- */
+
+        if (canvasStage) {
+
+            canvasStage.addEventListener(
+                "wheel",
+                event => {
+
+                    if (
+                        !event.ctrlKey &&
+                        !event.metaKey
+                    ) {
+                        return;
+                    }
+
+
+                    event.preventDefault();
+
+
+                    const amount =
+                        event.deltaY > 0
+                            ? -0.05
+                            : 0.05;
+
+
+                    setZoom(
+                        state.zoom +
+                        amount
+                    );
+
+                },
+                {
+                    passive: false
+                }
+            );
+
+        }
+
+
+        /* -----------------------------------------------------
+           TECLADO
+        ----------------------------------------------------- */
+
+        document.addEventListener(
+            "keydown",
+            event => {
+
+                const modifier =
+                    event.ctrlKey ||
+                    event.metaKey;
+
+
+                if (
+                    modifier &&
+                    event.key.toLowerCase() ===
+                    "s"
+                ) {
+
+                    event.preventDefault();
+
+                    saveProject();
+
                     return;
 
-                state.selected.style.color =
-                    picker.value;
+                }
 
-                saveProject();
+
+                if (
+                    modifier &&
+                    event.key.toLowerCase() ===
+                    "z"
+                ) {
+
+                    event.preventDefault();
+
+                    if (event.shiftKey) {
+
+                        redo();
+
+                    } else {
+
+                        undo();
+
+                    }
+
+                    return;
+
+                }
+
+
+                if (
+                    modifier &&
+                    event.key.toLowerCase() ===
+                    "y"
+                ) {
+
+                    event.preventDefault();
+
+                    redo();
+
+                    return;
+
+                }
+
+
+                if (
+                    event.key ===
+                    "Escape"
+                ) {
+
+                    selectElement(
+                        null
+                    );
+
+                }
 
             }
         );
 
     }
 
-}
+
+    /* =========================================================
+       PREVIEW
+    ========================================================= */
+
+    function togglePreview() {
+
+        state.preview =
+            !state.preview;
 
 
-/* =========================================================
-   SHEETS
-========================================================= */
-
-function openSheet(id) {
-
-    const sheet =
-        typeof id === "string"
-            ? document.getElementById(id)
-            : id;
-
-    if (!sheet) return;
-
-    closeAllSheets();
-
-    sheet.classList.add(
-        "open"
-    );
-
-    document.body.classList.add(
-        "sheet-open"
-    );
-
-}
-
-
-function closeSheet(sheet) {
-
-    if (!sheet) return;
-
-    sheet.classList.remove(
-        "open"
-    );
-
-}
-
-
-function closeAllSheets() {
-
-    $$(".sheet.open")
-        .forEach(sheet =>
-            sheet.classList.remove("open")
+        document.body.classList.toggle(
+            "preview-mode",
+            state.preview
         );
 
-    document.body.classList.remove(
-        "sheet-open"
-    );
 
-}
+        if (state.preview) {
 
+            showToast(
+                "Vista previa"
+            );
 
-/* =========================================================
-   SHEET BUTTONS
-========================================================= */
+        } else {
 
-function setupSheets() {
-
-    /*
-        Event delegation.
-        Así no importa si los botones
-        se crean dinámicamente.
-    */
-
-    document.addEventListener(
-        "click",
-        event => {
-
-            const open =
-                event.target.closest(
-                    "[data-open-sheet]"
-                );
-
-            if (open) {
-
-                event.preventDefault();
-
-                openSheet(
-                    open.dataset.openSheet
-                );
-
-                return;
-            }
-
-
-            const close =
-                event.target.closest(
-                    "[data-close-sheet]"
-                );
-
-            if (close) {
-
-                event.preventDefault();
-
-                closeSheet(
-                    close.closest(".sheet")
-                );
-
-                return;
-            }
-
-
-            const backdrop =
-                event.target.closest(
-                    ".sheet-backdrop"
-                );
-
-            if (backdrop) {
-
-                closeSheet(
-                    backdrop.closest(".sheet")
-                );
-
-            }
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   CREACIÓN DE ELEMENTOS
-========================================================= */
-
-function setupCreationButtons() {
-
-    document.addEventListener(
-        "click",
-        event => {
-
-            const button =
-                event.target.closest(
-                    "[data-create-element]"
-                );
-
-            if (!button) return;
-
-            event.preventDefault();
-
-            createElement(
-                button.dataset.createElement
+            showToast(
+                "Editor"
             );
 
         }
-    );
 
-}
+    }
 
 
-/* =========================================================
-   WALLPAPER BUTTONS
-========================================================= */
+    /* =========================================================
+       ARRASTRE DE ELEMENTOS
+    ========================================================= */
 
-function setupWallpaperButtons() {
+    let elementDrag = null;
 
-    document.addEventListener(
-        "click",
-        event => {
+    let elementDragFrame = 0;
 
-            const button =
-                event.target.closest(
-                    "[data-wallpaper]"
+
+    function setupElementDragging() {
+
+        if (!designPage) {
+            return;
+        }
+
+
+        designPage.addEventListener(
+            "pointerdown",
+            event => {
+
+                const element =
+                    event.target.closest(
+                        ".page-element"
+                    );
+
+
+                if (!element) {
+                    return;
+                }
+
+
+                if (
+                    event.pointerType ===
+                    "mouse" &&
+                    event.button !== 0
+                ) {
+                    return;
+                }
+
+
+                if (
+                    event.target.closest(
+                        "button"
+                    ) &&
+                    element.tagName !==
+                    "BUTTON"
+                ) {
+                    return;
+                }
+
+
+                const rect =
+                    element.getBoundingClientRect();
+
+
+                const pageRect =
+                    designPage.getBoundingClientRect();
+
+
+                const zoom =
+                    state.zoom;
+
+
+                const startX =
+                    event.clientX;
+
+
+                const startY =
+                    event.clientY;
+
+
+                const startLeft =
+                    parseFloat(
+                        element.style.getPropertyValue(
+                            "--element-x"
+                        )
+                    ) || 0;
+
+
+                const startTop =
+                    parseFloat(
+                        element.style.getPropertyValue(
+                            "--element-y"
+                        )
+                    ) || 0;
+
+
+                elementDrag = {
+
+                    element,
+
+                    startX,
+
+                    startY,
+
+                    startLeft,
+
+                    startTop,
+
+                    zoom,
+
+                    currentX: startX,
+
+                    currentY: startY
+
+                };
+
+
+                selectElement(
+                    element
                 );
 
-            if (!button) return;
 
-            event.preventDefault();
+                element.classList.add(
+                    "is-dragging"
+                );
 
-            applyWallpaper(
-                button.dataset.wallpaper
+
+                element.setPointerCapture(
+                    event.pointerId
+                );
+
+
+                event.preventDefault();
+
+            }
+        );
+
+
+        designPage.addEventListener(
+            "pointermove",
+            event => {
+
+                if (!elementDrag) {
+                    return;
+                }
+
+
+                elementDrag.currentX =
+                    event.clientX;
+
+                elementDrag.currentY =
+                    event.clientY;
+
+
+                if (
+                    elementDragFrame
+                ) {
+                    return;
+                }
+
+
+                elementDragFrame =
+                    requestAnimationFrame(
+                        updateElementDrag
+                    );
+
+            }
+        );
+
+
+        designPage.addEventListener(
+            "pointerup",
+            finishElementDrag
+        );
+
+
+        designPage.addEventListener(
+            "pointercancel",
+            finishElementDrag
+        );
+
+    }
+
+
+    function updateElementDrag() {
+
+        elementDragFrame = 0;
+
+
+        if (!elementDrag) {
+            return;
+        }
+
+
+        const drag =
+            elementDrag;
+
+
+        const dx =
+            (
+                drag.currentX -
+                drag.startX
+            ) / drag.zoom;
+
+
+        const dy =
+            (
+                drag.currentY -
+                drag.startY
+            ) / drag.zoom;
+
+
+        const x =
+            drag.startLeft +
+            dx;
+
+
+        const y =
+            drag.startTop +
+            dy;
+
+
+        drag.element.style.setProperty(
+            "--element-x",
+            `${x}px`
+        );
+
+
+        drag.element.style.setProperty(
+            "--element-y",
+            `${y}px`
+        );
+
+    }
+
+
+    function finishElementDrag() {
+
+        if (!elementDrag) {
+            return;
+        }
+
+
+        if (elementDragFrame) {
+
+            cancelAnimationFrame(
+                elementDragFrame
             );
 
-            closeAllSheets();
+            elementDragFrame = 0;
+
+            updateElementDrag();
 
         }
-    );
-
-}
 
 
-/* =========================================================
-   TOGGLES
-========================================================= */
-
-function setupToggles() {
-
-    document.addEventListener(
-        "click",
-        event => {
-
-            const smoke =
-                event.target.closest(
-                    "[data-smoke-toggle]"
-                );
-
-            if (smoke) {
-
-                setSmoke(
-                    !state.smoke
-                );
-
-                return;
-            }
+        const element =
+            elementDrag.element;
 
 
-            const motion =
-                event.target.closest(
-                    "[data-motion-toggle]"
-                );
-
-            if (motion) {
-
-                setMotion(
-                    !state.motion
-                );
-
-            }
-
-        }
-    );
-
-}
+        element.classList.remove(
+            "is-dragging"
+        );
 
 
-/* =========================================================
-   ZOOM
-========================================================= */
+        elementDrag = null;
 
-function applyZoom() {
 
-    if (!page) return;
+        captureHistory();
 
-    page.style.setProperty(
-        "--page-scale",
-        state.zoom
-    );
-
-    /*
-       Si el CSS utiliza transform directamente,
-       conservamos compatibilidad.
-    */
-
-    if (
-        !page.dataset.customTransform
-    ) {
-
-        page.style.transform =
-            `scale(${state.zoom})`;
+        scheduleSave();
 
     }
 
-    const display =
-        $("[data-zoom-value]");
 
-    if (display) {
+    /* =========================================================
+       INICIALIZACIÓN DE ELEMENTOS
+    ========================================================= */
 
-        display.textContent =
-            `${Math.round(
-                state.zoom * 100
-            )}%`;
+    function initializeElements() {
+
+        getElements().forEach(
+            setupElement
+        );
 
     }
 
-}
+
+    /* =========================================================
+       ESTADO INICIAL
+    ========================================================= */
+
+    function createInitialHistory() {
+
+        state.history = [
+            JSON.stringify(
+                serializeProject()
+            )
+        ];
+
+        state.historyIndex = 0;
+
+    }
 
 
-function setupZoom() {
+    /* =========================================================
+       OPTIMIZACIÓN
+    ========================================================= */
 
-    document.addEventListener(
-        "click",
-        event => {
+    function connectOptimization() {
 
-            const button =
-                event.target.closest(
-                    "[data-zoom]"
+        if (
+            !window.PluginDexOptimization
+        ) {
+
+            return;
+
+        }
+
+
+        window.PluginDexOptimization
+            .init?.();
+
+    }
+
+
+    /* =========================================================
+       VENTANAS
+    ========================================================= */
+
+    function connectWindows() {
+
+        if (
+            !window.PluginDexWindows
+        ) {
+
+            console.warn(
+                "[PluginDex] Motor de ventanas no encontrado."
+            );
+
+            return;
+
+        }
+
+
+        window.PluginDexWindows.init?.({
+
+            container:
+                workspace
+
+        });
+
+    }
+
+
+    /* =========================================================
+       RESIZE
+    ========================================================= */
+
+    let resizeTimer = 0;
+
+
+    function setupResize() {
+
+        window.addEventListener(
+            "resize",
+            () => {
+
+                clearTimeout(
+                    resizeTimer
                 );
 
-            if (!button) return;
 
-            const action =
-                button.dataset.zoom;
+                resizeTimer =
+                    setTimeout(() => {
 
-            if (action === "in") {
+                        applyZoom();
 
-                state.zoom =
-                    clamp(
-                        state.zoom + .1,
-                        .4,
-                        2.5
-                    );
+                    }, 120);
 
+            },
+            {
+                passive: true
             }
+        );
 
-            else if (action === "out") {
+    }
 
-                state.zoom =
-                    clamp(
-                        state.zoom - .1,
-                        .4,
-                        2.5
-                    );
 
-            }
+    /* =========================================================
+       ESTADO DE RENDIMIENTO
+    ========================================================= */
 
-            else if (action === "reset") {
+    function updatePerformanceLabel() {
 
-                state.zoom = 1;
+        const label =
+            $("#performanceStatus");
 
-            }
 
-            applyZoom();
+        if (
+            !label ||
+            !window.PluginDexOptimization
+        ) {
+            return;
+        }
+
+
+        const lowEnd =
+            window.PluginDexOptimization
+                .isLowEnd?.();
+
+
+        label.textContent =
+            lowEnd
+                ? "Modo eficiente activo"
+                : "Optimización automática activa";
+
+    }
+
+
+    /* =========================================================
+       INICIO
+    ========================================================= */
+
+    function init() {
+
+        if (!app) {
+
+            console.error(
+                "[PluginDex] App no encontrada."
+            );
+
+            return;
+
+        }
+
+
+        const loaded =
+            loadProject();
+
+
+        initializeElements();
+
+
+        setupGlobalEvents();
+
+        setupElementDragging();
+
+        setupResize();
+
+
+        applyZoom();
+
+        applyWallpaper();
+
+        applySmoke();
+
+        applyMotion();
+
+
+        if (!loaded) {
+
+            createInitialHistory();
+
+        } else {
+
+            createInitialHistory();
+
+        }
+
+
+        /*
+         * El inspector permanece oculto
+         * hasta seleccionar un elemento.
+         */
+
+        selectElement(
+            null
+        );
+
+
+        connectOptimization();
+
+        connectWindows();
+
+        updatePerformanceLabel();
+
+
+        /*
+         * Guardado inicial silencioso.
+         */
+
+        saveProject(true);
+
+
+        console.log(
+            "[PluginDex] Interface Engine iniciado."
+        );
+
+    }
+
+
+    /* =========================================================
+       API PÚBLICA
+    ========================================================= */
+
+    window.PluginDexApp = {
+
+        getState() {
+
+            return {
+                ...state
+            };
+
+        },
+
+        save() {
 
             saveProject();
 
-        }
-    );
-
-
-    canvas?.addEventListener(
-        "wheel",
-        event => {
-
-            if (!event.ctrlKey)
-                return;
-
-            event.preventDefault();
-
-            state.zoom =
-                clamp(
-                    state.zoom -
-                    event.deltaY * .001,
-                    .4,
-                    2.5
-                );
-
-            applyZoom();
-
         },
-        {
-            passive: false
-        }
-    );
 
-}
+        undo,
 
+        redo,
 
-/* =========================================================
-   PREVIEW
-========================================================= */
+        zoomIn,
 
-function setupPreview() {
+        zoomOut,
 
-    document.addEventListener(
-        "click",
-        event => {
+        resetZoom,
 
-            const button =
-                event.target.closest(
-                    "[data-preview]"
-                );
+        selectElement,
 
-            if (!button) return;
+        createElement,
 
-            event.preventDefault();
+        setWallpaper,
 
-            const enabled =
-                !document.body.classList.contains(
-                    "preview-mode"
-                );
+        setSmoke,
 
-            document.body.classList.toggle(
-                "preview-mode",
-                enabled
-            );
+        setMotion,
 
-            clearSelection();
+        togglePreview
 
-            showToast(
-                enabled
-                    ? "Vista previa"
-                    : "Editor"
-            );
+    };
 
-        }
-    );
 
-}
-
-
-/* =========================================================
-   NAVEGACIÓN
-========================================================= */
-
-function setupNavigation() {
-
-    document.addEventListener(
-        "click",
-        event => {
-
-            const button =
-                event.target.closest(
-                    "[data-view]"
-                );
-
-            if (!button) return;
-
-            event.preventDefault();
-
-            $$("[data-view]")
-                .forEach(
-                    item =>
-                        item.classList.remove(
-                            "active"
-                        )
-                );
-
-            button.classList.add(
-                "active"
-            );
-
-            const view =
-                button.dataset.view;
-
-            document.body.dataset.view =
-                view;
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   GUARDAR MANUAL
-========================================================= */
-
-function setupSave() {
-
-    document.addEventListener(
-        "click",
-        event => {
-
-            const button =
-                event.target.closest(
-                    "[data-save]"
-                );
-
-            if (!button) return;
-
-            event.preventDefault();
-
-            localStorage.setItem(
-                STORAGE,
-                JSON.stringify({
-                    html:
-                        page?.innerHTML || "",
-
-                    wallpaper:
-                        state.wallpaper,
-
-                    smoke:
-                        state.smoke,
-
-                    motion:
-                        state.motion,
-
-                    zoom:
-                        state.zoom
-                })
-            );
-
-            showToast(
-                "Proyecto guardado"
-            );
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   CANVAS
-========================================================= */
-
-function setupCanvas() {
-
-    canvas?.addEventListener(
-        "click",
-        event => {
-
-            if (
-                event.target === canvas ||
-                event.target.classList.contains(
-                    "canvas-stage"
-                ) ||
-                event.target.classList.contains(
-                    "design-page"
-                )
-            ) {
-
-                clearSelection();
-
-            }
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   TECLADO
-========================================================= */
-
-function setupKeyboard() {
-
-    document.addEventListener(
-        "keydown",
-        event => {
-
-            const modifier =
-                event.ctrlKey ||
-                event.metaKey;
-
-            if (
-                modifier &&
-                event.key.toLowerCase() === "z"
-            ) {
-
-                event.preventDefault();
-
-                event.shiftKey
-                    ? redo()
-                    : undo();
-
-                return;
-            }
-
-
-            if (
-                modifier &&
-                event.key.toLowerCase() === "y"
-            ) {
-
-                event.preventDefault();
-
-                redo();
-
-                return;
-            }
-
-
-            if (
-                modifier &&
-                event.key.toLowerCase() === "s"
-            ) {
-
-                event.preventDefault();
-
-                localStorage.setItem(
-                    STORAGE,
-                    JSON.stringify({
-                        html:
-                            page?.innerHTML || "",
-                        wallpaper:
-                            state.wallpaper,
-                        smoke:
-                            state.smoke,
-                        motion:
-                            state.motion,
-                        zoom:
-                            state.zoom
-                    })
-                );
-
-                showToast(
-                    "Proyecto guardado"
-                );
-
-                return;
-            }
-
-
-            if (
-                event.key === "Escape"
-            ) {
-
-                closeAllSheets();
-
-                document.body.classList.remove(
-                    "preview-mode"
-                );
-
-                clearSelection();
-
-            }
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   OPTIMIZACIÓN DE DISPOSITIVO
-========================================================= */
-
-function optimizeDevice() {
-
-    /*
-       No cambiamos el diseño.
-
-       Solo evitamos efectos innecesarios
-       en dispositivos muy limitados.
-    */
-
-    const cores =
-        navigator.hardwareConcurrency || 4;
-
-    const memory =
-        navigator.deviceMemory || 4;
-
-    const lowEnd =
-        cores <= 4 &&
-        memory <= 4;
-
-
-    if (lowEnd) {
-
-        document.body.classList.add(
-            "low-end-device"
-        );
-
-    }
-
-
-    /*
-       Touch = menos parallax global.
-    */
+    /* =========================================================
+       DOM READY
+    ========================================================= */
 
     if (
-        window.matchMedia(
-            "(pointer: coarse)"
-        ).matches
+        document.readyState ===
+        "loading"
     ) {
 
-        document.body.classList.add(
-            "touch-device"
+        document.addEventListener(
+            "DOMContentLoaded",
+            init,
+            {
+                once: true
+            }
         );
+
+    } else {
+
+        init();
 
     }
 
-}
-
-
-/* =========================================================
-   RESIZE
-========================================================= */
-
-let resizeTimer;
-
-function setupResize() {
-
-    window.addEventListener(
-        "resize",
-        () => {
-
-            clearTimeout(
-                resizeTimer
-            );
-
-            resizeTimer =
-                setTimeout(
-                    applyZoom,
-                    100
-                );
-
-        },
-        {
-            passive: true
-        }
-    );
-
-}
-
-
-/* =========================================================
-   INICIO
-========================================================= */
-
-function init() {
-
-    loadProject();
-
-    document.body.dataset.wallpaper =
-        state.wallpaper;
-
-    document.body.classList.toggle(
-        "no-smoke",
-        !state.smoke
-    );
-
-    document.body.classList.toggle(
-        "no-motion",
-        !state.motion
-    );
-
-
-    optimizeDevice();
-
-    refreshElements();
-
-    snapshot();
-
-
-    setupParallax();
-
-    setupAllGlass();
-
-    setupSheets();
-
-    setupCreationButtons();
-
-    setupWallpaperButtons();
-
-    setupToggles();
-
-    setupOpacity();
-
-    setupScale();
-
-    setupColors();
-
-    setupZoom();
-
-    setupPreview();
-
-    setupNavigation();
-
-    setupSave();
-
-    setupCanvas();
-
-    setupKeyboard();
-
-    setupResize();
-
-
-    applyZoom();
-
-    updateInspector();
-
-}
-
-
-if (
-    document.readyState === "loading"
-) {
-
-    document.addEventListener(
-        "DOMContentLoaded",
-        init
-    );
-
-} else {
-
-    init();
-
-}
+})();
