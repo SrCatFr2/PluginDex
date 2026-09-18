@@ -1862,3 +1862,1885 @@ button:disabled {
         font-size: 8px;
     }
 }
+/* =========================================================
+   PLUGINDEX — STYLE.CSS
+   BLOQUE 6/8
+   INSPECTOR · ELEMENTS · LAYERS · DESIGN · PROPERTIES
+   ========================================================= */
+
+
+/* =========================================================
+   64. INSPECTOR EMPTY
+   ========================================================= */
+
+.inspector-empty {
+    min-height: 170px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 9px;
+
+    padding: 24px;
+
+    text-align: center;
+
+    color: rgba(255,255,255,.34);
+}
+
+.inspector-empty::before {
+    content: "";
+    width: 42px;
+    height: 42px;
+
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.075),
+            rgba(255,255,255,.018)
+        );
+
+    border: 1px solid rgba(255,255,255,.065);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+.inspector-empty strong {
+    color: rgba(255,255,255,.58);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.inspector-empty span,
+.inspector-empty p {
+    max-width: 210px;
+    margin: 0;
+
+    color: rgba(255,255,255,.30);
+
+    font-size: 9px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   65. INSPECTOR PROPERTIES
+   ========================================================= */
+
+.inspector-properties {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.inspector-properties[hidden] {
+    display: none !important;
+}
+
+
+/* =========================================================
+   66. PROPERTY SECTION
+   ========================================================= */
+
+.property-section {
+    position: relative;
+
+    padding: 12px 0;
+
+    border-bottom:
+        1px solid rgba(255,255,255,.045);
+}
+
+.property-section:first-child {
+    padding-top: 2px;
+}
+
+.property-section:last-child {
+    border-bottom: 0;
+}
+
+.property-section-title,
+.property-label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: rgba(255,255,255,.37);
+
+    font-size: 8px;
+    font-weight: 750;
+
+    letter-spacing: .085em;
+    text-transform: uppercase;
+}
+
+
+/* =========================================================
+   67. SELECTED ELEMENT NAME
+   ========================================================= */
+
+.selected-element-name {
+    width: 100%;
+    min-height: 38px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 11px;
+
+    border-radius: 9px;
+
+    color: rgba(255,255,255,.78);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.065),
+            rgba(255,255,255,.018)
+        );
+
+    border:
+        1px solid rgba(255,255,255,.06);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.selected-element-name span,
+.selected-element-name strong {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    font-size: 10px;
+    font-weight: 650;
+}
+
+
+/* =========================================================
+   68. PROPERTY ROW
+   ========================================================= */
+
+.property-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    min-height: 34px;
+}
+
+.property-row + .property-row {
+    margin-top: 6px;
+}
+
+.property-row > label {
+    min-width: 0;
+
+    color: rgba(255,255,255,.48);
+
+    font-size: 9px;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   69. PROPERTY VALUE
+   ========================================================= */
+
+.property-value {
+    min-width: 42px;
+    height: 26px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 7px;
+
+    border-radius: 7px;
+
+    color: rgba(255,255,255,.58);
+
+    background:
+        rgba(0,0,0,.17);
+
+    border:
+        1px solid rgba(255,255,255,.045);
+
+    font-size: 9px;
+    font-weight: 700;
+
+    font-variant-numeric: tabular-nums;
+}
+
+
+/* =========================================================
+   70. RANGE INPUT
+   ========================================================= */
+
+.inspector-properties input[type="range"] {
+    appearance: none;
+    -webkit-appearance: none;
+
+    width: 100%;
+    height: 22px;
+
+    margin: 0;
+
+    background: transparent;
+
+    cursor: pointer;
+}
+
+.inspector-properties input[type="range"]::-webkit-slider-runnable-track {
+    height: 4px;
+
+    border-radius: 999px;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(255,255,255,.22),
+            rgba(255,255,255,.075)
+        );
+
+    border:
+        1px solid rgba(255,255,255,.035);
+}
+
+.inspector-properties input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+
+    width: 15px;
+    height: 15px;
+
+    margin-top: -6px;
+
+    border-radius: 50%;
+
+    background:
+        linear-gradient(
+            145deg,
+            #f3f5f7,
+            #9da4ac
+        );
+
+    border:
+        1px solid rgba(255,255,255,.5);
+
+    box-shadow:
+        0 3px 9px rgba(0,0,0,.32),
+        0 0 0 3px rgba(255,255,255,.035);
+
+    transition:
+        transform 120ms ease,
+        box-shadow 120ms ease;
+}
+
+.inspector-properties input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.12);
+
+    box-shadow:
+        0 4px 12px rgba(0,0,0,.38),
+        0 0 0 4px rgba(255,255,255,.045);
+}
+
+.inspector-properties input[type="range"]::-moz-range-track {
+    height: 4px;
+
+    border-radius: 999px;
+
+    background:
+        rgba(255,255,255,.10);
+}
+
+.inspector-properties input[type="range"]::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+
+    border-radius: 50%;
+
+    background:
+        linear-gradient(
+            145deg,
+            #f3f5f7,
+            #9da4ac
+        );
+
+    border:
+        1px solid rgba(255,255,255,.5);
+
+    box-shadow:
+        0 3px 9px rgba(0,0,0,.32);
+}
+
+
+/* =========================================================
+   71. COLOR GRID
+   ========================================================= */
+
+.color-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(6, minmax(0, 1fr));
+
+    gap: 6px;
+}
+
+.color-chip {
+    position: relative;
+
+    width: 100%;
+    aspect-ratio: 1;
+
+    padding: 0;
+
+    border-radius: 8px;
+
+    border:
+        1px solid rgba(255,255,255,.10);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.13),
+        0 3px 9px rgba(0,0,0,.16);
+
+    transition:
+        transform 140ms cubic-bezier(.22,1,.36,1),
+        border-color 140ms ease,
+        box-shadow 140ms ease;
+}
+
+.color-chip:hover {
+    transform: translateY(-1px) scale(1.04);
+
+    border-color:
+        rgba(255,255,255,.30);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.16),
+        0 6px 13px rgba(0,0,0,.24);
+}
+
+.color-chip:active {
+    transform: scale(.94);
+}
+
+.color-chip.active,
+.color-chip.selected,
+.color-chip[aria-selected="true"] {
+    border-color:
+        rgba(255,255,255,.75);
+
+    box-shadow:
+        0 0 0 2px rgba(255,255,255,.075),
+        0 5px 14px rgba(0,0,0,.22);
+}
+
+.color-chip.active::after,
+.color-chip.selected::after,
+.color-chip[aria-selected="true"]::after {
+    content: "";
+
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    width: 6px;
+    height: 6px;
+
+    border-radius: 50%;
+
+    transform: translate(-50%,-50%);
+
+    background: rgba(255,255,255,.9);
+
+    box-shadow:
+        0 0 8px rgba(255,255,255,.35);
+}
+
+
+/* =========================================================
+   72. CUSTOM COLOR
+   ========================================================= */
+
+.color-custom {
+    width: 100%;
+    min-height: 36px;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 5px 8px;
+
+    border-radius: 9px;
+
+    background:
+        rgba(255,255,255,.025);
+
+    border:
+        1px solid rgba(255,255,255,.055);
+}
+
+.color-custom input[type="color"] {
+    appearance: none;
+    -webkit-appearance: none;
+
+    width: 25px;
+    height: 25px;
+
+    padding: 0;
+
+    border: 0;
+    border-radius: 7px;
+
+    background: transparent;
+
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.color-custom input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.color-custom input[type="color"]::-webkit-color-swatch {
+    border:
+        1px solid rgba(255,255,255,.16);
+
+    border-radius: 6px;
+}
+
+.color-custom span {
+    color: rgba(255,255,255,.45);
+    font-size: 9px;
+}
+
+
+/* =========================================================
+   73. ELEMENT OPTIONS
+   ========================================================= */
+
+.element-options {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 7px;
+}
+
+
+/* =========================================================
+   74. ELEMENT OPTION
+   ========================================================= */
+
+.element-option {
+    position: relative;
+
+    min-width: 0;
+    min-height: 70px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+
+    padding: 9px;
+
+    border-radius: 11px;
+
+    text-align: left;
+
+    color: rgba(255,255,255,.72);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.055),
+            rgba(255,255,255,.015)
+        );
+
+    border:
+        1px solid rgba(255,255,255,.055);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.045);
+
+    transition:
+        transform 160ms cubic-bezier(.22,1,.36,1),
+        background 160ms ease,
+        border-color 160ms ease,
+        box-shadow 160ms ease;
+}
+
+.element-option:hover {
+    color: rgba(255,255,255,.94);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.09),
+            rgba(255,255,255,.025)
+        );
+
+    border-color:
+        rgba(255,255,255,.105);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.07),
+        0 7px 18px rgba(0,0,0,.15);
+
+    transform: translateY(-1px);
+}
+
+.element-option:active {
+    transform: scale(.97);
+}
+
+
+/* =========================================================
+   75. ELEMENT OPTION ICON
+   ========================================================= */
+
+.element-option-icon {
+    position: relative;
+
+    flex: 0 0 38px;
+
+    width: 38px;
+    height: 38px;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 10px;
+
+    color: rgba(255,255,255,.82);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.105),
+            rgba(255,255,255,.025)
+        );
+
+    border:
+        1px solid rgba(255,255,255,.075);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.075),
+        0 5px 12px rgba(0,0,0,.15);
+
+    font-size: 15px;
+    font-weight: 750;
+}
+
+.element-option-icon > svg,
+.element-option-icon svg {
+    width: 18px;
+    height: 18px;
+
+    min-width: 18px;
+    min-height: 18px;
+
+    display: block;
+
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+
+    flex: 0 0 auto;
+}
+
+
+/* =========================================================
+   76. ELEMENT OPTION TEXT
+   ========================================================= */
+
+.element-option > span:last-child {
+    min-width: 0;
+
+    display: flex;
+    flex: 1 1 auto;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    gap: 3px;
+}
+
+.element-option > span:last-child strong {
+    min-width: 0;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    color: rgba(255,255,255,.78);
+
+    font-size: 10px;
+    line-height: 1.1;
+
+    font-weight: 700;
+}
+
+.element-option > span:last-child small {
+    min-width: 0;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    color: rgba(255,255,255,.32);
+
+    font-size: 8px;
+    line-height: 1.1;
+
+    font-weight: 500;
+}
+
+
+/* =========================================================
+   77. LAYERS LIST
+   ========================================================= */
+
+.layers-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.layer-item {
+    position: relative;
+
+    min-height: 42px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 6px 8px;
+
+    border-radius: 9px;
+
+    color: rgba(255,255,255,.52);
+
+    background:
+        transparent;
+
+    border:
+        1px solid transparent;
+
+    transition:
+        color 150ms ease,
+        background 150ms ease,
+        border-color 150ms ease,
+        transform 150ms ease;
+}
+
+.layer-item:hover {
+    color: rgba(255,255,255,.82);
+
+    background:
+        rgba(255,255,255,.045);
+
+    border-color:
+        rgba(255,255,255,.045);
+}
+
+.layer-item.active,
+.layer-item.selected,
+.layer-item[aria-selected="true"] {
+    color: rgba(255,255,255,.92);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.075),
+            rgba(255,255,255,.02)
+        );
+
+    border-color:
+        rgba(255,255,255,.065);
+}
+
+.layer-item > svg,
+.layer-item svg {
+    width: 15px;
+    height: 15px;
+
+    min-width: 15px;
+    min-height: 15px;
+
+    display: block;
+
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.layer-item span {
+    min-width: 0;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    font-size: 9px;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   78. DESIGN OPTIONS
+   ========================================================= */
+
+.design-options,
+.background-options {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.design-options .property-row,
+.background-options .property-row {
+    min-height: 38px;
+
+    padding:
+        4px 7px;
+
+    border-radius: 9px;
+
+    background:
+        rgba(255,255,255,.018);
+
+    border:
+        1px solid rgba(255,255,255,.035);
+}
+
+
+/* =========================================================
+   79. GENERIC PROPERTY INPUTS
+   ========================================================= */
+
+.property input:not([type="range"]):not([type="color"]),
+.property select,
+.property textarea,
+.design-options input:not([type="range"]):not([type="color"]),
+.background-options input:not([type="range"]):not([type="color"]),
+.design-options select,
+.background-options select {
+    width: 100%;
+
+    min-height: 34px;
+
+    padding:
+        0 10px;
+
+    border-radius: 8px;
+
+    color: rgba(255,255,255,.72);
+
+    background:
+        rgba(0,0,0,.19);
+
+    border:
+        1px solid rgba(255,255,255,.055);
+
+    outline: none;
+
+    font-size: 9px;
+
+    transition:
+        border-color 150ms ease,
+        background 150ms ease,
+        box-shadow 150ms ease;
+}
+
+.property input:focus,
+.property select:focus,
+.property textarea:focus,
+.design-options input:focus,
+.background-options input:focus,
+.design-options select:focus,
+.background-options select:focus {
+    border-color:
+        rgba(255,255,255,.16);
+
+    background:
+        rgba(0,0,0,.24);
+
+    box-shadow:
+        0 0 0 3px rgba(255,255,255,.025);
+}
+
+
+/* =========================================================
+   80. SELECTS
+   ========================================================= */
+
+.property select,
+.design-options select,
+.background-options select {
+    appearance: none;
+    -webkit-appearance: none;
+
+    padding-right: 29px;
+
+    background-image:
+        linear-gradient(45deg, transparent 50%, rgba(255,255,255,.45) 50%),
+        linear-gradient(135deg, rgba(255,255,255,.45) 50%, transparent 50%);
+
+    background-position:
+        calc(100% - 13px) 14px,
+        calc(100% - 9px) 14px;
+
+    background-size:
+        4px 4px,
+        4px 4px;
+
+    background-repeat: no-repeat;
+}
+
+.property select option,
+.design-options select option,
+.background-options select option {
+    color: #15181c;
+    background: #f1f3f5;
+}
+
+
+/* =========================================================
+   81. SWITCH
+   ========================================================= */
+
+.switch {
+    position: relative;
+
+    width: 38px;
+    height: 22px;
+
+    flex: 0 0 38px;
+}
+
+.switch input {
+    position: absolute;
+
+    opacity: 0;
+
+    width: 1px;
+    height: 1px;
+}
+
+.switch span {
+    position: absolute;
+    inset: 0;
+
+    border-radius: 999px;
+
+    background:
+        rgba(255,255,255,.08);
+
+    border:
+        1px solid rgba(255,255,255,.08);
+
+    cursor: pointer;
+
+    transition:
+        background 180ms ease,
+        border-color 180ms ease;
+}
+
+.switch span::after {
+    content: "";
+
+    position: absolute;
+
+    width: 16px;
+    height: 16px;
+
+    left: 2px;
+    top: 2px;
+
+    border-radius: 50%;
+
+    background:
+        linear-gradient(
+            145deg,
+            #e7eaed,
+            #9da3aa
+        );
+
+    box-shadow:
+        0 3px 7px rgba(0,0,0,.28);
+
+    transition:
+        transform 180ms cubic-bezier(.22,1,.36,1);
+}
+
+.switch input:checked + span {
+    background:
+        rgba(210,220,230,.16);
+
+    border-color:
+        rgba(220,230,240,.20);
+}
+
+.switch input:checked + span::after {
+    transform:
+        translateX(16px);
+}
+
+
+/* =========================================================
+   82. MOBILE ELEMENT OPTIONS
+   ========================================================= */
+
+@media (max-width: 560px) {
+
+    .element-options {
+        gap: 6px;
+    }
+
+    .element-option {
+        min-height: 64px;
+        padding: 7px;
+        gap: 7px;
+    }
+
+    .element-option-icon {
+        width: 34px;
+        height: 34px;
+        flex-basis: 34px;
+        border-radius: 9px;
+    }
+
+    .element-option-icon > svg,
+    .element-option-icon svg {
+        width: 16px;
+        height: 16px;
+        min-width: 16px;
+        min-height: 16px;
+    }
+}
+
+/* =========================================================
+   PLUGINDEX — STYLE.CSS
+   BLOQUE 8/8
+   FINISHING · STATES · RESPONSIVE · PERFORMANCE
+   ========================================================= */
+
+
+/* =========================================================
+   91. INTERACTION POLISH
+   ========================================================= */
+
+button,
+.tool-item,
+.nav-item,
+.top-action,
+.profile-button,
+.window-control,
+.element-option,
+.layer-item,
+.color-chip,
+.wallpaper-option,
+.mobile-dock-item,
+.mobile-dock-add {
+    touch-action: manipulation;
+}
+
+button {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+button::selection {
+    background: transparent;
+}
+
+
+/* =========================================================
+   92. HOVER LIGHT
+   ========================================================= */
+
+.tool-item::after,
+.element-option::after,
+.layer-item::after,
+.settings-item::after {
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    border-radius: inherit;
+
+    pointer-events: none;
+
+    opacity: 0;
+
+    background:
+        radial-gradient(
+            circle at 30% 0%,
+            rgba(255,255,255,.07),
+            transparent 48%
+        );
+
+    transition:
+        opacity 180ms ease;
+}
+
+.tool-item:hover::after,
+.element-option:hover::after,
+.layer-item:hover::after,
+.settings-item:hover::after {
+    opacity: 1;
+}
+
+
+/* =========================================================
+   93. TOOL DOCK ACTIVE GLOW
+   ========================================================= */
+
+.tool-item.active::after,
+.tool-item[aria-selected="true"]::after {
+    opacity: 1;
+
+    background:
+        radial-gradient(
+            circle at 50% 20%,
+            rgba(255,255,255,.085),
+            transparent 60%
+        );
+}
+
+
+/* =========================================================
+   94. WINDOW ACTIVE FRONT
+   ========================================================= */
+
+.window[data-window-active="true"],
+.window.active-window,
+.window.is-front {
+    z-index: 900;
+}
+
+.window[data-window-active="true"] .window-title-icon,
+.window.active-window .window-title-icon {
+    color: rgba(255,255,255,.92);
+
+    border-color:
+        rgba(255,255,255,.12);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.09),
+        0 5px 15px rgba(0,0,0,.22);
+}
+
+
+/* =========================================================
+   95. WINDOW FOCUS
+   ========================================================= */
+
+.window:focus-within {
+    border-color:
+        rgba(255,255,255,.11);
+
+    box-shadow:
+        0 28px 75px rgba(0,0,0,.38),
+        0 7px 22px rgba(0,0,0,.24),
+        inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+
+/* =========================================================
+   96. RESIZE VISUAL
+   ========================================================= */
+
+.window[data-window-resizable="true"] {
+    resize: both;
+}
+
+.window[data-window-resizable="true"]::-webkit-resizer {
+    background:
+        linear-gradient(
+            135deg,
+            transparent 0 38%,
+            rgba(255,255,255,.18) 39% 48%,
+            transparent 49% 58%,
+            rgba(255,255,255,.12) 59% 68%,
+            transparent 69%
+        );
+}
+
+
+/* =========================================================
+   97. WINDOW MINIMIZED HEADER
+   ========================================================= */
+
+.window.minimized .window-header,
+.window.is-minimized .window-header,
+.window.window-minimized .window-header,
+.window[data-window-state="minimized"] .window-header {
+    border-bottom-color:
+        transparent;
+}
+
+.window.minimized .window-title-icon,
+.window.is-minimized .window-title-icon,
+.window.window-minimized .window-title-icon,
+.window[data-window-state="minimized"] .window-title-icon {
+    transform: scale(.92);
+}
+
+
+/* =========================================================
+   98. WINDOW CONTROL TOOLTIP
+   ========================================================= */
+
+.window-control[data-tooltip],
+.window-control[title] {
+    position: relative;
+}
+
+.window-control[data-tooltip]::after {
+    content: attr(data-tooltip);
+
+    position: absolute;
+
+    right: 0;
+    top: calc(100% + 7px);
+
+    z-index: 5000;
+
+    width: max-content;
+    max-width: 140px;
+
+    padding:
+        6px 8px;
+
+    border-radius: 7px;
+
+    opacity: 0;
+    visibility: hidden;
+
+    color: rgba(255,255,255,.72);
+
+    background:
+        rgba(12,13,15,.94);
+
+    border:
+        1px solid rgba(255,255,255,.08);
+
+    box-shadow:
+        0 9px 25px rgba(0,0,0,.35);
+
+    font-size: 8px;
+    font-weight: 600;
+
+    pointer-events: none;
+
+    transform:
+        translateY(-3px);
+
+    transition:
+        opacity 120ms ease,
+        visibility 120ms ease,
+        transform 120ms ease;
+}
+
+.window-control[data-tooltip]:hover::after {
+    opacity: 1;
+    visibility: visible;
+
+    transform:
+        translateY(0);
+}
+
+
+/* =========================================================
+   99. BUTTON PRESS DEPTH
+   ========================================================= */
+
+.top-action:active,
+.profile-button:active,
+.canvas-toolbar button:active,
+.window-control:active,
+.element-option:active,
+.tool-item:active,
+.mobile-dock-item:active,
+.mobile-dock-add:active {
+    box-shadow:
+        inset 0 1px 5px rgba(0,0,0,.22);
+}
+
+
+/* =========================================================
+   100. PAGE SELECTION OVERLAY
+   ========================================================= */
+
+.page-element.selected::after,
+.pd-element.selected::after,
+.page-element.active::after,
+.pd-element.active::after {
+    content: "";
+
+    position: absolute;
+
+    inset: -5px;
+
+    border:
+        1px solid rgba(70,105,160,.45);
+
+    border-radius: 3px;
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   101. ELEMENT HANDLE SUPPORT
+   ========================================================= */
+
+.selection-handle,
+.resize-handle,
+.editor-handle {
+    position: absolute;
+
+    width: 8px;
+    height: 8px;
+
+    border-radius: 2px;
+
+    background:
+        #ffffff;
+
+    border:
+        1px solid rgba(40,55,75,.55);
+
+    box-shadow:
+        0 2px 5px rgba(0,0,0,.20);
+
+    z-index: 2000;
+
+    pointer-events: auto;
+}
+
+.selection-handle:hover,
+.resize-handle:hover,
+.editor-handle:hover {
+    transform: scale(1.18);
+}
+
+
+/* =========================================================
+   102. CODE-LIKE TEXT SUPPORT
+   ========================================================= */
+
+code,
+.code,
+.code-text,
+.syntax-text {
+    font-family:
+        "SFMono-Regular",
+        "Cascadia Code",
+        "Roboto Mono",
+        Consolas,
+        monospace;
+}
+
+.syntax-keyword {
+    color: #c9a9ff;
+}
+
+.syntax-function {
+    color: #8fc7ff;
+}
+
+.syntax-string {
+    color: #a9d7ad;
+}
+
+.syntax-number {
+    color: #e4b98a;
+}
+
+.syntax-comment {
+    color: rgba(255,255,255,.28);
+}
+
+.syntax-property {
+    color: #b7c8e7;
+}
+
+
+/* =========================================================
+   103. EMPTY STATES
+   ========================================================= */
+
+.empty-state {
+    min-height: 130px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+
+    padding: 20px;
+
+    text-align: center;
+}
+
+.empty-state strong {
+    color: rgba(255,255,255,.58);
+
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.empty-state span {
+    max-width: 210px;
+
+    color: rgba(255,255,255,.28);
+
+    font-size: 8px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   104. ERROR / SUCCESS STATES
+   ========================================================= */
+
+.input-error,
+.property-error {
+    border-color:
+        rgba(220,100,100,.30) !important;
+
+    box-shadow:
+        0 0 0 3px rgba(220,100,100,.045) !important;
+}
+
+.input-success,
+.property-success {
+    border-color:
+        rgba(150,205,170,.25) !important;
+
+    box-shadow:
+        0 0 0 3px rgba(150,205,170,.035) !important;
+}
+
+
+/* =========================================================
+   105. LOADING
+   ========================================================= */
+
+.is-loading {
+    position: relative;
+
+    pointer-events: none;
+
+    color: transparent !important;
+}
+
+.is-loading::after {
+    content: "";
+
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    width: 14px;
+    height: 14px;
+
+    margin:
+        -7px 0 0 -7px;
+
+    border-radius: 50%;
+
+    border:
+        1.5px solid rgba(255,255,255,.16);
+
+    border-top-color:
+        rgba(255,255,255,.78);
+
+    animation:
+        pdSpin .7s linear infinite;
+}
+
+@keyframes pdSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* =========================================================
+   106. SHIMMER
+   ========================================================= */
+
+.shimmer {
+    position: relative;
+
+    overflow: hidden;
+}
+
+.shimmer::after {
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    pointer-events: none;
+
+    transform:
+        translateX(-110%);
+
+    background:
+        linear-gradient(
+            100deg,
+            transparent 25%,
+            rgba(255,255,255,.055) 50%,
+            transparent 75%
+        );
+
+    animation:
+        pdShimmer 2.8s ease-in-out infinite;
+}
+
+@keyframes pdShimmer {
+    0% {
+        transform: translateX(-110%);
+    }
+
+    45%,
+    100% {
+        transform: translateX(110%);
+    }
+}
+
+
+/* =========================================================
+   107. RESPONSIVE TABLET
+   ========================================================= */
+
+@media (max-width: 1100px) {
+
+    .tool-dock {
+        width: 58px;
+        flex-basis: 58px;
+    }
+
+    .tool-item span {
+        font-size: 7px;
+    }
+
+    .window {
+        width: 295px;
+    }
+
+    .inspector {
+        width: 295px;
+    }
+}
+
+
+/* =========================================================
+   108. RESPONSIVE SMALL TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .canvas-stage {
+        overflow: hidden;
+    }
+
+    .window {
+        box-shadow:
+            0 24px 60px rgba(0,0,0,.42),
+            0 8px 25px rgba(0,0,0,.24),
+            inset 0 1px 0 rgba(255,255,255,.07);
+    }
+}
+
+
+/* =========================================================
+   109. RESPONSIVE PHONE
+   ========================================================= */
+
+@media (max-width: 850px) {
+
+    .app {
+        min-height: 100dvh;
+    }
+
+    .workspace {
+        min-height: 0;
+    }
+
+    .canvas-space {
+        width: 100%;
+    }
+
+    .canvas-stage {
+        min-height: 0;
+    }
+
+    .window {
+        max-height:
+            calc(
+                100dvh - 145px
+            );
+    }
+
+    .window-body {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+}
+
+
+/* =========================================================
+   110. PHONE LANDSCAPE
+   ========================================================= */
+
+@media (max-width: 850px) and (orientation: landscape) {
+
+    .mobile-dock {
+        left: 10px;
+        right: 10px;
+
+        height: 48px;
+    }
+
+    .mobile-dock-item,
+    .mobile-dock-add {
+        flex-direction: row;
+
+        gap: 6px;
+    }
+
+    .canvas-stage {
+        padding-bottom: 72px;
+    }
+
+    .window {
+        max-height:
+            calc(100dvh - 85px);
+    }
+}
+
+
+/* =========================================================
+   111. VERY SMALL PHONE
+   ========================================================= */
+
+@media (max-width: 360px) {
+
+    .window {
+        width:
+            calc(100vw - 14px);
+
+        max-width:
+            calc(100vw - 14px);
+    }
+
+    .window-body {
+        padding: 8px;
+    }
+
+    .element-options {
+        gap: 5px;
+    }
+
+    .element-option {
+        min-height: 60px;
+
+        padding: 6px;
+    }
+
+    .element-option-icon {
+        width: 31px;
+        height: 31px;
+        flex-basis: 31px;
+    }
+
+    .element-option > span:last-child strong {
+        font-size: 9px;
+    }
+
+    .element-option > span:last-child small {
+        font-size: 7px;
+    }
+}
+
+
+/* =========================================================
+   112. SAFE AREA
+   ========================================================= */
+
+@supports (padding: env(safe-area-inset-bottom)) {
+
+    .mobile-dock {
+        padding-bottom:
+            max(
+                5px,
+                env(safe-area-inset-bottom)
+            );
+    }
+
+    .toast {
+        bottom:
+            calc(
+                24px +
+                env(safe-area-inset-bottom)
+            );
+    }
+}
+
+
+/* =========================================================
+   113. HIGH CONTRAST
+   ========================================================= */
+
+@media (prefers-contrast: more) {
+
+    .glass {
+        border-color:
+            rgba(255,255,255,.18);
+    }
+
+    .window,
+    .topbar,
+    .tool-dock,
+    .canvas-toolbar,
+    .mobile-dock {
+        border-color:
+            rgba(255,255,255,.15);
+    }
+
+    .window-control,
+    .tool-item,
+    .nav-item {
+        color:
+            rgba(255,255,255,.68);
+    }
+}
+
+
+/* =========================================================
+   114. REDUCED TRANSPARENCY
+   ========================================================= */
+
+@media (prefers-reduced-transparency: reduce) {
+
+    .glass,
+    .window,
+    .toast {
+        background:
+            rgba(10,11,13,.96);
+
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+
+    .smoke,
+    .ambient-light {
+        opacity: .08;
+    }
+}
+
+
+/* =========================================================
+   115. PRINT
+   ========================================================= */
+
+@media print {
+
+    .environment,
+    .topbar,
+    .tool-dock,
+    .canvas-toolbar,
+    .window,
+    .mobile-dock,
+    .toast {
+        display: none !important;
+    }
+
+    .app,
+    .workspace,
+    .canvas-space,
+    .canvas-stage {
+        overflow: visible !important;
+        height: auto !important;
+        min-height: auto !important;
+    }
+
+    .design-page {
+        transform: none !important;
+        box-shadow: none !important;
+    }
+}
+
+
+/* =========================================================
+   116. GPU / COMPOSITING
+   ========================================================= */
+
+.glass,
+.window,
+.canvas-toolbar,
+.mobile-dock,
+.design-page,
+.smoke,
+.ambient-light {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.window,
+.mobile-dock,
+.canvas-toolbar {
+    transform-style: preserve-3d;
+}
+
+
+/* =========================================================
+   117. FINAL ANIMATION QUALITY
+   ========================================================= */
+
+.window,
+.tool-item,
+.element-option,
+.layer-item,
+.window-control,
+.top-action,
+.profile-button,
+.nav-item,
+.mobile-dock-item,
+.mobile-dock-add,
+.color-chip,
+.wallpaper-option {
+    will-change: transform;
+}
+
+
+/* =========================================================
+   118. DISABLE WILL-CHANGE WHILE IDLE
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .window,
+    .tool-item,
+    .element-option,
+    .layer-item,
+    .window-control,
+    .top-action,
+    .profile-button,
+    .nav-item,
+    .mobile-dock-item,
+    .mobile-dock-add,
+    .color-chip,
+    .wallpaper-option {
+        will-change: auto;
+    }
+}
+
+
+/* =========================================================
+   119. FINAL PAGE GEOMETRY SAFETY
+   DO NOT CHANGE THIS TO initial.
+   ========================================================= */
+
+.design-page > .page-element,
+.design-page > .pd-element {
+    left: 0;
+    top: 0;
+}
+
+
+/* =========================================================
+   120. FINAL SVG SAFETY
+   Scoped dimensions only.
+   ========================================================= */
+
+.window svg,
+.tool-dock svg,
+.canvas-toolbar svg,
+.topbar svg,
+.mobile-dock svg,
+.toast svg,
+.element-option-icon svg,
+.layer-item svg,
+.settings-item svg,
+.project-avatar svg {
+    max-width: 100%;
+    max-height: 100%;
+
+    overflow: visible;
+}
+
+
+/* =========================================================
+   121. FINAL OVERFLOW SAFETY
+   ========================================================= */
+
+.topbar,
+.workspace,
+.tool-dock,
+.canvas-space,
+.canvas-toolbar,
+.window,
+.mobile-dock {
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   122. FINAL FONT RENDERING
+   ========================================================= */
+
+body,
+button,
+input,
+select,
+textarea {
+    text-rendering:
+        optimizeLegibility;
+
+    -webkit-font-smoothing:
+        antialiased;
+
+    -moz-osx-font-smoothing:
+        grayscale;
+}
+
+
+/* =========================================================
+   123. END OF PLUGINDEX STYLE SYSTEM
+   ========================================================= */
