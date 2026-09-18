@@ -1,3124 +1,2409 @@
-/* ============================================================
-   PLUGINDEX
-   LIQUID GLASS BLACK — DEFINITIVE EDITOR CSS
-   ============================================================ */
+/* =============================================================
+   PLUGINDEX — LIQUID GLASS BLACK
+   CSS DEFINITIVO
+   ============================================================= */
 
 :root {
-    --black: #030405;
-    --black-2: #07090c;
-    --black-3: #0b0e12;
+  --black: #030405;
+  --black-2: #07090c;
+  --black-3: #0b0e12;
 
-    --glass: rgba(13, 16, 20, .72);
-    --glass-strong: rgba(8, 10, 13, .90);
-    --glass-soft: rgba(255, 255, 255, .045);
+  --glass: rgba(13, 16, 20, .72);
+  --glass-strong: rgba(8, 10, 13, .88);
+  --glass-soft: rgba(255,255,255,.045);
 
-    --white: #f5f7fa;
-    --text: rgba(245, 247, 250, .92);
-    --muted: rgba(235, 240, 246, .58);
-    --dim: rgba(235, 240, 246, .34);
+  --white: #f5f7fa;
+  --text: rgba(245,247,250,.92);
+  --muted: rgba(235,240,246,.58);
+  --dim: rgba(235,240,246,.34);
 
-    --border: rgba(255, 255, 255, .105);
-    --border-strong: rgba(255, 255, 255, .18);
+  --border: rgba(255,255,255,.105);
+  --border-strong: rgba(255,255,255,.17);
 
-    --danger: #ff4d58;
-    --accent: #6d9cff;
-    --accent-soft: rgba(109, 156, 255, .14);
+  --danger: #ff4d58;
 
-    --radius-xl: 28px;
-    --radius-lg: 22px;
-    --radius-md: 17px;
-    --radius-sm: 12px;
+  --radius-xl: 28px;
+  --radius-lg: 22px;
+  --radius-md: 17px;
+  --radius-sm: 12px;
 
-    --ease: cubic-bezier(.22, 1, .36, 1);
-    --spring: cubic-bezier(.16, 1.25, .32, 1);
+  --ease: cubic-bezier(.22,1,.36,1);
+  --spring: cubic-bezier(.16,1.25,.32,1);
 
-    --shadow:
-        0 28px 80px rgba(0, 0, 0, .42),
-        0 8px 28px rgba(0, 0, 0, .26);
+  --shadow:
+    0 28px 80px rgba(0,0,0,.42),
+    0 8px 28px rgba(0,0,0,.26);
 
-    --safe-top: env(safe-area-inset-top, 0px);
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 
-    --page-scale: 1;
-
-    --window-z: 100;
-
-    /*
-     * Variables antiguas mantenidas para compatibilidad.
-     * NO se utilizan para posicionar .page-element.
-     */
-    --element-x: 0px;
-    --element-y: 0px;
+  --page-scale: 1;
+  --window-z: 100;
 }
 
 
-/* ============================================================
+/* =============================================================
    RESET
-   ============================================================ */
+   ============================================================= */
 
 * {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html,
 body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
 }
 
 body {
-    overflow: hidden;
+  overflow: hidden;
+  background: var(--black);
+  color: var(--text);
 
-    background: var(--black);
-    color: var(--text);
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Display",
+    "Segoe UI",
+    sans-serif;
 
-    font-family:
-        Inter,
-        -apple-system,
-        BlinkMacSystemFont,
-        "SF Pro Display",
-        "Segoe UI",
-        sans-serif;
-
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-
-    user-select: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  user-select: none;
 }
 
 button,
-input,
-textarea,
-select {
-    font: inherit;
+input {
+  font: inherit;
 }
 
 button {
-    border: 0;
-    background: none;
-    color: inherit;
-    cursor: pointer;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
 }
 
 button:focus-visible,
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible {
-    outline: 1px solid rgba(255, 255, 255, .32);
-    outline-offset: 2px;
+input:focus-visible {
+  outline: 1px solid rgba(255,255,255,.32);
+  outline-offset: 2px;
 }
 
 svg {
-    display: block;
-}
-
-img {
-    max-width: 100%;
+  display: block;
 }
 
 
-/* ============================================================
+/* =============================================================
    ENVIRONMENT
-   ============================================================ */
+   ============================================================= */
 
 .environment {
-    position: fixed;
-    inset: 0;
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  overflow: hidden;
 
-    z-index: -10;
-
-    overflow: hidden;
-
-    background: #020304;
-
-    pointer-events: none;
+  background: #020304;
+  pointer-events: none;
 }
 
 .wallpaper {
-    position: absolute;
-    inset: -8%;
+  position: absolute;
+  inset: -8%;
 
-    background:
-        radial-gradient(
-            circle at 18% 18%,
-            rgba(255, 255, 255, .075),
-            transparent 25%
-        ),
-        radial-gradient(
-            circle at 80% 26%,
-            rgba(120, 135, 155, .065),
-            transparent 28%
-        ),
-        radial-gradient(
-            circle at 52% 88%,
-            rgba(255, 255, 255, .035),
-            transparent 32%
-        ),
-        linear-gradient(
-            145deg,
-            #050608,
-            #080b0f 48%,
-            #030405
-        );
+  background:
+    radial-gradient(
+      circle at 18% 18%,
+      rgba(255,255,255,.075),
+      transparent 25%
+    ),
+    radial-gradient(
+      circle at 80% 26%,
+      rgba(120,135,155,.065),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 52% 88%,
+      rgba(255,255,255,.035),
+      transparent 32%
+    ),
+    linear-gradient(
+      145deg,
+      #050608,
+      #080b0f 48%,
+      #030405
+    );
 
-    transform:
-        translate3d(
-            var(--opt-x, 0px),
-            var(--opt-y, 0px),
-            0
-        )
-        scale(1.06);
+  transform:
+    translate3d(
+      var(--opt-x,0px),
+      var(--opt-y,0px),
+      0
+    )
+    scale(1.06);
 
-    transition:
-        transform 1.2s var(--ease);
+  transition:
+    transform 1.2s var(--ease);
 }
 
 .smoke {
-    position: absolute;
+  position: absolute;
 
-    width: 52vw;
-    height: 52vw;
+  width: 52vw;
+  height: 52vw;
 
-    min-width: 360px;
-    min-height: 360px;
+  min-width: 360px;
+  min-height: 360px;
 
-    border-radius: 50%;
+  border-radius: 50%;
 
-    filter: blur(72px);
+  filter: blur(72px);
+  opacity: .22;
 
-    opacity: .22;
+  mix-blend-mode: screen;
 
-    mix-blend-mode: screen;
-
-    will-change: transform;
+  will-change: transform;
 }
 
 .smoke-a {
-    left: -12%;
-    top: 4%;
+  left: -12%;
+  top: 4%;
 
-    background:
-        radial-gradient(
-            circle,
-            rgba(255,255,255,.14),
-            rgba(120,130,145,.04) 40%,
-            transparent 70%
-        );
+  background:
+    radial-gradient(
+      circle,
+      rgba(255,255,255,.14),
+      rgba(120,130,145,.04) 40%,
+      transparent 70%
+    );
 
-    animation:
-        smokeA 22s ease-in-out infinite alternate;
+  animation:
+    smokeA 22s ease-in-out infinite alternate;
 }
 
 .smoke-b {
-    right: -18%;
-    top: 28%;
+  right: -18%;
+  top: 28%;
 
-    background:
-        radial-gradient(
-            circle,
-            rgba(150,160,175,.12),
-            transparent 68%
-        );
+  background:
+    radial-gradient(
+      circle,
+      rgba(150,160,175,.12),
+      transparent 68%
+    );
 
-    animation:
-        smokeB 28s ease-in-out infinite alternate;
+  animation:
+    smokeB 28s ease-in-out infinite alternate;
 }
 
 .smoke-c {
-    left: 30%;
-    bottom: -34%;
+  left: 30%;
+  bottom: -34%;
 
-    background:
-        radial-gradient(
-            circle,
-            rgba(255,255,255,.07),
-            transparent 70%
-        );
+  background:
+    radial-gradient(
+      circle,
+      rgba(255,255,255,.07),
+      transparent 70%
+    );
 
-    animation:
-        smokeC 32s ease-in-out infinite alternate;
+  animation:
+    smokeC 32s ease-in-out infinite alternate;
 }
 
 @keyframes smokeA {
-    from {
-        transform:
-            translate3d(-4%, -2%, 0)
-            scale(1);
-    }
+  from {
+    transform:
+      translate3d(-4%,-2%,0)
+      scale(1);
+  }
 
-    to {
-        transform:
-            translate3d(14%, 12%, 0)
-            scale(1.14);
-    }
+  to {
+    transform:
+      translate3d(14%,12%,0)
+      scale(1.14);
+  }
 }
 
 @keyframes smokeB {
-    from {
-        transform:
-            translate3d(3%, 2%, 0)
-            scale(1);
-    }
+  from {
+    transform:
+      translate3d(3%,2%,0)
+      scale(1);
+  }
 
-    to {
-        transform:
-            translate3d(-15%, -8%, 0)
-            scale(1.18);
-    }
+  to {
+    transform:
+      translate3d(-15%,-8%,0)
+      scale(1.18);
+  }
 }
 
 @keyframes smokeC {
-    from {
-        transform:
-            translate3d(-8%, 4%, 0)
-            scale(1);
-    }
+  from {
+    transform:
+      translate3d(-8%,4%,0)
+      scale(1);
+  }
 
-    to {
-        transform:
-            translate3d(10%, -12%, 0)
-            scale(1.12);
-    }
+  to {
+    transform:
+      translate3d(10%,-12%,0)
+      scale(1.12);
+  }
 }
 
 .ambient-light {
-    position: absolute;
-    inset: -25%;
+  position: absolute;
+  inset: -25%;
 
-    background:
-        radial-gradient(
-            circle at
-                var(--opt-light-x, 50%)
-                var(--opt-light-y, 45%),
-            rgba(255,255,255,.065),
-            transparent 25%
-        );
+  background:
+    radial-gradient(
+      circle at
+      var(--opt-light-x,50%)
+      var(--opt-light-y,45%),
+      rgba(255,255,255,.065),
+      transparent 25%
+    );
 
-    filter: blur(42px);
+  filter: blur(42px);
 }
 
 .carbon {
-    position: absolute;
-    inset: 0;
+  position: absolute;
+  inset: 0;
 
-    opacity: .15;
+  opacity: .15;
 
-    background-image:
-        linear-gradient(
-            135deg,
-            rgba(255,255,255,.024) 25%,
-            transparent 25%
-        ),
-        linear-gradient(
-            315deg,
-            rgba(255,255,255,.016) 25%,
-            transparent 25%
-        );
+  background-image:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.024) 25%,
+      transparent 25%
+    ),
+    linear-gradient(
+      315deg,
+      rgba(255,255,255,.016) 25%,
+      transparent 25%
+    );
 
-    background-size: 8px 8px;
+  background-size: 8px 8px;
 
-    mix-blend-mode: overlay;
+  mix-blend-mode: overlay;
 }
 
 .grain {
-    position: absolute;
-    inset: 0;
+  position: absolute;
+  inset: 0;
 
-    opacity: .025;
+  opacity: .025;
 
-    background-image:
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E");
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E");
 
-    mix-blend-mode: overlay;
+  mix-blend-mode: overlay;
 }
 
 .motion-off .smoke {
-    animation: none;
+  animation: none;
 }
 
 .smoke-off .smoke {
-    display: none;
+  display: none;
 }
 
 
-/* ============================================================
+/* =============================================================
    GLASS
-   ============================================================ */
+   ============================================================= */
 
 .glass {
-    position: relative;
+  position: relative;
 
-    background:
-        linear-gradient(
-            145deg,
-            rgba(255,255,255,.065),
-            rgba(255,255,255,.018) 42%,
-            rgba(0,0,0,.18)
-        ),
-        var(--glass);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.065),
+      rgba(255,255,255,.018) 42%,
+      rgba(0,0,0,.18)
+    ),
+    var(--glass);
 
-    border: 1px solid var(--border);
+  border: 1px solid var(--border);
 
-    box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.075),
-        inset 0 -1px 0 rgba(0,0,0,.38),
-        0 24px 70px rgba(0,0,0,.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.075),
+    inset 0 -1px 0 rgba(0,0,0,.38),
+    0 24px 70px rgba(0,0,0,.28);
 
-    backdrop-filter:
-        blur(22px)
-        saturate(120%);
+  backdrop-filter:
+    blur(22px)
+    saturate(120%);
 
-    -webkit-backdrop-filter:
-        blur(22px)
-        saturate(120%);
+  -webkit-backdrop-filter:
+    blur(22px)
+    saturate(120%);
 
-    overflow: hidden;
+  overflow: hidden;
 }
 
 .glass::before {
-    content: "";
+  content: "";
 
-    position: absolute;
-    inset: 0;
+  position: absolute;
+  inset: 0;
 
-    pointer-events: none;
+  pointer-events: none;
 
-    background:
-        linear-gradient(
-            118deg,
-            rgba(255,255,255,.085),
-            transparent 22%,
-            transparent 72%,
-            rgba(255,255,255,.018)
-        );
+  background:
+    linear-gradient(
+      118deg,
+      rgba(255,255,255,.085),
+      transparent 22%,
+      transparent 72%,
+      rgba(255,255,255,.018)
+    );
 
-    opacity: .7;
+  opacity: .7;
 }
 
 .glass::after {
-    content: "";
+  content: "";
 
-    position: absolute;
+  position: absolute;
 
-    top: 0;
-    left: 8%;
-    right: 8%;
+  top: 0;
+  left: 8%;
+  right: 8%;
 
-    height: 1px;
+  height: 1px;
 
-    pointer-events: none;
+  pointer-events: none;
 
-    background:
-        linear-gradient(
-            90deg,
-            transparent,
-            rgba(255,255,255,.23),
-            transparent
-        );
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,.23),
+      transparent
+    );
 
-    opacity: .55;
+  opacity: .55;
 }
 
 
-/* ============================================================
+/* =============================================================
    APP
-   ============================================================ */
+   ============================================================= */
 
 .app {
-    position: relative;
+  position: relative;
 
-    width: 100%;
-    height: 100%;
+  width: 100%;
+  height: 100%;
 
-    padding:
-        calc(12px + var(--safe-top))
-        14px
-        calc(12px + var(--safe-bottom));
+  padding:
+    calc(12px + var(--safe-top))
+    14px
+    calc(12px + var(--safe-bottom));
 
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 
-    gap: 12px;
-
-    isolation: isolate;
+  isolation: isolate;
 }
 
 
-/* ============================================================
+/* =============================================================
    TOPBAR
-   ============================================================ */
+   ============================================================= */
 
 .topbar {
-    height: 60px;
-    min-height: 60px;
+  position: relative;
 
-    border-radius: 21px;
+  height: 60px;
+  min-height: 60px;
 
-    display: flex;
-    align-items: center;
+  border-radius: 21px;
 
-    padding: 0 9px 0 15px;
+  display: flex;
+  align-items: center;
 
-    z-index: 30;
+  padding:
+    0
+    9px
+    0
+    15px;
+
+  z-index: 30;
 }
 
 .brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  display: flex;
+  align-items: center;
 
-    min-width: 190px;
+  gap: 10px;
+
+  min-width: 190px;
 }
 
 .brand-mark {
-    width: 32px;
-    height: 32px;
+  width: 32px;
+  height: 32px;
 
-    border-radius: 10px;
+  flex: 0 0 32px;
 
-    display: grid;
-    place-items: center;
+  border-radius: 10px;
 
-    color: #eef0f3;
+  display: grid;
+  place-items: center;
 
-    background:
-        linear-gradient(
-            145deg,
-            rgba(255,255,255,.15),
-            rgba(255,255,255,.025)
-        );
+  color: #eef0f3;
 
-    border:
-        1px solid rgba(255,255,255,.13);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.15),
+      rgba(255,255,255,.025)
+    );
 
-    box-shadow:
-        inset 0 1px rgba(255,255,255,.12),
-        0 8px 22px rgba(0,0,0,.3);
+  border:
+    1px solid
+    rgba(255,255,255,.13);
+
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.12),
+    0 8px 22px rgba(0,0,0,.3);
 }
 
 .brand-mark svg {
-    width: 21px;
-    height: 21px;
+  width: 21px;
+  height: 21px;
 }
 
 .brand-text {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 
-    line-height: 1;
+  min-width: 0;
+
+  line-height: 1;
 }
 
 .brand-text strong {
-    font-size: 14px;
-    letter-spacing: -.02em;
+  font-size: 14px;
+  letter-spacing: -.02em;
+
+  white-space: nowrap;
 }
 
 .brand-text span {
-    margin-top: 5px;
+  margin-top: 5px;
 
-    font-size: 9px;
+  font-size: 9px;
 
-    color: var(--muted);
+  color: var(--muted);
 
-    letter-spacing: .09em;
-    text-transform: uppercase;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+
+  white-space: nowrap;
 }
 
+
+/* =============================================================
+   NAVIGATION
+   ============================================================= */
+
 .top-navigation {
-    position: absolute;
+  position: absolute;
 
-    left: 50%;
+  left: 50%;
+  transform: translateX(-50%);
 
-    transform:
-        translateX(-50%);
+  display: flex;
+  align-items: center;
 
-    display: flex;
+  gap: 3px;
 
-    gap: 3px;
+  padding: 4px;
 
-    padding: 4px;
+  border-radius: 14px;
 
-    border-radius: 14px;
+  background: rgba(0,0,0,.16);
 
-    background: rgba(0,0,0,.16);
-
-    border:
-        1px solid rgba(255,255,255,.045);
+  border:
+    1px solid
+    rgba(255,255,255,.045);
 }
 
 .nav-item {
-    height: 34px;
+  height: 34px;
 
-    padding: 0 13px;
+  padding:
+    0
+    13px;
 
-    border-radius: 11px;
+  border-radius: 11px;
 
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 
-    gap: 7px;
+  gap: 7px;
 
-    color: var(--muted);
+  color: var(--muted);
 
-    transition:
-        color .3s var(--ease),
-        background .3s var(--ease),
-        transform .35s var(--spring);
+  transition:
+    color .3s var(--ease),
+    background .3s var(--ease),
+    transform .35s var(--spring);
 }
 
 .nav-item svg {
-    width: 15px;
-    height: 15px;
+  width: 15px;
+  height: 15px;
 
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.7;
+  fill: none;
 
-    stroke-linecap: round;
-    stroke-linejoin: round;
+  stroke: currentColor;
+  stroke-width: 1.7;
+
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .nav-item span {
-    font-size: 12px;
+  font-size: 12px;
 }
 
 .nav-item:hover {
-    color: var(--white);
-    background: rgba(255,255,255,.045);
+  color: var(--white);
+  background: rgba(255,255,255,.045);
 }
 
 .nav-item:active {
-    transform: scale(.95);
+  transform: scale(.95);
 }
 
 .nav-item.active {
-    color: var(--white);
+  color: var(--white);
 
-    background:
-        rgba(255,255,255,.09);
+  background:
+    rgba(255,255,255,.09);
 
-    box-shadow:
-        inset 0 1px rgba(255,255,255,.08);
+  box-shadow:
+    inset 0 1px
+    rgba(255,255,255,.08);
 }
 
+
+/* =============================================================
+   TOP ACTIONS
+   ============================================================= */
+
 .top-actions {
-    margin-left: auto;
+  margin-left: auto;
 
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 
-    gap: 4px;
+  gap: 4px;
 }
 
 .icon-button,
 .profile-button {
-    width: 39px;
-    height: 39px;
+  width: 39px;
+  height: 39px;
 
-    border-radius: 13px;
+  border-radius: 13px;
 
-    display: grid;
-    place-items: center;
+  display: grid;
+  place-items: center;
 
-    color: var(--muted);
+  color: var(--muted);
 
-    transition:
-        transform .35s var(--spring),
-        background .25s var(--ease),
-        color .25s var(--ease);
+  transition:
+    transform .35s var(--spring),
+    background .25s var(--ease),
+    color .25s var(--ease);
 }
 
 .icon-button svg {
-    width: 17px;
-    height: 17px;
+  width: 17px;
+  height: 17px;
 
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.6;
+  fill: none;
 
-    stroke-linecap: round;
-    stroke-linejoin: round;
+  stroke: currentColor;
+  stroke-width: 1.6;
+
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .icon-button:hover {
-    color: var(--white);
-    background: rgba(255,255,255,.065);
+  color: var(--white);
+  background: rgba(255,255,255,.065);
 }
 
 .icon-button:active,
 .profile-button:active {
-    transform: scale(.88);
+  transform: scale(.88);
 }
 
 .profile-button {
-    margin-left: 4px;
+  margin-left: 4px;
 
-    background:
-        rgba(255,255,255,.065);
+  background:
+    rgba(255,255,255,.065);
 
-    border:
-        1px solid rgba(255,255,255,.1);
+  border:
+    1px solid
+    rgba(255,255,255,.1);
 }
 
 .profile-avatar {
-    width: 25px;
-    height: 25px;
+  width: 25px;
+  height: 25px;
 
-    border-radius: 9px;
+  border-radius: 9px;
 
-    display: grid;
-    place-items: center;
+  display: grid;
+  place-items: center;
 
-    font-size: 10px;
-    font-weight: 700;
+  font-size: 10px;
+  font-weight: 700;
 
-    background:
-        linear-gradient(
-            145deg,
-            #555c65,
-            #16191d
-        );
+  background:
+    linear-gradient(
+      145deg,
+      #555c65,
+      #16191d
+    );
 
-    box-shadow:
-        inset 0 1px rgba(255,255,255,.18);
+  box-shadow:
+    inset 0 1px
+    rgba(255,255,255,.18);
 }
 
 
-/* ============================================================
+/* =============================================================
    WORKSPACE
-   ============================================================ */
+   ============================================================= */
 
 .workspace {
-    position: relative;
+  position: relative;
 
-    flex: 1;
-    min-height: 0;
+  flex: 1;
 
-    overflow: hidden;
+  min-height: 0;
 
-    border-radius: 28px;
+  overflow: hidden;
+
+  border-radius: 28px;
 }
 
 
-/* ============================================================
+/* =============================================================
    TOOL DOCK
-   ============================================================ */
+   ============================================================= */
 
 .tool-dock {
-    position: absolute;
+  position: absolute;
 
-    z-index: 25;
+  z-index: 25;
 
-    left: 15px;
-    top: 50%;
+  left: 15px;
+  top: 50%;
 
-    transform:
-        translateY(-50%);
+  transform: translateY(-50%);
 
-    width: 57px;
+  width: 57px;
 
-    padding: 8px;
+  padding: 8px;
 
-    border-radius: 19px;
+  border-radius: 19px;
 
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
-    gap: 5px;
+  gap: 5px;
 }
 
 .tool-group {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 
-    gap: 5px;
+  gap: 5px;
 }
 
 .tool-item {
-    width: 40px;
-    height: 40px;
+  width: 40px;
+  height: 40px;
 
-    border-radius: 13px;
+  border-radius: 13px;
 
-    display: grid;
-    place-items: center;
+  display: grid;
+  place-items: center;
 
-    color: var(--dim);
+  color: var(--dim);
 
-    transition:
-        transform .35s var(--spring),
-        background .25s var(--ease),
-        color .25s var(--ease);
+  transition:
+    transform .35s var(--spring),
+    background .25s var(--ease),
+    color .25s var(--ease);
 }
 
 .tool-item svg {
-    width: 17px;
-    height: 17px;
+  width: 17px;
+  height: 17px;
 
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.5;
+  fill: none;
 
-    stroke-linecap: round;
-    stroke-linejoin: round;
+  stroke: currentColor;
+  stroke-width: 1.5;
+
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .tool-item:hover {
-    color: var(--white);
+  color: var(--white);
 
-    background:
-        rgba(255,255,255,.06);
+  background:
+    rgba(255,255,255,.06);
 
-    transform: scale(1.05);
+  transform: scale(1.05);
 }
 
 .tool-item:active {
-    transform: scale(.87);
+  transform: scale(.87);
 }
 
 .tool-item.active {
-    color: var(--white);
+  color: var(--white);
 
-    background:
-        rgba(255,255,255,.095);
+  background:
+    rgba(255,255,255,.095);
 
-    box-shadow:
-        inset 0 1px rgba(255,255,255,.1);
+  box-shadow:
+    inset 0 1px
+    rgba(255,255,255,.1);
 }
 
 .dock-separator {
-    width: 25px;
-    height: 1px;
+  width: 25px;
+  height: 1px;
 
-    margin: 4px 0;
+  margin: 4px 0;
 
-    background:
-        rgba(255,255,255,.1);
+  background:
+    rgba(255,255,255,.1);
 }
 
 
-/* ============================================================
-   CANVAS AREA
-   ============================================================ */
+/* =============================================================
+   CANVAS
+   ============================================================= */
 
 .canvas-space {
-    position: absolute;
-    inset: 0;
+  position: absolute;
+  inset: 0;
 
-    min-width: 0;
-    min-height: 0;
+  min-width: 0;
+  min-height: 0;
 
-    background:
-        radial-gradient(
-            ellipse at center,
-            rgba(255,255,255,.022),
-            transparent 62%
-        );
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(255,255,255,.022),
+      transparent 62%
+    );
 }
 
 .canvas-toolbar {
-    position: absolute;
+  position: absolute;
 
-    z-index: 20;
+  z-index: 20;
 
-    left: 50%;
-    top: 14px;
+  left: 50%;
+  top: 14px;
 
-    transform:
-        translateX(-50%);
+  transform: translateX(-50%);
 
-    min-width: 250px;
-    height: 43px;
+  min-width: 250px;
+  height: 43px;
 
-    padding: 4px 6px;
+  padding:
+    4px
+    6px;
 
-    border-radius: 15px;
+  border-radius: 15px;
 
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
-    background:
-        rgba(7,9,12,.68);
+  background:
+    rgba(7,9,12,.68);
 }
 
 .canvas-toolbar-group {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 
-    gap: 2px;
+  gap: 2px;
 }
 
 .canvas-button {
-    width: 33px;
-    height: 33px;
+  width: 33px;
+  height: 33px;
 
-    border-radius: 10px;
+  border-radius: 10px;
 
-    display: grid;
-    place-items: center;
+  display: grid;
+  place-items: center;
 
-    color: var(--dim);
+  color: var(--dim);
 
-    transition:
-        transform .3s var(--spring),
-        background .25s var(--ease),
-        color .25s var(--ease);
+  transition:
+    transform .3s var(--spring),
+    background .25s var(--ease),
+    color .25s var(--ease);
 }
 
 .canvas-button svg {
-    width: 15px;
-    height: 15px;
+  width: 15px;
+  height: 15px;
 
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.6;
+  fill: none;
 
-    stroke-linecap: round;
-    stroke-linejoin: round;
+  stroke: currentColor;
+  stroke-width: 1.6;
+
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .canvas-button:hover {
-    color: var(--white);
-    background: rgba(255,255,255,.065);
+  color: var(--white);
+
+  background:
+    rgba(255,255,255,.065);
 }
 
 .canvas-button:active {
-    transform: scale(.84);
+  transform: scale(.84);
 }
 
 .canvas-toolbar-center {
-    position: absolute;
+  position: absolute;
 
-    left: 50%;
+  left: 50%;
 
-    transform:
-        translateX(-50%);
+  transform:
+    translateX(-50%);
 }
 
 .canvas-status {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 
-    gap: 7px;
+  gap: 7px;
 
-    color: var(--dim);
+  color: var(--dim);
 
-    font-size: 10px;
+  font-size: 10px;
 
-    white-space: nowrap;
+  white-space: nowrap;
 }
 
 .status-dot {
-    width: 5px;
-    height: 5px;
+  width: 5px;
+  height: 5px;
 
-    border-radius: 50%;
+  border-radius: 50%;
 
-    background: #aeb5bd;
+  background: #aeb5bd;
 
-    box-shadow:
-        0 0 8px rgba(255,255,255,.22);
+  box-shadow:
+    0 0 8px
+    rgba(255,255,255,.22);
 }
 
 
-/* ============================================================
+/* =============================================================
    CANVAS STAGE
-   ============================================================ */
+   ============================================================= */
 
 .canvas-stage {
-    position: absolute;
-    inset: 0;
+  position: absolute;
+  inset: 0;
 
-    overflow: auto;
+  overflow: auto;
 
-    display: grid;
-    place-items: center;
+  display: grid;
+  place-items: center;
 
-    padding:
-        90px
-        110px;
+  padding:
+    90px
+    110px;
 
-    scrollbar-width: thin;
+  scrollbar-width: thin;
 
-    scrollbar-color:
-        rgba(255,255,255,.13)
-        transparent;
+  scrollbar-color:
+    rgba(255,255,255,.13)
+    transparent;
 
-    overscroll-behavior: contain;
-
-    /*
-     * Muy importante para interacción táctil.
-     */
-    touch-action: pan-x pan-y;
+  overscroll-behavior: contain;
 }
 
 .canvas-stage::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+  width: 8px;
+  height: 8px;
 }
 
 .canvas-stage::-webkit-scrollbar-thumb {
-    background:
-        rgba(255,255,255,.11);
+  background:
+    rgba(255,255,255,.11);
 
-    border-radius: 99px;
+  border-radius: 99px;
 }
 
 
-/* ============================================================
+/* =============================================================
    DESIGN PAGE
-   ============================================================ */
+   ============================================================= */
 
 .design-page {
-    position: relative;
+  position: relative;
 
-    flex: none;
+  flex: none;
 
-    width: 760px;
-    height: 520px;
+  width: 760px;
+  height: 520px;
 
-    padding: 0;
+  padding: 0;
 
-    border-radius: 8px;
+  border-radius: 8px;
 
-    background: #f7f7f5;
+  background: #f7f7f5;
 
-    color: #16181b;
+  color: #16181b;
 
-    box-shadow:
-        0 35px 90px rgba(0,0,0,.5),
-        0 2px 0 rgba(255,255,255,.3);
+  box-shadow:
+    0 35px 90px rgba(0,0,0,.5),
+    0 2px 0 rgba(255,255,255,.3);
 
-    /*
-     * EL ZOOM SOLAMENTE SE APLICA AL LIENZO.
-     * Nunca a los elementos individualmente.
-     */
-    transform:
-        scale(var(--page-scale));
+  /*
+   * EL ÚNICO SCALE DEL CANVAS.
+   */
+  transform:
+    scale(var(--page-scale,1));
 
-    transform-origin: center;
+  transform-origin: center center;
 
-    overflow: hidden;
+  overflow: hidden;
 
-    transition:
-        box-shadow .35s var(--ease);
-
-    isolation: isolate;
+  transition:
+    box-shadow .35s var(--ease);
 }
 
 .design-page::before {
-    content: "";
+  content: "";
 
-    position: absolute;
-    inset: 0;
+  position: absolute;
+  inset: 0;
 
-    pointer-events: none;
+  pointer-events: none;
 
-    background:
-        linear-gradient(
-            135deg,
-            rgba(255,255,255,.28),
-            transparent 28%,
-            transparent 72%,
-            rgba(0,0,0,.035)
-        );
+  z-index: 0;
 
-    z-index: 9990;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.28),
+      transparent 28%,
+      transparent 72%,
+      rgba(0,0,0,.035)
+    );
 }
 
 
-/* ============================================================
-   PAGE ELEMENTS — SISTEMA NUEVO
-   ============================================================ */
+/* =============================================================
+   CANVAS ELEMENTS
+   ============================================================= */
 
 /*
- * IMPORTANTE:
+ * SISTEMA DEFINITIVO
  *
- * left/top = posición
- * width/height = tamaño
- * --editor-rotation = rotación
+ * left       -> X
+ * top        -> Y
+ * width      -> ancho
+ * height     -> alto
+ * rotation   -> rotación
  *
- * NO translateX
- * NO translateY
- * NO scale()
+ * NO translate.
+ * NO scale.
  */
 
-.page-element,
-.pd-element {
-    position: absolute;
+.design-page > .page-element,
+.design-page > .pd-element {
+  position: absolute;
 
-    left: 0;
-    top: 0;
+  left: 0;
+  top: 0;
 
-    margin: 0;
+  box-sizing: border-box;
 
-    transform:
-        rotate(
-            var(
-                --editor-rotation,
-                0deg
-            )
-        );
+  min-width: 0;
+  min-height: 0;
 
-    transform-origin:
-        center center;
+  max-width: none;
+  max-height: none;
 
-    cursor: move;
+  margin: 0;
 
-    user-select: none;
+  transform:
+    rotate(
+      var(--editor-rotation, 0deg)
+    );
 
-    touch-action: none;
+  transform-origin: center center;
 
-    box-sizing: border-box;
+  user-select: none;
 
-    min-width: 0;
-    min-height: 0;
+  cursor: grab;
 
-    /*
-     * Evita que los elementos se conviertan en
-     * un nuevo contexto de stacking extraño.
-     */
-    isolation: isolate;
+  z-index: 1;
 
-    transition:
-        outline-color .16s var(--ease),
-        box-shadow .16s var(--ease);
+  transition:
+    outline-color .18s var(--ease),
+    box-shadow .18s var(--ease),
+    opacity .18s var(--ease);
+}
 
-    will-change: left, top, width, height;
+.design-page > .page-element:active,
+.design-page > .pd-element:active {
+  cursor: grabbing;
 }
 
 
-/*
- * Durante manipulación eliminamos transiciones.
- * Esto evita que el elemento "persiga" al cursor.
- */
+/* =============================================================
+   ELEMENT SELECTION
+   ============================================================= */
 
-.page-element.editor-moving,
-.page-element.editor-resizing,
-.page-element.editor-rotating,
-.pd-element.editor-moving,
-.pd-element.editor-resizing,
-.pd-element.editor-rotating {
-    transition: none !important;
+.design-page
+  > .page-element.selected,
+.design-page
+  > .page-element.editor-selected,
+.design-page
+  > .pd-element.selected,
+.design-page
+  > .pd-element.editor-selected {
+  outline:
+    1px solid
+    rgba(55,120,255,.9);
+
+  outline-offset: 4px;
+
+  box-shadow:
+    0 0 0 1px
+    rgba(55,120,255,.12);
+
+  z-index: 5000;
+}
+
+.design-page
+  > .page-element:hover:not(.selected):not(.editor-selected),
+.design-page
+  > .pd-element:hover:not(.selected):not(.editor-selected) {
+  outline:
+    1px dashed
+    rgba(70,100,140,.38);
+
+  outline-offset: 4px;
 }
 
 
-/* ============================================================
-   SELECCIÓN
-   ============================================================ */
-
-.page-element.editor-selected,
-.page-element.selected,
-.pd-element.editor-selected,
-.pd-element.selected {
-    outline:
-        1px solid
-        rgba(75, 135, 255, .95);
-
-    outline-offset: 4px;
-
-    box-shadow:
-        0 0 0 1px
-        rgba(75,135,255,.16);
-}
-
-.page-element:hover:not(.editor-selected):not(.selected),
-.pd-element:hover:not(.editor-selected):not(.selected) {
-    outline:
-        1px dashed
-        rgba(70,100,140,.38);
-
-    outline-offset: 3px;
-}
-
-
-/* ============================================================
-   TEXTO
-   ============================================================ */
+/* =============================================================
+   TEXT ELEMENTS
+   ============================================================= */
 
 .editable-text {
-    display: block;
+  display: block;
 
-    box-sizing: border-box;
+  width: 100%;
+  height: 100%;
 
-    min-width: 0;
+  min-width: 0;
+  min-height: 0;
 
-    user-select: none;
+  max-width: none;
+  max-height: none;
 
-    overflow-wrap: anywhere;
+  box-sizing: border-box;
 
-    word-break: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .page-heading {
-    font-size: 34px;
+  width: 100%;
+  height: 100%;
 
-    font-weight: 720;
+  font-size: 34px;
+  font-weight: 720;
 
-    letter-spacing: -.04em;
+  letter-spacing: -.04em;
 
-    line-height: 1.05;
+  line-height: 1.05;
 }
 
 .page-text {
-    width: 100%;
+  width: 100%;
+  height: 100%;
 
-    max-width: none;
+  max-width: none;
 
-    font-size: 16px;
+  font-size: 16px;
 
-    line-height: 1.55;
+  line-height: 1.55;
 
-    color: #666b73;
+  color: #666b73;
 
-    overflow-wrap: anywhere;
+  overflow-wrap: anywhere;
 }
 
 
-/* ============================================================
-   BUTTONS DENTRO DEL LIENZO
-   ============================================================ */
-
-/*
- * El botón visual ya no controla la posición.
- *
- * El .page-element padre controla:
- *   left/top/width/height/rotation
- */
+/* =============================================================
+   BUTTON ELEMENTS
+   ============================================================= */
 
 .page-button {
-    position: relative;
+  width: 100%;
+  height: 100%;
 
-    width: 100%;
-    height: 100%;
+  min-width: 0;
+  min-height: 0;
 
-    min-width: 0;
-    min-height: 0;
+  max-width: none;
+  max-height: none;
 
-    margin: 0;
+  box-sizing: border-box;
 
-    padding:
-        0 18px;
+  padding:
+    0
+    18px;
 
-    border-radius: 12px;
+  border-radius: 12px;
 
-    background: #15171a;
+  background: #15171a;
 
-    color: #fff;
+  color: #fff;
 
-    box-shadow:
-        0 10px 22px rgba(0,0,0,.16);
+  box-shadow:
+    0 10px 22px
+    rgba(0,0,0,.16);
 
-    /*
-     * Durante edición no queremos que el botón
-     * robe el gesto al padre.
-     */
-    pointer-events: none;
+  /*
+   * EL BOTÓN INTERNO NO MUEVE AL PADRE.
+   */
+  transform: none;
 
-    transition:
-        box-shadow .25s var(--ease),
-        filter .25s var(--ease);
+  transition:
+    box-shadow .25s var(--ease),
+    background .2s var(--ease),
+    color .2s var(--ease);
 }
 
-.page-element:hover .page-button,
-.pd-element:hover .page-button {
-    filter: brightness(1.06);
+.page-button:hover {
+  /*
+   * Nunca modificar posición o escala.
+   */
+  transform: none;
 
-    box-shadow:
-        0 14px 28px rgba(0,0,0,.2);
+  box-shadow:
+    0 14px 28px
+    rgba(0,0,0,.2);
+}
+
+.page-button:active {
+  transform: none;
 }
 
 
-/*
- * NUNCA hacer esto:
- *
- * transform: translate3d(...)
- *
- * porque destruiría el sistema de coordenadas.
- */
-
-
-/* ============================================================
-   IMÁGENES
-   ============================================================ */
+/* =============================================================
+   IMAGES
+   ============================================================= */
 
 .page-image {
-    display: block;
+  display: block;
 
-    width: 100%;
-    height: 100%;
+  width: 100%;
+  height: 100%;
 
-    max-width: none;
+  max-width: none;
+  max-height: none;
 
-    object-fit: cover;
+  object-fit: cover;
 
-    border-radius: 12px;
+  border-radius: 12px;
 
-    overflow: hidden;
-
-    pointer-events: none;
-
-    user-select: none;
+  overflow: hidden;
 }
 
 
-/* ============================================================
-   ELEMENTOS INTERNOS
-   ============================================================ */
-
-.page-element > *,
-.pd-element > * {
-    max-width: 100%;
-}
-
-.page-element button,
-.page-element a,
-.page-element img,
-.pd-element button,
-.pd-element a,
-.pd-element img {
-    user-select: none;
-}
-
-
-/* ============================================================
-   EDITOR HANDLES
-   ============================================================ */
-
-/*
- * El contenedor completo NO recibe clicks.
- * Solo los handles tienen pointer-events.
- */
-
-.editor-handles {
-    position: absolute;
-
-    left: 0;
-    top: 0;
-
-    width: 100%;
-    height: 100%;
-
-    z-index: 10000;
-
-    pointer-events: none;
-
-    box-sizing: border-box;
-
-    /*
-     * Los handles siguen la misma rotación porque
-     * están dentro del elemento.
-     */
-}
-
-
-/* ============================================================
-   RESIZE HANDLE BASE
-   ============================================================ */
-
-.editor-handle {
-    position: absolute;
-
-    width: 20px;
-    height: 20px;
-
-    margin: -10px;
-
-    border-radius: 50%;
-
-    pointer-events: auto;
-
-    cursor: default;
-
-    /*
-     * Área invisible grande para poder tocar cómodamente.
-     */
-    background: transparent;
-
-    z-index: 20;
-
-    touch-action: none;
-}
-
-.editor-handle::after {
-    content: "";
-
-    position: absolute;
-
-    left: 50%;
-    top: 50%;
-
-    width: 8px;
-    height: 8px;
-
-    transform:
-        translate(-50%, -50%);
-
-    border-radius: 50%;
-
-    background: #ffffff;
-
-    border:
-        1px solid
-        rgba(20,30,45,.25);
-
-    box-shadow:
-        0 1px 5px rgba(0,0,0,.28);
-
-    transition:
-        transform .15s var(--spring),
-        width .15s var(--ease),
-        height .15s var(--ease);
-}
-
-.editor-handle:hover::after {
-    width: 11px;
-    height: 11px;
-}
-
-
-/* ============================================================
-   HANDLE POSITIONS
-   ============================================================ */
-
-.editor-handle-nw {
-    left: 0;
-    top: 0;
-
-    cursor: nwse-resize;
-}
-
-.editor-handle-n {
-    left: 50%;
-    top: 0;
-
-    cursor: ns-resize;
-}
-
-.editor-handle-ne {
-    left: 100%;
-    top: 0;
-
-    cursor: nesw-resize;
-}
-
-.editor-handle-e {
-    left: 100%;
-    top: 50%;
-
-    cursor: ew-resize;
-}
-
-.editor-handle-se {
-    left: 100%;
-    top: 100%;
-
-    cursor: nwse-resize;
-}
-
-.editor-handle-s {
-    left: 50%;
-    top: 100%;
-
-    cursor: ns-resize;
-}
-
-.editor-handle-sw {
-    left: 0;
-    top: 100%;
-
-    cursor: nesw-resize;
-}
-
-.editor-handle-w {
-    left: 0;
-    top: 50%;
-
-    cursor: ew-resize;
-}
-
-
-/* ============================================================
-   ROTATE HANDLE
-   ============================================================ */
-
-.editor-rotate-handle {
-    position: absolute;
-
-    left: 50%;
-    top: -31px;
-
-    width: 22px;
-    height: 22px;
-
-    margin-left: -11px;
-
-    border-radius: 50%;
-
-    pointer-events: auto;
-
-    cursor: grab;
-
-    touch-action: none;
-
-    background:
-        rgba(255,255,255,.96);
-
-    border:
-        1px solid
-        rgba(30,40,55,.18);
-
-    box-shadow:
-        0 3px 10px rgba(0,0,0,.3);
-
-    z-index: 30;
-
-    transition:
-        transform .16s var(--spring);
-}
-
-.editor-rotate-handle::before {
-    content: "";
-
-    position: absolute;
-
-    left: 50%;
-    top: 50%;
-
-    width: 8px;
-    height: 8px;
-
-    transform:
-        translate(-50%, -50%);
-
-    border:
-        1.5px solid
-        #343a44;
-
-    border-top-color:
-        transparent;
-
-    border-radius: 50%;
-}
-
-.editor-rotate-handle:active {
-    cursor: grabbing;
-
-    transform:
-        scale(.9);
-}
-
-
-/* ============================================================
-   ROTATION CONNECTOR
-   ============================================================ */
-
-.editor-handles::before {
-    content: "";
-
-    position: absolute;
-
-    left: 50%;
-    top: -21px;
-
-    width: 1px;
-    height: 21px;
-
-    transform:
-        translateX(-50%);
-
-    background:
-        rgba(75,135,255,.65);
-
-    pointer-events: none;
-}
-
-
-/* ============================================================
-   SNAP GUIDES
-   ============================================================ */
-
-.editor-guide {
-    position: absolute;
-
-    z-index: 9999;
-
-    pointer-events: none;
-
-    background:
-        rgba(74,135,255,.7);
-
-    box-shadow:
-        0 0 8px
-        rgba(74,135,255,.25);
-
-    opacity: .9;
-}
-
-.editor-guide-x {
-    width: 1px;
-
-    transform:
-        translateX(-.5px);
-}
-
-.editor-guide-y {
-    height: 1px;
-
-    transform:
-        translateY(-.5px);
-}
-
-
-/* ============================================================
-   LOCKED ELEMENTS
-   ============================================================ */
-
-.page-element.locked,
-.page-element[data-locked="true"],
-.pd-element.locked,
-.pd-element[data-locked="true"] {
-    cursor: default;
-}
-
-.page-element.locked .editor-handles,
-.page-element[data-locked="true"] .editor-handles,
-.pd-element.locked .editor-handles,
-.pd-element[data-locked="true"] .editor-handles {
-    display: none;
-}
-
-
-/* ============================================================
+/* =============================================================
    WINDOW SYSTEM
-   ============================================================ */
+   ============================================================= */
 
 .window {
-    position: absolute;
+  position: absolute;
 
-    z-index: var(--window-z);
+  z-index: var(--window-z);
 
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 
-    min-width: 250px;
-    min-height: 120px;
+  min-width: 250px;
+  min-height: 120px;
 
-    max-width:
-        calc(100% - 24px);
+  max-width:
+    calc(100% - 24px);
 
-    max-height:
-        calc(100% - 24px);
+  max-height:
+    calc(100% - 24px);
 
-    border-radius: 21px;
+  border-radius: 21px;
 
-    overflow: hidden;
+  overflow: hidden;
 
-    opacity: 0;
+  opacity: 0;
+  visibility: hidden;
 
-    visibility: hidden;
+  pointer-events: none;
 
-    pointer-events: none;
+  transform:
+    translate3d(
+      var(--window-x,0px),
+      var(--window-y,0px),
+      0
+    )
+    scale(.97);
 
-    transform:
-        translate3d(
-            var(--window-x,0px),
-            var(--window-y,0px),
-            0
-        )
-        scale(.97);
+  transform-origin: center;
 
-    transform-origin: center;
-
-    transition:
-        opacity .22s var(--ease),
-        visibility 0s linear .22s,
-        transform .32s var(--spring),
-        box-shadow .25s var(--ease),
-        border-color .25s var(--ease);
+  transition:
+    opacity .22s var(--ease),
+    visibility 0s linear .22s,
+    transform .32s var(--spring),
+    box-shadow .25s var(--ease),
+    border-color .25s var(--ease);
 }
 
 .window.is-open,
 .window.visible {
-    opacity: 1;
+  opacity: 1;
+  visibility: visible;
 
-    visibility: visible;
+  pointer-events: auto;
 
-    pointer-events: auto;
+  transform:
+    translate3d(
+      var(--window-x,0px),
+      var(--window-y,0px),
+      0
+    )
+    scale(1);
 
-    transform:
-        translate3d(
-            var(--window-x,0px),
-            var(--window-y,0px),
-            0
-        )
-        scale(1);
-
-    transition-delay: 0s;
+  transition-delay: 0s;
 }
 
 .window.is-focused {
-    border-color:
-        rgba(255,255,255,.16);
+  border-color:
+    rgba(255,255,255,.16);
 
-    box-shadow:
-        inset 0 1px rgba(255,255,255,.08),
-        0 34px 100px rgba(0,0,0,.46),
-        0 8px 30px rgba(0,0,0,.25);
+  box-shadow:
+    inset 0 1px
+    rgba(255,255,255,.08),
+    0 34px 100px
+    rgba(0,0,0,.46),
+    0 8px 30px
+    rgba(0,0,0,.25);
 }
 
 .window.is-dragging,
 .window.is-resizing {
-    transition: none;
+  transition: none;
 }
 
 .window.is-dragging {
-    cursor: grabbing;
+  cursor: grabbing;
 }
 
 .window.is-minimized {
-    min-height: 52px;
-
-    height: auto !important;
+  min-height: 52px;
+  height: auto !important;
 }
 
 .window.is-minimized .window-body {
-    display: none;
+  display: none;
 }
 
 .window.is-maximized {
-    left: 12px !important;
-    top: 12px !important;
+  left: 12px !important;
+  top: 12px !important;
 
-    width:
-        calc(100% - 24px) !important;
+  width:
+    calc(100% - 24px) !important;
 
-    height:
-        calc(100% - 24px) !important;
+  height:
+    calc(100% - 24px) !important;
 }
 
+
+/* =============================================================
+   WINDOW HEADER
+   ============================================================= */
+
 .window-header {
-    position: relative;
+  position: relative;
 
-    z-index: 2;
+  z-index: 2;
 
-    min-height: 50px;
+  min-height: 50px;
 
-    padding:
-        0 10px
-        0 15px;
+  padding:
+    0
+    10px
+    0
+    15px;
 
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
-    gap: 12px;
+  gap: 12px;
 
-    border-bottom:
-        1px solid
-        rgba(255,255,255,.065);
+  border-bottom:
+    1px solid
+    rgba(255,255,255,.065);
 
-    background:
-        rgba(255,255,255,.018);
+  background:
+    rgba(255,255,255,.018);
 
-    touch-action: none;
+  touch-action: none;
 
-    cursor: grab;
+  cursor: grab;
 }
 
 .window-header:active {
-    cursor: grabbing;
+  cursor: grabbing;
 }
 
 .window-heading,
 .inspector-title {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 
-    gap: 9px;
+  gap: 9px;
 
-    min-width: 0;
+  min-width: 0;
 
-    font-size: 12px;
-    font-weight: 600;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .window-title-icon {
-    width: 28px;
-    height: 28px;
+  width: 28px;
+  height: 28px;
 
-    border-radius: 9px;
+  border-radius: 9px;
 
-    display: grid;
-    place-items: center;
+  display: grid;
+  place-items: center;
 
-    color: var(--muted);
+  color: var(--muted);
 
-    background:
-        rgba(255,255,255,.055);
+  background:
+    rgba(255,255,255,.055);
 
-    border:
-        1px solid
-        rgba(255,255,255,.07);
+  border:
+    1px solid
+    rgba(255,255,255,.07);
 }
 
 .window-title-icon svg {
-    width: 15px;
-    height: 15px;
+  width: 15px;
+  height: 15px;
 
-    fill: none;
-    stroke: currentColor;
+  fill: none;
 
-    stroke-linecap: round;
-    stroke-linejoin: round;
+  stroke: currentColor;
+
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .window-controls {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 
-    gap: 3px;
+  gap: 3px;
 }
 
 .window-control {
-    width: 31px;
-    height: 31px;
+  width: 31px;
+  height: 31px;
 
-    border-radius: 9px;
+  border-radius: 9px;
 
-    display: grid;
-    place-items: center;
+  display: grid;
+  place-items: center;
 
-    color: var(--dim);
+  color: var(--dim);
 
-    transition:
-        background .2s var(--ease),
-        color .2s var(--ease),
-        transform .25s var(--spring);
+  transition:
+    background .2s var(--ease),
+    color .2s var(--ease),
+    transform .25s var(--spring);
 }
 
 .window-control svg {
-    width: 14px;
-    height: 14px;
+  width: 14px;
+  height: 14px;
 }
 
 .window-control:hover {
-    color: var(--white);
+  color: var(--white);
 
-    background:
-        rgba(255,255,255,.065);
+  background:
+    rgba(255,255,255,.065);
 }
 
 .window-control:active {
-    transform: scale(.87);
+  transform: scale(.87);
 }
 
 .window-control.close:hover {
-    color: #fff;
+  color: #fff;
 
-    background:
-        rgba(255,70,80,.22);
+  background:
+    rgba(255,70,80,.22);
 }
 
+
+/* =============================================================
+   WINDOW BODY
+   ============================================================= */
+
 .window-body {
-    min-height: 0;
+  min-height: 0;
 
-    overflow: auto;
+  overflow: auto;
 
-    padding: 14px;
+  padding: 14px;
 
-    scrollbar-width: thin;
+  scrollbar-width: thin;
 
-    scrollbar-color:
-        rgba(255,255,255,.12)
-        transparent;
+  scrollbar-color:
+    rgba(255,255,255,.12)
+    transparent;
 }
 
 .window-body::-webkit-scrollbar {
-    width: 7px;
+  width: 7px;
 }
 
 .window-body::-webkit-scrollbar-thumb {
-    background:
-        rgba(255,255,255,.11);
+  background:
+    rgba(255,255,255,.11);
 
-    border-radius: 99px;
+  border-radius: 99px;
 }
 
+
+/* =============================================================
+   WINDOW RESIZER
+   ============================================================= */
+
 .window-resizer {
-    position: absolute;
+  position: absolute;
 
-    right: 3px;
-    bottom: 3px;
+  right: 3px;
+  bottom: 3px;
 
-    width: 22px;
-    height: 22px;
+  width: 22px;
+  height: 22px;
 
-    z-index: 8;
+  z-index: 8;
 
-    cursor: nwse-resize;
+  cursor: nwse-resize;
 
-    touch-action: none;
+  touch-action: none;
 }
 
 .window-resizer::after {
-    content: "";
+  content: "";
 
-    position: absolute;
+  position: absolute;
 
-    right: 4px;
-    bottom: 4px;
+  right: 4px;
+  bottom: 4px;
 
-    width: 8px;
-    height: 8px;
+  width: 8px;
+  height: 8px;
 
-    border-right:
-        1px solid
-        rgba(255,255,255,.25);
+  border-right:
+    1px solid
+    rgba(255,255,255,.25);
 
-    border-bottom:
-        1px solid
-        rgba(255,255,255,.25);
+  border-bottom:
+    1px solid
+    rgba(255,255,255,.25);
 }
 
 
-/* ============================================================
+/* =============================================================
    INSPECTOR
-   ============================================================ */
+   ============================================================= */
 
 .inspector {
-    width: 285px;
-    height: 480px;
+  width: 285px;
+  height: 480px;
 
-    right: 18px;
-    top: 18px;
+  right: 18px;
+  top: 18px;
 }
 
 .inspector-header {
-    min-height: 50px;
+  min-height: 50px;
 }
 
 .inspector-content {
-    padding: 16px;
+  padding: 16px;
 }
 
 .inspector-empty {
-    min-height: 310px;
+  min-height: 310px;
 
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 
-    align-items: center;
-    justify-content: center;
+  align-items: center;
+  justify-content: center;
 
-    text-align: center;
+  text-align: center;
 
-    gap: 8px;
+  gap: 8px;
 
-    color: var(--muted);
+  color: var(--muted);
 }
 
 .empty-icon {
-    width: 48px;
-    height: 48px;
+  width: 48px;
+  height: 48px;
 
-    border-radius: 15px;
+  border-radius: 15px;
 
-    display: grid;
-    place-items: center;
+  display: grid;
+  place-items: center;
 
-    margin-bottom: 5px;
+  margin-bottom: 5px;
 
-    color: var(--dim);
+  color: var(--dim);
 
-    background:
-        rgba(255,255,255,.04);
+  background:
+    rgba(255,255,255,.04);
 
-    border:
-        1px solid
-        rgba(255,255,255,.06);
+  border:
+    1px solid
+    rgba(255,255,255,.06);
 }
 
 .empty-icon svg {
-    width: 22px;
-    height: 22px;
+  width: 22px;
+  height: 22px;
 }
 
 .inspector-empty strong {
-    color: var(--text);
-    font-size: 12px;
+  color: var(--text);
+
+  font-size: 12px;
 }
 
 .inspector-empty span {
-    max-width: 190px;
+  max-width: 190px;
 
-    font-size: 11px;
+  font-size: 11px;
 
-    line-height: 1.5;
+  line-height: 1.5;
 
-    color: var(--dim);
+  color: var(--dim);
 }
 
 
-/* ============================================================
-   PROPERTIES
-   ============================================================ */
+/* =============================================================
+   INSPECTOR PROPERTIES
+   ============================================================= */
 
 .property-section {
-    padding: 14px 0;
+  padding: 14px 0;
 
-    border-bottom:
-        1px solid
-        rgba(255,255,255,.055);
+  border-bottom:
+    1px solid
+    rgba(255,255,255,.055);
 }
 
 .property-section:first-child {
-    padding-top: 0;
+  padding-top: 0;
 }
 
 .property-section:last-child {
-    border-bottom: 0;
+  border-bottom: 0;
 }
 
 .property-label {
-    margin-bottom: 9px;
+  margin-bottom: 9px;
 
-    font-size: 10px;
+  font-size: 10px;
 
-    color: var(--dim);
+  color: var(--dim);
 
-    text-transform: uppercase;
+  text-transform: uppercase;
 
-    letter-spacing: .09em;
+  letter-spacing: .09em;
 }
 
 .property-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
-    gap: 12px;
+  gap: 12px;
 
-    font-size: 11px;
+  font-size: 11px;
 
-    color: var(--muted);
+  color: var(--muted);
 }
 
 .property-row strong {
-    color: var(--text);
+  color: var(--text);
 
-    font-size: 11px;
-
-    font-weight: 600;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .selected-element-name {
-    padding: 10px 11px;
+  padding: 10px 11px;
 
-    border-radius: 11px;
+  border-radius: 11px;
 
-    background:
-        rgba(255,255,255,.045);
+  background:
+    rgba(255,255,255,.045);
 
-    border:
-        1px solid
-        rgba(255,255,255,.06);
+  border:
+    1px solid
+    rgba(255,255,255,.06);
 
-    font-size: 12px;
+  font-size: 12px;
 
-    color: var(--text);
+  color: var(--text);
 
-    overflow: hidden;
+  overflow: hidden;
 
-    text-overflow: ellipsis;
+  text-overflow: ellipsis;
 
-    white-space: nowrap;
+  white-space: nowrap;
 }
 
 
-/* ============================================================
-   INPUTS
-   ============================================================ */
-
-input[type="text"],
-input[type="number"],
-input[type="color"],
-textarea,
-select {
-    width: 100%;
-
-    min-height: 36px;
-
-    padding:
-        0 10px;
-
-    border-radius: 10px;
-
-    color: var(--text);
-
-    background:
-        rgba(255,255,255,.045);
-
-    border:
-        1px solid
-        rgba(255,255,255,.075);
-
-    outline: none;
-
-    transition:
-        background .2s var(--ease),
-        border-color .2s var(--ease),
-        box-shadow .2s var(--ease);
-}
-
-input[type="text"]:hover,
-input[type="number"]:hover,
-textarea:hover,
-select:hover {
-    background:
-        rgba(255,255,255,.065);
-
-    border-color:
-        rgba(255,255,255,.12);
-}
-
-input[type="text"]:focus,
-input[type="number"]:focus,
-textarea:focus,
-select:focus {
-    background:
-        rgba(255,255,255,.075);
-
-    border-color:
-        rgba(109,156,255,.55);
-
-    box-shadow:
-        0 0 0 3px
-        rgba(109,156,255,.10);
-}
-
-input[type="color"] {
-    padding: 3px;
-    cursor: pointer;
-}
-
-
-/* ============================================================
-   RANGE
-   ============================================================ */
+/* =============================================================
+   RANGE INPUTS
+   ============================================================= */
 
 input[type="range"] {
-    width: 100%;
-    height: 22px;
+  width: 100%;
+  height: 22px;
 
-    margin: 8px 0 0;
+  margin: 8px 0 0;
 
-    appearance: none;
+  appearance: none;
 
-    background: transparent;
+  background: transparent;
 }
 
 input[type="range"]::-webkit-slider-runnable-track {
-    height: 4px;
+  height: 4px;
 
-    border-radius: 99px;
+  border-radius: 99px;
 
-    background:
-        rgba(255,255,255,.11);
+  background:
+    rgba(255,255,255,.11);
 }
 
 input[type="range"]::-webkit-slider-thumb {
-    appearance: none;
+  appearance: none;
 
-    width: 17px;
-    height: 17px;
+  width: 17px;
+  height: 17px;
 
-    margin-top: -6px;
+  margin-top: -6px;
 
-    border-radius: 50%;
+  border-radius: 50%;
 
-    background: #e9edf2;
+  background: #e9edf2;
 
-    border:
-        1px solid
-        rgba(0,0,0,.2);
+  border:
+    1px solid
+    rgba(0,0,0,.2);
 
-    box-shadow:
-        0 3px 10px rgba(0,0,0,.35);
+  box-shadow:
+    0 3px 10px
+    rgba(0,0,0,.35);
 }
 
 input[type="range"]::-moz-range-track {
-    height: 4px;
+  height: 4px;
 
-    border-radius: 99px;
+  border-radius: 99px;
 
-    background:
-        rgba(255,255,255,.11);
+  background:
+    rgba(255,255,255,.11);
 }
 
 input[type="range"]::-moz-range-thumb {
-    width: 17px;
-    height: 17px;
+  width: 17px;
+  height: 17px;
 
-    border-radius: 50%;
+  border-radius: 50%;
 
-    background: #e9edf2;
+  background: #e9edf2;
 
-    border: 0;
+  border: 0;
 }
 
 
-/* ============================================================
+/* =============================================================
    COLORS
-   ============================================================ */
+   ============================================================= */
 
 .color-grid {
-    display: grid;
+  display: grid;
 
-    grid-template-columns:
-        repeat(6, 1fr);
+  grid-template-columns:
+    repeat(6,1fr);
 
-    gap: 7px;
+  gap: 7px;
 }
 
 .color-chip,
 .color-custom {
-    position: relative;
+  position: relative;
 
-    width: 100%;
+  width: 100%;
 
-    aspect-ratio: 1;
+  aspect-ratio: 1;
 
-    border-radius: 10px;
+  border-radius: 10px;
 
-    border:
-        1px solid
-        rgba(255,255,255,.1);
+  border:
+    1px solid
+    rgba(255,255,255,.1);
 
-    background:
-        var(--chip-color);
+  background:
+    var(--chip-color);
 
-    cursor: pointer;
+  cursor: pointer;
 
-    transition:
-        transform .25s var(--spring),
-        border-color .2s var(--ease);
+  transition:
+    transform .25s var(--spring),
+    border-color .2s var(--ease);
 }
 
 .color-chip:hover,
 .color-custom:hover {
-    transform: scale(1.08);
+  transform: scale(1.08);
 
-    border-color:
-        rgba(255,255,255,.3);
+  border-color:
+    rgba(255,255,255,.3);
 }
 
 .color-chip.active {
-    box-shadow:
-        0 0 0 2px #080a0d,
-        0 0 0 3px rgba(255,255,255,.75);
+  box-shadow:
+    0 0 0 2px #080a0d,
+    0 0 0 3px rgba(255,255,255,.75);
 }
 
 .color-custom {
-    display: grid;
-    place-items: center;
+  display: grid;
+  place-items: center;
 
-    background:
-        rgba(255,255,255,.05);
+  background:
+    rgba(255,255,255,.05);
 
-    color: var(--muted);
+  color: var(--muted);
 }
 
 .color-custom svg {
-    width: 15px;
-    height: 15px;
+  width: 15px;
+  height: 15px;
 }
 
 .color-custom input {
-    position: absolute;
-    inset: 0;
+  position: absolute;
+  inset: 0;
 
-    opacity: 0;
+  opacity: 0;
 
-    cursor: pointer;
+  cursor: pointer;
 }
 
 
-/* ============================================================
-   FLOATING WINDOWS
-   ============================================================ */
+/* =============================================================
+   ELEMENTS / LAYERS / DESIGN / BACKGROUND
+   ============================================================= */
 
 .floating-panel {
-    width: 280px;
-    min-height: 180px;
+  width: 280px;
+
+  min-height: 180px;
 }
 
 #elementsWindow {
-    left: 86px;
-    top: 76px;
+  left: 86px;
+  top: 76px;
 
-    width: 285px;
-    height: 370px;
+  width: 285px;
+  height: 370px;
 }
 
 #layersWindow {
-    left: 86px;
-    top: 82px;
+  left: 86px;
+  top: 82px;
 
-    width: 285px;
-    height: 300px;
+  width: 285px;
+  height: 300px;
 }
 
 #designWindow {
-    right: 318px;
-    top: 18px;
+  right: 318px;
+  top: 18px;
 
-    width: 260px;
-    height: 280px;
+  width: 260px;
+  height: 280px;
 }
 
 #backgroundWindow {
-    right: 318px;
-    top: 310px;
+  right: 318px;
+  top: 310px;
 
-    width: 260px;
-    height: 255px;
+  width: 260px;
+  height: 255px;
 }
 
 #settingsWindow {
-    left: calc(50% - 140px);
-    top: 82px;
+  left: calc(50% - 140px);
+  top: 82px;
 
-    width: 280px;
-    height: 220px;
+  width: 280px;
+  height: 220px;
 }
 
 #profileWindow {
-    right: 18px;
-    top: 18px;
+  right: 18px;
+  top: 18px;
 
-    width: 280px;
-    height: 210px;
+  width: 280px;
+  height: 210px;
 }
 
 
-/* ============================================================
-   ELEMENT LIST
-   ============================================================ */
+/* =============================================================
+   ELEMENT OPTIONS
+   ============================================================= */
 
 .element-list {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 
-    gap: 7px;
+  gap: 7px;
 }
 
 .element-option {
-    width: 100%;
+  width: 100%;
 
-    min-height: 58px;
+  min-height: 58px;
 
-    padding:
-        9px 10px;
+  padding:
+    9px
+    10px;
 
-    border-radius: 13px;
+  border-radius: 13px;
 
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 
-    gap: 11px;
+  gap: 11px;
 
-    text-align: left;
+  text-align: left;
 
-    color: var(--muted);
+  color: var(--muted);
 
-    background:
-        rgba(255,255,255,.025);
+  background:
+    rgba(255,255,255,.025);
 
-    border:
-        1px solid
-        rgba(255,255,255,.05);
+  border:
+    1px solid
+    rgba(255,255,255,.05);
 
-    transition:
-        transform .25s var(--spring),
-        background .25s var(--ease),
-        border-color .25s var(--ease),
-        color .25s var(--ease);
+  transition:
+    transform .25s var(--spring),
+    background .25s var(--ease),
+    border-color .25s var(--ease),
+    color .25s var(--ease);
 }
 
 .element-option:hover {
-    color: var(--white);
+  color: var(--white);
 
-    background:
-        rgba(255,255,255,.06);
+  background:
+    rgba(255,255,255,.06);
 
-    border-color:
-        rgba(255,255,255,.1);
+  border-color:
+    rgba(255,255,255,.1);
 
-    transform:
-        translateX(2px);
+  transform:
+    translateX(2px);
 }
 
 .element-option:active {
-    transform: scale(.98);
+  transform: scale(.98);
 }
 
 .element-option-icon {
-    width: 34px;
-    height: 34px;
+  width: 34px;
+  height: 34px;
 
-    flex: none;
+  flex: none;
 
-    border-radius: 10px;
+  border-radius: 10px;
 
-    display: grid;
-    place-items: center;
+  display: grid;
+  place-items: center;
 
-    color: var(--muted);
+  color: var(--muted);
 
-    background:
-        rgba(255,255,255,.045);
+  background:
+    rgba(255,255,255,.045);
 
-    border:
-        1px solid
-        rgba(255,255,255,.06);
+  border:
+    1px solid
+    rgba(255,255,255,.06);
 }
 
 .element-option-icon svg {
-    width: 18px;
-    height: 18px;
+  width: 18px;
+  height: 18px;
 
-    fill: none;
-    stroke: currentColor;
+  fill: none;
 
-    stroke-linecap: round;
-    stroke-linejoin: round;
+  stroke: currentColor;
+
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .element-option strong,
 .element-option small {
-    display: block;
+  display: block;
 }
 
 .element-option strong {
-    font-size: 11px;
-    color: var(--text);
+  font-size: 11px;
+
+  color: var(--text);
 }
 
 .element-option small {
-    margin-top: 3px;
+  margin-top: 3px;
 
-    font-size: 9px;
+  font-size: 9px;
 
-    color: var(--dim);
+  color: var(--dim);
 }
 
 
-/* ============================================================
+/* =============================================================
    LAYERS
-   ============================================================ */
+   ============================================================= */
 
 .layers-list {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 
-    gap: 5px;
+  gap: 5px;
 }
 
 .layer-item {
-    width: 100%;
+  width: 100%;
 
-    min-height: 43px;
+  min-height: 43px;
 
-    padding:
-        7px 9px;
+  padding:
+    7px
+    9px;
 
-    border-radius: 11px;
+  border-radius: 11px;
 
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 
-    gap: 9px;
+  gap: 9px;
 
-    text-align: left;
+  text-align: left;
 
-    color: var(--muted);
+  color: var(--muted);
 
-    background: transparent;
+  background: transparent;
 
-    transition:
-        background .2s var(--ease),
-        color .2s var(--ease);
+  transition:
+    background .2s var(--ease),
+    color .2s var(--ease);
 }
 
 .layer-item:hover {
-    background:
-        rgba(255,255,255,.05);
+  background:
+    rgba(255,255,255,.05);
 
-    color: var(--white);
+  color: var(--white);
 }
 
 .layer-item.active {
-    color: var(--white);
+  color: var(--white);
 
-    background:
-        rgba(255,255,255,.075);
+  background:
+    rgba(255,255,255,.075);
 }
 
 .layer-item span:last-child {
-    overflow: hidden;
+  overflow: hidden;
 
-    text-overflow: ellipsis;
+  text-overflow: ellipsis;
 
-    white-space: nowrap;
+  white-space: nowrap;
 
-    font-size: 10px;
+  font-size: 10px;
 }
 
 .layer-type {
-    width: 27px;
-    height: 27px;
+  width: 27px;
+  height: 27px;
 
-    flex: none;
+  flex: none;
 
-    border-radius: 8px;
+  border-radius: 8px;
 
-    display: grid;
-    place-items: center;
+  display: grid;
+  place-items: center;
 
-    font-size: 9px;
-    font-weight: 650;
+  font-size: 9px;
+  font-weight: 650;
 
-    color: var(--muted);
+  color: var(--muted);
 
-    background:
-        rgba(255,255,255,.05);
+  background:
+    rgba(255,255,255,.05);
 
-    border:
-        1px solid
-        rgba(255,255,255,.06);
+  border:
+    1px solid
+    rgba(255,255,255,.06);
 }
 
 .layer-type svg {
-    width: 14px;
-    height: 14px;
+  width: 14px;
+  height: 14px;
 }
 
 
-/* ============================================================
+/* =============================================================
    DESIGN OPTIONS
-   ============================================================ */
+   ============================================================= */
 
 .design-options {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 
-    gap: 7px;
+  gap: 7px;
 }
 
 .design-option {
-    width: 100%;
+  width: 100%;
 
-    padding: 12px;
+  padding: 12px;
 
-    border-radius: 11px;
+  border-radius: 11px;
 
-    text-align: left;
+  text-align: left;
 
-    color: var(--muted);
+  color: var(--muted);
 
-    background:
-        rgba(255,255,255,.035);
+  background:
+    rgba(255,255,255,.035);
 
-    border:
-        1px solid
-        rgba(255,255,255,.05);
+  border:
+    1px solid
+    rgba(255,255,255,.05);
 
-    font-size: 11px;
+  font-size: 11px;
 
-    transition:
-        background .2s var(--ease),
-        color .2s var(--ease),
-        transform .25s var(--spring);
+  transition:
+    background .2s var(--ease),
+    color .2s var(--ease),
+    transform .25s var(--spring);
 }
 
 .design-option:hover {
-    color: var(--white);
+  color: var(--white);
 
-    background:
-        rgba(255,255,255,.07);
+  background:
+    rgba(255,255,255,.07);
 
-    transform:
-        translateX(2px);
+  transform:
+    translateX(2px);
 }
 
 .design-option:active {
-    transform: scale(.98);
+  transform: scale(.98);
 }
 
 
-/* ============================================================
-   BACKGROUND OPTIONS
-   ============================================================ */
+/* =============================================================
+   BACKGROUND
+   ============================================================= */
 
 .background-options {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 
-    gap: 13px;
+  gap: 13px;
+}
+
+.wallpaper-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2,1fr);
+
+  gap: 7px;
+}
+
+.wallpaper-option {
+  min-height: 48px;
+
+  border-radius: 11px;
+
+  color: var(--muted);
+
+  font-size: 10px;
+
+  background:
+    rgba(255,255,255,.035);
+
+  border:
+    1px solid
+    rgba(255,255,255,.06);
+
+  transition:
+    transform .25s var(--spring),
+    border-color .2s var(--ease),
+    background .2s var(--ease);
+}
+
+.wallpaper-option:hover {
+  transform: translateY(-1px);
+
+  color: var(--white);
+}
+
+.wallpaper-option.active {
+  color: var(--white);
+
+  border-color:
+    rgba(255,255,255,.2);
+
+  background:
+    rgba(255,255,255,.085);
 }
 
 
-/* ============================================================
-   PROPERTY PANELS
-   ============================================================ */
+/* =============================================================
+   SWITCH
+   ============================================================= */
 
-.property {
-    display: flex;
-    flex-direction: column;
+.switch {
+  position: relative;
 
-    gap: 7px;
+  width: 38px;
+  height: 23px;
 
-    margin-bottom: 12px;
+  flex: none;
 }
 
-.property label {
-    font-size: 9px;
+.switch input {
+  position: absolute;
 
-    color: var(--dim);
+  opacity: 0;
 
-    text-transform: uppercase;
-
-    letter-spacing: .1em;
+  pointer-events: none;
 }
 
-.property-row {
-    display: grid;
+.switch span {
+  position: absolute;
+  inset: 0;
 
-    grid-template-columns:
-        1fr 1fr;
+  border-radius: 99px;
 
-    gap: 9px;
+  background:
+    rgba(255,255,255,.11);
+
+  border:
+    1px solid
+    rgba(255,255,255,.07);
+
+  transition:
+    background .25s var(--ease);
 }
 
+.switch span::after {
+  content: "";
 
-/* ============================================================
-   DELETE BUTTON
-   ============================================================ */
+  position: absolute;
 
-.delete-element {
-    width: 100%;
+  width: 17px;
+  height: 17px;
 
-    min-height: 38px;
+  left: 2px;
+  top: 2px;
 
-    margin-top: 8px;
+  border-radius: 50%;
 
-    border-radius: 11px;
+  background: #dce0e5;
 
-    color:
-        rgba(255,110,118,.9);
+  box-shadow:
+    0 2px 7px
+    rgba(0,0,0,.4);
 
-    background:
-        rgba(255,70,80,.07);
-
-    border:
-        1px solid
-        rgba(255,70,80,.12);
-
-    transition:
-        background .2s var(--ease),
-        transform .25s var(--spring),
-        border-color .2s var(--ease);
+  transition:
+    transform .3s var(--spring);
 }
 
-.delete-element:hover {
-    background:
-        rgba(255,70,80,.14);
-
-    border-color:
-        rgba(255,70,80,.22);
+.switch input:checked + span {
+  background:
+    rgba(255,255,255,.25);
 }
 
-.delete-element:active {
-    transform: scale(.97);
-}
+.switch input:checked + span::after {
+  transform: translateX(15px);
 
-
-/* ============================================================
-   EMPTY PROPERTIES
-   ============================================================ */
-
-.empty-properties {
-    min-height: 220px;
-
-    display: flex;
-    flex-direction: column;
-
-    align-items: center;
-    justify-content: center;
-
-    text-align: center;
-
-    gap: 7px;
-
-    color: var(--muted);
-}
-
-.empty-properties strong {
-    font-size: 12px;
-
-    color: var(--text);
-}
-
-.empty-properties span {
-    max-width: 190px;
-
-    font-size: 10px;
-
-    line-height: 1.5;
-
-    color: var(--dim);
+  background: #fff;
 }
 
 
-/* ============================================================
-   STATUS
-   ============================================================ */
+/* =============================================================
+   SETTINGS
+   ============================================================= */
 
-[data-status] {
-    pointer-events: none;
+.settings-item {
+  padding: 12px 0;
 
-    white-space: nowrap;
+  border-bottom:
+    1px solid
+    rgba(255,255,255,.055);
 
-    transition:
-        opacity .2s var(--ease);
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.settings-item:last-child {
+  border-bottom: 0;
+}
+
+.settings-item strong {
+  font-size: 11px;
+
+  color: var(--text);
+}
+
+.settings-item span {
+  font-size: 10px;
+
+  line-height: 1.45;
+
+  color: var(--dim);
 }
 
 
-/* ============================================================
-   PREVIEW
-   ============================================================ */
+/* =============================================================
+   PROJECT CARD
+   ============================================================= */
 
-/*
- * En preview sí permitimos interacción.
- */
+.project-card {
+  display: flex;
+  align-items: center;
 
-.preview-mode .page-element,
-.preview-mode .pd-element {
-    cursor: default;
+  gap: 11px;
 
-    user-select: auto;
+  padding: 12px;
 
-    touch-action: auto;
+  border-radius: 14px;
+
+  background:
+    rgba(255,255,255,.04);
+
+  border:
+    1px solid
+    rgba(255,255,255,.06);
 }
 
-.preview-mode .editor-handles {
-    display: none !important;
+.project-avatar {
+  width: 38px;
+  height: 38px;
+
+  border-radius: 12px;
+
+  display: grid;
+  place-items: center;
+
+  font-weight: 700;
+
+  background:
+    linear-gradient(
+      145deg,
+      #505761,
+      #171a1e
+    );
+
+  box-shadow:
+    inset 0 1px
+    rgba(255,255,255,.16);
 }
 
-.preview-mode .page-button {
-    pointer-events: auto;
+.project-card strong,
+.project-card span {
+  display: block;
 }
 
-.preview-mode .page-element,
-.preview-mode .pd-element {
-    outline: none !important;
-
-    box-shadow: none !important;
-}
-
-
-/* ============================================================
-   ACCESSIBILITY / MOTION
-   ============================================================ */
-
-@media (prefers-reduced-motion: reduce) {
-
-    *,
-    *::before,
-    *::after {
-        animation-duration: .001ms !important;
-        animation-iteration-count: 1 !important;
-
-        scroll-behavior: auto !important;
-
-        transition-duration: .001ms !important;
-    }
-}
-
-
-/* ============================================================
-   MOBILE
-   ============================================================ */
-
-@media (max-width: 800px) {
-
-    .app {
-        padding:
-            calc(8px + var(--safe-top))
-            8px
-            calc(8px + var(--safe-bottom));
-
-        gap: 8px;
-    }
-
-    .topbar {
-        height: 54px;
-        min-height: 54px;
-
-        border-radius: 18px;
-    }
-
-    .brand {
-        min-width: 0;
-    }
-
-    .brand-text span {
-        display: none;
-    }
-
-    .top-navigation {
-        display: none;
-    }
-
-    .workspace {
-        border-radius: 22px;
-    }
-
-    .tool-dock {
-        left: 8px;
-
-        width: 48px;
-
-        padding: 6px;
-
-        border-radius: 16px;
-    }
-
-    .tool-item {
-        width: 36px;
-        height: 36px;
-
-        border-radius: 11px;
-    }
-
-    .canvas-toolbar {
-        top: 10px;
-
-        min-width: 210px;
-        height: 40px;
-    }
-
-    .canvas-stage {
-        padding:
-            70px
-            60px;
-    }
-
-    .design-page {
-        width: 760px;
-        height: 520px;
-    }
-
-    /*
-     * Windows como bottom sheets.
-     */
-
-    .window {
-        position: fixed;
-
-        left: 8px !important;
-        right: 8px !important;
-
-        bottom:
-            calc(8px + var(--safe-bottom));
-
-        top: auto !important;
-
-        width:
-            calc(100% - 16px) !important;
-
-        max-width:
-            none;
-
-        max-height:
-            calc(100% - 80px);
-
-        border-radius: 22px;
-
-        transform:
-            translate3d(
-                0,
-                20px,
-                0
-            )
-            scale(.98);
-    }
-
-    .window.is-open,
-    .window.visible {
-        transform:
-            translate3d(
-                0,
-                0,
-                0
-            )
-            scale(1);
-    }
-
-    .window.is-maximized {
-        left: 8px !important;
-        right: 8px !important;
-        top: 8px !important;
-        bottom: 8px !important;
-
-        width:
-            calc(100% - 16px) !important;
-
-        height:
-            calc(100% - 16px) !important;
-    }
-
-    #elementsWindow,
-    #layersWindow,
-    #designWindow,
-    #backgroundWindow,
-    #settingsWindow,
-    #profileWindow,
-    .inspector {
-        width:
-            calc(100% - 16px) !important;
-
-        height:
-            auto !important;
-
-        min-height: 220px;
-
-        max-height:
-            calc(100% - 80px);
-    }
-
-    /*
-     * Handles un poco más grandes en móvil.
-     */
-
-    .editor-handle {
-        width: 28px;
-        height: 28px;
-
-        margin: -14px;
-    }
-
-    .editor-handle::after {
-        width: 9px;
-        height: 9px;
-    }
-
-    .editor-rotate-handle {
-        width: 26px;
-        height: 26px;
-
-        margin-left: -13px;
-
-        top: -36px;
-    }
-
-    .editor-handles::before {
-        top: -24px;
-        height: 24px;
-    }
-}
-
-
-/* ============================================================
-   VERY SMALL SCREENS
-   ============================================================ */
-
-@media (max-width: 480px) {
-
-    .brand-text strong {
-        font-size: 12px;
-    }
-
-    .top-actions {
-        gap: 0;
-    }
-
-    .icon-button,
-    .profile-button {
-        width: 35px;
-        height: 35px;
-    }
-
-    .tool-dock {
-        display: none;
-    }
-
-    .canvas-stage {
-        padding:
-            65px
-            30px;
-    }
-
-    .canvas-toolbar {
-        min-width: 190px;
-    }
-
-    .canvas-status {
-        display: none;
-    }
-
-    .property-row {
-        grid-template-columns: 1fr;
-    }
-}
-
-
-/* ============================================================
-   TOUCH
-   ============================================================ */
-
-@media (pointer: coarse) {
-
-    .tool-item,
-    .icon-button,
-    .canvas-button,
-    .window-control {
-        min-width: 40px;
-        min-height: 40px;
-    }
-
-    .editor-handle {
-        width: 28px;
-        height: 28px;
-
-        margin: -14px;
-    }
-
-    .editor-rotate-handle {
-        width: 27px;
-        height: 27px;
-
-        margin-left: -13.5px;
-    }
-}
-
-
-/* ============================================================
-   FINAL SAFETY OVERRIDES
-   ============================================================ */
-
-/*
- * Estos overrides son intencionales.
- * Evitan que estilos antiguos del proyecto vuelvan a introducir
- * translate3d() o scale() en los elementos.
- */
-
-.design-page
-    > .page-element,
-.design-page
-    > .pd-element {
-
-    left: var(--editor-x, auto);
-
-    /*
-     * Si editor.js/manipulador.js establece left/top,
-     * esos valores tienen prioridad.
-     *
-     * El fallback sigue siendo 0.
-     */
-}
-
-.design-page
-    > .page-element,
-.design-page
-    > .pd-element {
-
-    transform:
-        rotate(
-            var(
-                --editor-rotation,
-                0deg
-            )
-        ) !important;
-}
-
-
-/*
- * No permitir que un hover de un elemento hijo
- * destruya la geometría del padre.
- */
-
-.page-element .page-button:hover,
-.pd-element .page-button:hover {
-    transform: none !important;
-}
-
-
-/*
- * El overlay de selección nunca altera la geometría.
- */
-
-.editor-handles,
-.editor-guide {
-    margin: 0;
-}
-
-
-/*
- * Durante una manipulación no queremos animación,
- * backdrop, filtros ni efectos adicionales.
- */
-
-.page-element.editor-moving,
-.page-element.editor-resizing,
-.page-element.editor-rotating,
-.pd-element.editor-moving,
-.pd-element.editor-resizing,
-.pd-element.editor-rotating {
-    filter: none !important;
-    animation: none !important;
-}
-
-
-/*
- * Los elementos no pueden escapar visualmente del lienzo.
- */
-
-.design-page {
-    contain: layout paint;
-}
-
-
-/*
- * Los elementos seleccionados siempre permanecen por encima
- * de elementos normales.
- */
-
-.page-element.editor-selected,
-.page-element.selected,
-.pd-element.editor-selected,
-.pd-element.selected {
-    z-index: 5000;
-}
-
-
-/*
- * Pero los handles están todavía por encima.
- */
-
-.page-element.editor-selected > .editor-handles,
-.page-element.selected > .editor-handles,
-.pd-element.editor-selected > .editor-handles,
-.pd-element.selected > .editor-handles {
-    z-index: 10000;
-}
-
-
-/* ============================================================
-   FIN
-   ============================================================ */
+.project-card strong {
+  font-size: 11
