@@ -1,411 +1,408 @@
-/* ============================================================
-   PLUGINDEX — MANIPULADOR
-   editor/manipulador.js
-
-   Editor físico tipo Canva.
-
-   FUNCIONES:
-   - Arrastrar
-   - Redimensionar
-   - Rotar
-   - Snap
-   - Guías
-   - Touch
-   - Pointer Capture
-   - Hitbox cómoda
-   - Protección contra botones HTML
-   - Sin RAF permanente
-============================================================ */
-
 (() => {
-
     "use strict";
 
+    /*
+     * PluginDex — Manipulador
+     * -----------------------
+     * Sistema único de:
+     *  - selección
+     *  - mover
+     *  - redimensionar
+     *  - rotar
+     *  - snap
+     *  - límites del lienzo
+     *
+     * IMPORTANTE:
+     * La geometría real usa únicamente:
+     *
+     *   left
+     *   top
+     *   width
+     *   height
+     *   --editor-rotation
+     *
+     * No usamos translate3d() para posicionar elementos.
+     */
 
-    /* ============================================================
-       CONFIG
-    ============================================================ */
+    const ELEMENT_SELECTOR = ".page-element, .pd-element";
+    const HANDLE_SELECTOR = ".editor-handle";
+    const ROTATE_SELECTOR = ".editor-rotate-handle";
 
-    const ROOT_SELECTOR =
-        ".page-element";
+    const MIN_WIDTH = 30;
+    const MIN_HEIGHT = 30;
 
+    const SNAP_DISTANCE = 8;
+    const MOVE_THRESHOLD = 3;
 
-    const HANDLE_SIZE =
-        12;
+    let active = null;
+    let selectionObserver = null;
 
+    // --------------------------------------------------
+    // DOM
+    // --------------------------------------------------
 
-    const MIN_WIDTH =
-        40;
-
-
-    const MIN_HEIGHT =
-        30;
-
-
-    const SNAP_DISTANCE =
-        8;
-
-
-    const MOVE_THRESHOLD =
-        3;
-
-
-    /* ============================================================
-       ESTADO
-    ============================================================ */
-
-    const state = {
-
-        root: null,
-
-        active: null,
-
-        mode: null,
-
-        pointerId: null,
-
-        startX: 0,
-
-        startY: 0,
-
-        startLeft: 0,
-
-        startTop: 0,
-
-        startWidth: 0,
-
-        startHeight: 0,
-
-        startRotation: 0,
-
-        centerX: 0,
-
-        centerY: 0,
-
-        startAngle: 0,
-
-        moved: false,
-
-        historyBefore: null,
-
-        handles: null,
-
-        guides: [],
-
-        raf: 0,
-
-        pendingX: 0,
-
-        pendingY: 0
-
-    };
-
-
-    /* ============================================================
-       UTILIDADES
-    ============================================================ */
-
-    function getRoot() {
-
+    function getCanvas() {
         return (
-            document.querySelector("#designPage") ||
-            document.querySelector(".design-page")
+            document.querySelector(".design-page") ||
+            document.querySelector("#page")
         );
-
     }
-
 
     function getElements() {
+        const canvas = getCanvas();
 
-        if (!state.root) {
-            return [];
-        }
+        if (!canvas) return [];
 
         return [
-            ...state.root.querySelectorAll(
-                ROOT_SELECTOR
+            ...canvas.querySelectorAll(
+                ".page-element, .pd-element"
             )
-        ];
-
-    }
-
-
-    function selected() {
-
-        return (
-            window.PluginDexSelection
-                ?.getSelected?.() ||
-            null
+        ].filter(
+            el =>
+                !el.classList.contains("editor-handles") &&
+                !el.closest(".editor-handles")
         );
-
     }
-
 
     function isLocked(element) {
-
         return (
-            element?.dataset?.locked ===
-            "true"
+            element.dataset.locked === "true" ||
+            element.hasAttribute("data-locked") ||
+            element.classList.contains("locked")
         );
-
     }
 
+    function getRotation(element) {
+        const value =
+            getComputedStyle(element)
+                .getPropertyValue("--editor-rotation")
+                .trim();
 
-    function px(value) {
+        const rotation = parseFloat(value);
 
-        const result =
-            parseFloat(value);
-
-        return Number.isFinite(result)
-            ? result
+        return Number.isFinite(rotation)
+            ? rotation
             : 0;
-
     }
 
+    function normalizeRotation(value) {
+        let rotation = Number(value) || 0;
 
-    function clamp(
-        value,
-        min,
-        max
-    ) {
+        rotation %= 360;
 
-        return Math.min(
-            Math.max(
-                value,
-                min
-            ),
-            max
-        );
+        if (rotation > 180) rotation -= 360;
+        if (rotation < -180) rotation += 360;
 
+        return rotation;
     }
 
+    // --------------------------------------------------
+    // ZOOM
+    // --------------------------------------------------
 
-    function emit(
-        name,
-        detail = {}
-    ) {
+    function getCanvasScale() {
+        const canvas = getCanvas();
 
-        document.dispatchEvent(
-            new CustomEvent(
-                name,
-                {
-                    detail
-                }
-            )
-        );
+        if (!canvas) return 1;
 
+        /*
+         * Si el canvas está escalado con transform: scale(),
+         * getBoundingClientRect() devuelve la medida visual.
+         *
+         * offsetWidth devuelve la medida interna.
+         *
+         * Así obtenemos el zoom real sin depender de una
+         * variable CSS concreta.
+         */
+
+        const internalWidth = canvas.offsetWidth;
+        const visualWidth = canvas.getBoundingClientRect().width;
+
+        if (
+            !internalWidth ||
+            !visualWidth ||
+            !Number.isFinite(internalWidth) ||
+            !Number.isFinite(visualWidth)
+        ) {
+            return 1;
+        }
+
+        const scale = visualWidth / internalWidth;
+
+        if (!Number.isFinite(scale) || scale <= 0) {
+            return 1;
+        }
+
+        return scale;
     }
 
-
-    /* ============================================================
-       POSICIÓN
-    ============================================================ */
-
-    function getRect(element) {
-
-        return element.getBoundingClientRect();
-
-    }
-
-
-    function getPageRect() {
-
-        return state.root
-            ?.getBoundingClientRect();
-
-    }
-
-
-    function getLocalPosition(
-        element
-    ) {
+    function pointerDelta(startX, startY, event) {
+        const scale = getCanvasScale();
 
         return {
-
-            left:
-                px(
-                    element.style.left
-                ),
-
-            top:
-                px(
-                    element.style.top
-                )
-
+            x: (event.clientX - startX) / scale,
+            y: (event.clientY - startY) / scale
         };
-
     }
 
+    // --------------------------------------------------
+    // GEOMETRÍA
+    // --------------------------------------------------
 
-    function setPosition(
+    function readGeometry(element) {
+        const canvas = getCanvas();
+
+        if (!canvas || !element) {
+            return null;
+        }
+
+        const canvasRect = canvas.getBoundingClientRect();
+        const elementRect = element.getBoundingClientRect();
+
+        const scale = getCanvasScale();
+
+        let width =
+            parseFloat(element.style.width) ||
+            element.offsetWidth ||
+            elementRect.width / scale;
+
+        let height =
+            parseFloat(element.style.height) ||
+            element.offsetHeight ||
+            elementRect.height / scale;
+
+        let x = parseFloat(element.style.left);
+        let y = parseFloat(element.style.top);
+
+        /*
+         * Si no hay left/top válidos, calculamos la posición
+         * desde el rect visual y la convertimos al sistema
+         * interno del canvas.
+         */
+
+        if (!Number.isFinite(x)) {
+            x =
+                (elementRect.left - canvasRect.left) /
+                scale;
+        }
+
+        if (!Number.isFinite(y)) {
+            y =
+                (elementRect.top - canvasRect.top) /
+                scale;
+        }
+
+        width = Math.max(MIN_WIDTH, width);
+        height = Math.max(MIN_HEIGHT, height);
+
+        return {
+            x,
+            y,
+            width,
+            height,
+            rotation: getRotation(element)
+        };
+    }
+
+    function getCanvasSize() {
+        const canvas = getCanvas();
+
+        if (!canvas) {
+            return {
+                width: 0,
+                height: 0
+            };
+        }
+
+        return {
+            width: canvas.clientWidth,
+            height: canvas.clientHeight
+        };
+    }
+
+    function clamp(value, min, max) {
+        return Math.max(
+            min,
+            Math.min(max, value)
+        );
+    }
+
+    function applyGeometry(
         element,
-        left,
-        top
+        x,
+        y,
+        width,
+        height,
+        rotation
     ) {
+        if (!element) return;
 
-        element.style.left =
-            `${left}px`;
+        const canvas = getCanvas();
 
-        element.style.top =
-            `${top}px`;
+        if (!canvas) return;
 
+        const size = getCanvasSize();
+
+        width = Math.max(
+            MIN_WIDTH,
+            Math.min(width, size.width)
+        );
+
+        height = Math.max(
+            MIN_HEIGHT,
+            Math.min(height, size.height)
+        );
+
+        x = clamp(
+            x,
+            0,
+            Math.max(0, size.width - width)
+        );
+
+        y = clamp(
+            y,
+            0,
+            Math.max(0, size.height - height)
+        );
+
+        /*
+         * Este es el punto más importante:
+         *
+         * NO usamos transform para mover el elemento.
+         */
+
+        element.style.left = `${x}px`;
+        element.style.top = `${y}px`;
+
+        element.style.width = `${width}px`;
+        element.style.height = `${height}px`;
+
+        element.style.setProperty(
+            "--editor-rotation",
+            `${normalizeRotation(rotation)}deg`
+        );
+
+        /*
+         * Compatibilidad con proyectos antiguos.
+         * Dejamos las variables actualizadas, pero no las
+         * usamos para posicionar mediante translate.
+         */
 
         element.style.setProperty(
             "--element-x",
-            `${left}px`
+            `${x}px`
         );
 
         element.style.setProperty(
             "--element-y",
-            `${top}px`
+            `${y}px`
         );
 
+        element.dataset.editorX = String(x);
+        element.dataset.editorY = String(y);
+        element.dataset.editorWidth = String(width);
+        element.dataset.editorHeight = String(height);
+        element.dataset.editorRotation =
+            String(normalizeRotation(rotation));
+
+        refreshHandles(element);
     }
 
+    // --------------------------------------------------
+    // SELECCIÓN
+    // --------------------------------------------------
 
-    /* ============================================================
-       TRANSFORM
-    ============================================================ */
+    function selectElement(element, additive = false) {
+        if (!element) return;
 
-    function getRotation(
-        element
-    ) {
-
-        const value =
-            element.style.getPropertyValue(
-                "--editor-rotation"
+        if (window.PluginDexSelection?.select) {
+            window.PluginDexSelection.select(
+                element,
+                additive
             );
-
-
-        if (value) {
-
-            return px(
-                value.replace(
-                    "deg",
-                    ""
-                )
-            );
-
-        }
-
-
-        return 0;
-
-    }
-
-
-    function setRotation(
-        element,
-        degrees
-    ) {
-
-        element.style.setProperty(
-            "--editor-rotation",
-            `${degrees}deg`
-        );
-
-    }
-
-
-    /* ============================================================
-       HANDLES
-    ============================================================ */
-
-    function removeHandles() {
-
-        if (
-            state.handles
-        ) {
-
-            state.handles.remove();
-
-            state.handles =
-                null;
-
-        }
-
-    }
-
-
-    function createHandle(
-        type
-    ) {
-
-        const handle =
-            document.createElement(
-                "button"
-            );
-
-
-        handle.type =
-            "button";
-
-
-        handle.className =
-            `editor-handle editor-handle-${type}`;
-
-
-        handle.dataset.handle =
-            type;
-
-
-        handle.setAttribute(
-            "aria-label",
-            type
-        );
-
-
-        /*
-         * El botón es solamente un
-         * elemento del editor.
-         *
-         * No debe ejecutar ninguna
-         * acción propia.
-         */
-
-        handle.addEventListener(
-            "click",
-            event => {
-
-                event.preventDefault();
-
-            }
-        );
-
-
-        return handle;
-
-    }
-
-
-    function createHandles(
-        element
-    ) {
-
-        removeHandles();
-
-
-        if (!element) {
             return;
         }
 
+        document
+            .querySelectorAll(
+                ".editor-selected, .selected"
+            )
+            .forEach(el => {
+                el.classList.remove(
+                    "editor-selected",
+                    "selected"
+                );
+            });
 
-        const overlay =
-            document.createElement(
-                "div"
+        element.classList.add(
+            "editor-selected",
+            "selected"
+        );
+
+        document.dispatchEvent(
+            new CustomEvent(
+                "plugindex:selectionchange",
+                {
+                    detail: {
+                        elements: [element],
+                        element
+                    }
+                }
+            )
+        );
+    }
+
+    function getSelectedElements() {
+        if (
+            window.PluginDexSelection?.getSelected
+        ) {
+            const selected =
+                window.PluginDexSelection.getSelected();
+
+            if (Array.isArray(selected)) {
+                return selected;
+            }
+
+            if (selected) {
+                return [selected];
+            }
+        }
+
+        return [
+            ...document.querySelectorAll(
+                ".editor-selected, .selected"
+            )
+        ];
+    }
+
+    // --------------------------------------------------
+    // HANDLES
+    // --------------------------------------------------
+
+    function createHandles(element) {
+        if (!element) return;
+
+        let wrapper =
+            element.querySelector(
+                ":scope > .editor-handles"
             );
 
+        if (wrapper) {
+            refreshHandles(element);
+            return wrapper;
+        }
 
-        overlay.className =
-            "editor-transform-box";
+        wrapper =
+            document.createElement("div");
 
+        wrapper.className = "editor-handles";
 
-        overlay.dataset.editorOverlay =
-            "";
+        wrapper.setAttribute(
+            "aria-hidden",
+            "true"
+        );
 
-
-        const positions = [
-
+        const directions = [
             "nw",
             "n",
             "ne",
@@ -414,557 +411,911 @@
             "s",
             "sw",
             "w"
-
         ];
 
+        directions.forEach(direction => {
+            const handle =
+                document.createElement("div");
 
-        positions.forEach(
-            type => {
+            handle.className =
+                `editor-handle editor-handle-${direction}`;
 
-                overlay.appendChild(
-                    createHandle(
-                        type
-                    )
-                );
+            handle.dataset.resize =
+                direction;
 
-            }
-        );
+            handle.setAttribute(
+                "aria-hidden",
+                "true"
+            );
 
-
-        /*
-         * Rotación.
-         */
+            wrapper.appendChild(handle);
+        });
 
         const rotate =
-            document.createElement(
-                "button"
-            );
-
-
-        rotate.type =
-            "button";
-
+            document.createElement("div");
 
         rotate.className =
-            "editor-rotation-handle";
+            "editor-rotate-handle";
 
-
-        rotate.dataset.handle =
-            "rotate";
-
+        rotate.dataset.rotate = "true";
 
         rotate.setAttribute(
-            "aria-label",
-            "Rotar"
+            "aria-hidden",
+            "true"
         );
 
+        wrapper.appendChild(rotate);
 
-        overlay.appendChild(
-            rotate
-        );
+        element.appendChild(wrapper);
 
+        refreshHandles(element);
 
-        /*
-         * Overlay se coloca dentro
-         * del mismo parent.
-         */
-
-        state.root.appendChild(
-            overlay
-        );
-
-
-        state.handles =
-            overlay;
-
-
-        updateHandles(
-            element
-        );
-
+        return wrapper;
     }
 
+    function removeHandles(element) {
+        if (!element) return;
 
-    function updateHandles(
         element
-    ) {
-
-        if (
-            !state.handles ||
-            !element
-        ) {
-            return;
-        }
-
-
-        const rect =
-            element.getBoundingClientRect();
-
-
-        const rootRect =
-            getPageRect();
-
-
-        if (!rootRect) {
-            return;
-        }
-
-
-        state.handles.style.left =
-            `${rect.left - rootRect.left}px`;
-
-
-        state.handles.style.top =
-            `${rect.top - rootRect.top}px`;
-
-
-        state.handles.style.width =
-            `${rect.width}px`;
-
-
-        state.handles.style.height =
-            `${rect.height}px`;
-
+            .querySelectorAll(
+                ":scope > .editor-handles"
+            )
+            .forEach(el => el.remove());
     }
 
+    function refreshHandles(element) {
+        if (!element) return;
 
-    /* ============================================================
-       SNAP
-    ============================================================ */
+        const wrapper =
+            element.querySelector(
+                ":scope > .editor-handles"
+            );
 
-    function snapValue(
-        value,
-        targets
-    ) {
+        if (!wrapper) return;
 
-        for (
-            const target of targets
-        ) {
+        const geometry =
+            readGeometry(element);
 
-            if (
-                Math.abs(
-                    value - target
-                ) <= SNAP_DISTANCE
-            ) {
+        if (!geometry) return;
 
-                return {
-                    value: target,
-                    snapped: true
-                };
+        wrapper.style.width =
+            `${geometry.width}px`;
 
+        wrapper.style.height =
+            `${geometry.height}px`;
+    }
+
+    function refreshAllHandles() {
+        document
+            .querySelectorAll(
+                ".page-element, .pd-element"
+            )
+            .forEach(element => {
+                if (
+                    element.classList.contains(
+                        "editor-selected"
+                    ) ||
+                    element.classList.contains(
+                        "selected"
+                    )
+                ) {
+                    createHandles(element);
+                } else {
+                    removeHandles(element);
+                }
+            });
+    }
+
+    // --------------------------------------------------
+    // SNAP
+    // --------------------------------------------------
+
+    function snapValue(value, targets) {
+        let closest = value;
+        let distance = SNAP_DISTANCE;
+
+        for (const target of targets) {
+            const current =
+                Math.abs(value - target);
+
+            if (current <= distance) {
+                distance = current;
+                closest = target;
             }
-
         }
 
-
-        return {
-            value,
-            snapped: false
-        };
-
+        return closest;
     }
 
-
-    function calculateSnap(
+    function getSnapPosition(
         element,
-        left,
-        top
+        x,
+        y,
+        width,
+        height
     ) {
-
-        const rootRect =
-            getPageRect();
-
-
-        if (!rootRect) {
-
-            return {
-                left,
-                top
-            };
-
-        }
-
-
-        const width =
-            element.offsetWidth;
-
-
-        const height =
-            element.offsetHeight;
-
-
-        const pageWidth =
-            rootRect.width;
-
-
-        const pageHeight =
-            rootRect.height;
-
+        const size = getCanvasSize();
 
         const targetsX = [
-
             0,
-
-            (pageWidth - width) / 2,
-
-            pageWidth - width
-
+            (size.width - width) / 2,
+            size.width - width
         ];
-
 
         const targetsY = [
-
             0,
-
-            (pageHeight - height) / 2,
-
-            pageHeight - height
-
+            (size.height - height) / 2,
+            size.height - height
         ];
 
-
         /*
-         * Otros elementos.
+         * También hacemos snap a otros elementos.
          */
 
-        getElements().forEach(
-            other => {
+        getElements()
+            .filter(other => other !== element)
+            .forEach(other => {
+                const geometry =
+                    readGeometry(other);
 
-                if (
-                    other === element
-                ) {
-                    return;
-                }
-
-
-                const otherLeft =
-                    px(
-                        other.style.left
-                    );
-
-
-                const otherTop =
-                    px(
-                        other.style.top
-                    );
-
-
-                const otherWidth =
-                    other.offsetWidth;
-
-
-                const otherHeight =
-                    other.offsetHeight;
-
+                if (!geometry) return;
 
                 targetsX.push(
-                    otherLeft,
-
-                    otherLeft +
-                    otherWidth,
-
-                    otherLeft +
-                    otherWidth -
-                    width
+                    geometry.x,
+                    geometry.x +
+                        geometry.width,
+                    geometry.x +
+                        geometry.width -
+                        width,
+                    geometry.x +
+                        geometry.width / 2 -
+                        width / 2
                 );
-
 
                 targetsY.push(
-                    otherTop,
-
-                    otherTop +
-                    otherHeight,
-
-                    otherTop +
-                    otherHeight -
-                    height
+                    geometry.y,
+                    geometry.y +
+                        geometry.height,
+                    geometry.y +
+                        geometry.height -
+                        height,
+                    geometry.y +
+                        geometry.height / 2 -
+                        height / 2
                 );
-
-            }
-        );
-
-
-        const x =
-            snapValue(
-                left,
-                targetsX
-            );
-
-
-        const y =
-            snapValue(
-                top,
-                targetsY
-            );
-
-
-        updateGuides(
-            element,
-            x.snapped,
-            y.snapped,
-            x.value,
-            y.value
-        );
-
+            });
 
         return {
-
-            left:
-                x.value,
-
-            top:
-                y.value
-
+            x: snapValue(x, targetsX),
+            y: snapValue(y, targetsY)
         };
-
     }
 
+    // --------------------------------------------------
+    // GUÍAS
+    // --------------------------------------------------
 
-    /* ============================================================
-       GUÍAS
-    ============================================================ */
-
-    function createGuide(
-        axis
-    ) {
-
-        const guide =
-            document.createElement(
-                "div"
-            );
-
-
-        guide.className =
-            `editor-smart-guide guide-${axis}`;
-
-
-        state.root.appendChild(
-            guide
-        );
-
-
-        state.guides.push(
-            guide
-        );
-
-
-        return guide;
-
+    function removeGuides() {
+        document
+            .querySelectorAll(
+                ".editor-guide"
+            )
+            .forEach(guide => {
+                guide.remove();
+            });
     }
 
-
-    function clearGuides() {
-
-        state.guides.forEach(
-            guide =>
-                guide.remove()
-        );
-
-
-        state.guides = [];
-
-    }
-
-
-    function updateGuides(
-        element,
-        snapX,
-        snapY,
+    function drawGuides(
         x,
-        y
+        y,
+        width,
+        height
     ) {
+        removeGuides();
 
-        clearGuides();
+        const canvas = getCanvas();
 
+        if (!canvas) return;
 
-        const rootRect =
-            getPageRect();
+        const size = getCanvasSize();
 
+        const centerX =
+            x + width / 2;
 
-        if (!rootRect) {
-            return;
-        }
+        const centerY =
+            y + height / 2;
 
+        const vertical =
+            document.createElement("div");
 
-        if (snapX) {
+        vertical.className =
+            "editor-guide editor-guide-x";
 
-            const guide =
-                createGuide(
-                    "vertical"
-                );
+        vertical.style.position =
+            "absolute";
 
+        vertical.style.left =
+            `${centerX}px`;
 
-            guide.style.left =
-                `${x}px`;
+        vertical.style.top = "0";
+        vertical.style.height =
+            `${size.height}px`;
 
-        }
+        const horizontal =
+            document.createElement("div");
 
+        horizontal.className =
+            "editor-guide editor-guide-y";
 
-        if (snapY) {
+        horizontal.style.position =
+            "absolute";
 
-            const guide =
-                createGuide(
-                    "horizontal"
-                );
+        horizontal.style.top =
+            `${centerY}px`;
 
+        horizontal.style.left = "0";
 
-            guide.style.top =
-                `${y}px`;
+        horizontal.style.width =
+            `${size.width}px`;
 
-        }
-
+        canvas.append(
+            vertical,
+            horizontal
+        );
     }
 
+    // --------------------------------------------------
+    // MOVE
+    // --------------------------------------------------
 
-    /* ============================================================
-       INICIO DE OPERACIÓN
-    ============================================================ */
-
-    function begin(
-        event,
-        element,
-        mode
-    ) {
-
-        if (
-            !element ||
-            isLocked(element)
-        ) {
-            return;
-        }
-
-
-        state.active =
-            element;
-
-
-        state.mode =
-            mode;
-
-
-        state.pointerId =
-            event.pointerId;
-
-
-        state.startX =
-            event.clientX;
-
-
-        state.startY =
-            event.clientY;
-
-
-        const position =
-            getLocalPosition(
-                element
-            );
-
-
-        state.startLeft =
-            position.left;
-
-
-        state.startTop =
-            position.top;
-
-
-        state.startWidth =
-            element.offsetWidth;
-
-
-        state.startHeight =
-            element.offsetHeight;
-
-
-        state.startRotation =
-            getRotation(
-                element
-            );
-
-
-        state.moved =
-            false;
-
+    function beginMove(event, element) {
+        if (!element) return;
+        if (isLocked(element)) return;
 
         /*
-         * Guardamos el estado para
-         * que app.js pueda registrar
-         * la operación.
+         * No dejamos que un control interno real se ejecute
+         * durante la edición.
          */
 
-        state.historyBefore =
-            window.PluginDexApp
-                ?.serializeProject?.() ||
-            null;
-
-
         if (
-            element.setPointerCapture
-        ) {
-
-            try {
-
-                element.setPointerCapture(
-                    event.pointerId
-                );
-
-            } catch {}
-
-        }
-
-
-        document.body.classList.add(
-            "plugindex-manipulating"
-        );
-
-
-        element.classList.add(
-            "is-manipulating"
-        );
-
-
-        emit(
-            "plugindex:manipulationstart",
-            {
-                element,
-                mode
-            }
-        );
-
-
-        event.preventDefault();
-
-    }
-
-
-    /* ============================================================
-       MOVE
-    ============================================================ */
-
-    function move(
-        event
-    ) {
-
-        const element =
-            state.active;
-
-
-        if (
-            !element
+            event.target.closest(
+                ".editor-handle"
+            ) ||
+            event.target.closest(
+                ".editor-rotate-handle"
+            )
         ) {
             return;
         }
 
+        const geometry =
+            readGeometry(element);
+
+        if (!geometry) return;
+
+        selectElement(
+            element,
+            event.shiftKey ||
+            event.ctrlKey ||
+            event.metaKey
+        );
+
+        active = {
+            type: "move",
+
+            element,
+
+            pointerId:
+                event.pointerId,
+
+            startPointerX:
+                event.clientX,
+
+            startPointerY:
+                event.clientY,
+
+            startX:
+                geometry.x,
+
+            startY:
+                geometry.y,
+
+            width:
+                geometry.width,
+
+            height:
+                geometry.height,
+
+            rotation:
+                geometry.rotation,
+
+            moved: false
+        };
+
+        element.classList.add(
+            "editor-moving"
+        );
+
+        try {
+            document.documentElement.setPointerCapture?.(
+                event.pointerId
+            );
+        } catch {}
+
+        event.preventDefault();
+    }
+
+    function moveElement(event) {
+        if (!active) return;
+
+        if (
+            event.pointerId !==
+            active.pointerId
+        ) {
+            return;
+        }
+
+        const delta =
+            pointerDelta(
+                active.startPointerX,
+                active.startPointerY,
+                event
+            );
+
+        if (
+            Math.abs(delta.x) >
+                MOVE_THRESHOLD ||
+            Math.abs(delta.y) >
+                MOVE_THRESHOLD
+        ) {
+            active.moved = true;
+        }
+
+        let x =
+            active.startX +
+            delta.x;
+
+        let y =
+            active.startY +
+            delta.y;
+
+        const snapped =
+            getSnapPosition(
+                active.element,
+                x,
+                y,
+                active.width,
+                active.height
+            );
+
+        x = snapped.x;
+        y = snapped.y;
+
+        const size =
+            getCanvasSize();
+
+        x = clamp(
+            x,
+            0,
+            Math.max(
+                0,
+                size.width -
+                    active.width
+            )
+        );
+
+        y = clamp(
+            y,
+            0,
+            Math.max(
+                0,
+                size.height -
+                    active.height
+            )
+        );
+
+        applyGeometry(
+            active.element,
+            x,
+            y,
+            active.width,
+            active.height,
+            active.rotation
+        );
+
+        drawGuides(
+            x,
+            y,
+            active.width,
+            active.height
+        );
+
+        event.preventDefault();
+    }
+
+    // --------------------------------------------------
+    // RESIZE
+    // --------------------------------------------------
+
+    function beginResize(
+        event,
+        element,
+        direction
+    ) {
+        if (!element) return;
+        if (isLocked(element)) return;
+
+        const geometry =
+            readGeometry(element);
+
+        if (!geometry) return;
+
+        selectElement(element);
+
+        active = {
+            type: "resize",
+
+            element,
+
+            direction,
+
+            pointerId:
+                event.pointerId,
+
+            startPointerX:
+                event.clientX,
+
+            startPointerY:
+                event.clientY,
+
+            startX:
+                geometry.x,
+
+            startY:
+                geometry.y,
+
+            startWidth:
+                geometry.width,
+
+            startHeight:
+                geometry.height,
+
+            startRotation:
+                geometry.rotation,
+
+            moved: false,
+
+            aspect:
+                geometry.width /
+                geometry.height
+        };
+
+        element.classList.add(
+            "editor-resizing"
+        );
+
+        try {
+            event.currentTarget.setPointerCapture(
+                event.pointerId
+            );
+        } catch {}
+
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    function resizeElement(event) {
+        if (
+            !active ||
+            active.type !== "resize"
+        ) {
+            return;
+        }
+
+        if (
+            event.pointerId !==
+            active.pointerId
+        ) {
+            return;
+        }
+
+        const delta =
+            pointerDelta(
+                active.startPointerX,
+                active.startPointerY,
+                event
+            );
+
+        if (
+            Math.abs(delta.x) >
+                MOVE_THRESHOLD ||
+            Math.abs(delta.y) >
+                MOVE_THRESHOLD
+        ) {
+            active.moved = true;
+        }
+
+        const direction =
+            active.direction;
+
+        const west =
+            direction.includes("w");
+
+        const east =
+            direction.includes("e");
+
+        const north =
+            direction.includes("n");
+
+        const south =
+            direction.includes("s");
+
+        let x = active.startX;
+        let y = active.startY;
+
+        let width =
+            active.startWidth;
+
+        let height =
+            active.startHeight;
+
+        /*
+         * Primero calculamos el resize normal.
+         */
+
+        if (east) {
+            width =
+                active.startWidth +
+                delta.x;
+        }
+
+        if (west) {
+            width =
+                active.startWidth -
+                delta.x;
+
+            x =
+                active.startX +
+                delta.x;
+        }
+
+        if (south) {
+            height =
+                active.startHeight +
+                delta.y;
+        }
+
+        if (north) {
+            height =
+                active.startHeight -
+                delta.y;
+
+            y =
+                active.startY +
+                delta.y;
+        }
+
+        /*
+         * Shift = mantener proporción.
+         */
+
+        if (
+            event.shiftKey &&
+            (west ||
+                east ||
+                north ||
+                south)
+        ) {
+            const ratio =
+                active.aspect || 1;
+
+            const widthChange =
+                Math.abs(
+                    width -
+                        active.startWidth
+                );
+
+            const heightChange =
+                Math.abs(
+                    height -
+                        active.startHeight
+                );
+
+            if (
+                widthChange >=
+                heightChange
+            ) {
+                height =
+                    width / ratio;
+
+                if (north) {
+                    y =
+                        active.startY +
+                        active.startHeight -
+                        height;
+                }
+            } else {
+                width =
+                    height * ratio;
+
+                if (west) {
+                    x =
+                        active.startX +
+                        active.startWidth -
+                        width;
+                }
+            }
+        }
+
+        /*
+         * Alt = resize desde el centro.
+         */
+
+        if (event.altKey) {
+            const centerX =
+                active.startX +
+                active.startWidth / 2;
+
+            const centerY =
+                active.startY +
+                active.startHeight / 2;
+
+            if (west || east) {
+                x =
+                    centerX -
+                    width / 2;
+            }
+
+            if (north || south) {
+                y =
+                    centerY -
+                    height / 2;
+            }
+        }
+
+        /*
+         * Tamaño mínimo.
+         */
+
+        width = Math.max(
+            MIN_WIDTH,
+            width
+        );
+
+        height = Math.max(
+            MIN_HEIGHT,
+            height
+        );
+
+        /*
+         * Límites reales del lienzo.
+         */
+
+        const size =
+            getCanvasSize();
+
+        /*
+         * Si arrastramos desde izquierda:
+         */
+
+        if (west) {
+            if (x < 0) {
+                width += x;
+                x = 0;
+            }
+
+            if (
+                width >
+                active.startX +
+                active.startWidth
+            ) {
+                width =
+                    active.startX +
+                    active.startWidth;
+                x = 0;
+            }
+        }
+
+        /*
+         * Derecha.
+         */
+
+        if (east) {
+            width =
+                Math.min(
+                    width,
+                    size.width -
+                        x
+                );
+        }
+
+        /*
+         * Arriba.
+         */
+
+        if (north) {
+            if (y < 0) {
+                height += y;
+                y = 0;
+            }
+
+            if (
+                height >
+                active.startY +
+                active.startHeight
+            ) {
+                height =
+                    active.startY +
+                    active.startHeight;
+                y = 0;
+            }
+        }
+
+        /*
+         * Abajo.
+         */
+
+        if (south) {
+            height =
+                Math.min(
+                    height,
+                    size.height -
+                        y
+                );
+        }
+
+        width = Math.max(
+            MIN_WIDTH,
+            width
+        );
+
+        height = Math.max(
+            MIN_HEIGHT,
+            height
+        );
+
+        /*
+         * Última protección.
+         */
+
+        if (
+            x + width >
+            size.width
+        ) {
+            width =
+                size.width - x;
+        }
+
+        if (
+            y + height >
+            size.height
+        ) {
+            height =
+                size.height - y;
+        }
+
+        width = Math.max(
+            MIN_WIDTH,
+            width
+        );
+
+        height = Math.max(
+            MIN_HEIGHT,
+            height
+        );
+
+        applyGeometry(
+            active.element,
+            x,
+            y,
+            width,
+            height,
+            active.startRotation
+        );
+
+        drawGuides(
+            x,
+            y,
+            width,
+            height
+        );
+
+        event.preventDefault();
+    }
+
+    // --------------------------------------------------
+    // ROTACIÓN
+    // --------------------------------------------------
+
+    function beginRotate(
+        event,
+        element
+    ) {
+        if (!element) return;
+        if (isLocked(element)) return;
+
+        const geometry =
+            readGeometry(element);
+
+        if (!geometry) return;
+
+        const canvas =
+            getCanvas();
+
+        if (!canvas) return;
+
+        const rect =
+            canvas.getBoundingClientRect();
+
+        const scale =
+            getCanvasScale();
+
+        const centerX =
+            rect.left +
+            (geometry.x +
+                geometry.width / 2) *
+                scale;
+
+        const centerY =
+            rect.top +
+            (geometry.y +
+                geometry.height / 2) *
+                scale;
+
+        active = {
+            type: "rotate",
+
+            element,
+
+            pointerId:
+                event.pointerId,
+
+            centerX,
+
+            centerY,
+
+            startRotation:
+                geometry.rotation,
+
+            moved: false
+        };
+
+        element.classList.add(
+            "editor-rotating"
+        );
+
+        try {
+            event.currentTarget.setPointerCapture(
+                event.pointerId
+            );
+        } catch {}
+
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    function rotateElement(event) {
+        if (
+            !active ||
+            active.type !== "rotate"
+        ) {
+            return;
+        }
+
+        if (
+            event.pointerId !==
+            active.pointerId
+        ) {
+            return;
+        }
 
         const dx =
             event.clientX -
-            state.startX;
-
+            active.centerX;
 
         const dy =
             event.clientY -
-            state.startY;
-
+            active.centerY;
 
         if (
             Math.abs(dx) >
@@ -972,1137 +1323,465 @@
             Math.abs(dy) >
                 MOVE_THRESHOLD
         ) {
-
-            state.moved =
-                true;
-
+            active.moved = true;
         }
 
+        let angle =
+            Math.atan2(
+                dy,
+                dx
+            ) *
+            180 /
+            Math.PI;
 
-        if (
-            state.mode === "move"
-        ) {
+        angle += 90;
 
-            let left =
-                state.startLeft +
-                dx;
+        /*
+         * Shift = snap cada 15 grados.
+         */
 
-
-            let top =
-                state.startTop +
-                dy;
-
-
-            /*
-             * Shift = movimiento libre.
-             * Normal = snap.
-             */
-
-            if (
-                !event.shiftKey
-            ) {
-
-                const snapped =
-                    calculateSnap(
-                        element,
-                        left,
-                        top
-                    );
-
-
-                left =
-                    snapped.left;
-
-
-                top =
-                    snapped.top;
-
-            } else {
-
-                clearGuides();
-
-            }
-
-
-            setPosition(
-                element,
-                left,
-                top
-            );
-
+        if (event.shiftKey) {
+            angle =
+                Math.round(
+                    angle / 15
+                ) * 15;
         }
 
-
-        if (
-            state.mode === "resize"
-        ) {
-
-            resize(
-                event,
-                element
-            );
-
-        }
-
-
-        if (
-            state.mode === "rotate"
-        ) {
-
-            rotate(
-                event,
-                element
-            );
-
-        }
-
-
-        updateHandles(
-            element
+        active.element.style.setProperty(
+            "--editor-rotation",
+            `${normalizeRotation(angle)}deg`
         );
 
-
-        emit(
-            "plugindex:elementchange",
-            {
-                element,
-                mode:
-                    state.mode
-            }
-        );
-
+        active.element.dataset.editorRotation =
+            String(normalizeRotation(angle));
 
         event.preventDefault();
-
     }
 
+    // --------------------------------------------------
+    // NORMALIZACIÓN
+    // --------------------------------------------------
 
-    /* ============================================================
-       RESIZE
-    ============================================================ */
-
-    function resize(
-        event,
+    function normalizeElement(
         element
     ) {
+        if (!element) return;
 
-        const handle =
-            state.resizeHandle;
+        const geometry =
+            readGeometry(element);
 
+        if (!geometry) return;
 
-        if (!handle) {
-            return;
-        }
-
-
-        const dx =
-            event.clientX -
-            state.startX;
-
-
-        const dy =
-            event.clientY -
-            state.startY;
-
-
-        let left =
-            state.startLeft;
-
-
-        let top =
-            state.startTop;
-
+        const size =
+            getCanvasSize();
 
         let width =
-            state.startWidth;
-
+            clamp(
+                geometry.width,
+                MIN_WIDTH,
+                Math.max(
+                    MIN_WIDTH,
+                    size.width
+                )
+            );
 
         let height =
-            state.startHeight;
-
-
-        if (
-            handle.includes("e")
-        ) {
-
-            width =
-                state.startWidth +
-                dx;
-
-        }
-
-
-        if (
-            handle.includes("s")
-        ) {
-
-            height =
-                state.startHeight +
-                dy;
-
-        }
-
-
-        if (
-            handle.includes("w")
-        ) {
-
-            width =
-                state.startWidth -
-                dx;
-
-
-            left =
-                state.startLeft +
-                dx;
-
-        }
-
-
-        if (
-            handle.includes("n")
-        ) {
-
-            height =
-                state.startHeight -
-                dy;
-
-
-            top =
-                state.startTop +
-                dy;
-
-        }
-
-
-        width =
-            Math.max(
-                MIN_WIDTH,
-                width
-            );
-
-
-        height =
-            Math.max(
+            clamp(
+                geometry.height,
                 MIN_HEIGHT,
-                height
+                Math.max(
+                    MIN_HEIGHT,
+                    size.height
+                )
             );
 
+        let x =
+            clamp(
+                geometry.x,
+                0,
+                Math.max(
+                    0,
+                    size.width -
+                        width
+                )
+            );
 
-        /*
-         * Si el ancho llegó al mínimo
-         * reajustamos posición oeste.
-         */
+        let y =
+            clamp(
+                geometry.y,
+                0,
+                Math.max(
+                    0,
+                    size.height -
+                        height
+                )
+            );
 
-        if (
-            handle.includes("w") &&
-            width === MIN_WIDTH
-        ) {
-
-            left =
-                state.startLeft +
-                state.startWidth -
-                MIN_WIDTH;
-
-        }
-
-
-        if (
-            handle.includes("n") &&
-            height === MIN_HEIGHT
-        ) {
-
-            top =
-                state.startTop +
-                state.startHeight -
-                MIN_HEIGHT;
-
-        }
-
-
-        /*
-         * Alt + resize desde esquina:
-         * comportamiento simétrico.
-         */
-
-        if (
-            event.altKey &&
-            (
-                handle.length === 2
-            )
-        ) {
-
-            const centerX =
-                state.startLeft +
-                state.startWidth / 2;
-
-
-            const centerY =
-                state.startTop +
-                state.startHeight / 2;
-
-
-            if (
-                handle.includes("w") ||
-                handle.includes("e")
-            ) {
-
-                left =
-                    centerX -
-                    width / 2;
-
-            }
-
-
-            if (
-                handle.includes("n") ||
-                handle.includes("s")
-            ) {
-
-                top =
-                    centerY -
-                    height / 2;
-
-            }
-
-        }
-
-
-        element.style.width =
-            `${width}px`;
-
-
-        element.style.height =
-            `${height}px`;
-
-
-        setPosition(
+        applyGeometry(
             element,
-            left,
-            top
+            x,
+            y,
+            width,
+            height,
+            geometry.rotation
         );
-
-
-        clearGuides();
-
     }
 
-
-    /* ============================================================
-       ROTATE
-    ============================================================ */
-
-    function startRotation(
-        element
-    ) {
-
-        const rect =
-            element.getBoundingClientRect();
-
-
-        state.centerX =
-            rect.left +
-            rect.width / 2;
-
-
-        state.centerY =
-            rect.top +
-            rect.height / 2;
-
-
-        state.startAngle =
-            Math.atan2(
-                state.startY -
-                state.centerY,
-                state.startX -
-                state.centerX
-            ) *
-            180 /
-            Math.PI;
-
+    function normalizeAll() {
+        getElements().forEach(
+            normalizeElement
+        );
     }
 
+    // --------------------------------------------------
+    // FIN DE GESTO
+    // --------------------------------------------------
 
-    function rotate(
-        event,
-        element
-    ) {
-
-        const angle =
-            Math.atan2(
-                event.clientY -
-                state.centerY,
-                event.clientX -
-                state.centerX
-            ) *
-            180 /
-            Math.PI;
-
-
-        let rotation =
-            state.startRotation +
-            angle -
-            state.startAngle;
-
-
-        /*
-         * Shift = snap de rotación.
-         * Cada 15 grados.
-         */
+    function finish(event) {
+        if (!active) return;
 
         if (
-            event.shiftKey
+            event.pointerId !== undefined &&
+            event.pointerId !==
+                active.pointerId
         ) {
-
-            rotation =
-                Math.round(
-                    rotation / 15
-                ) * 15;
-
-        }
-
-
-        setRotation(
-            element,
-            rotation
-        );
-
-
-        clearGuides();
-
-    }
-
-
-    /* ============================================================
-       FIN
-    ============================================================ */
-
-    function end(
-        event
-    ) {
-
-        const element =
-            state.active;
-
-
-        if (!element) {
             return;
         }
 
-
-        clearGuides();
-
+        const element =
+            active.element;
 
         element.classList.remove(
-            "is-manipulating"
+            "editor-moving",
+            "editor-resizing",
+            "editor-rotating"
         );
 
+        removeGuides();
 
-        document.body.classList.remove(
-            "plugindex-manipulating"
-        );
+        refreshHandles(element);
 
-
-        if (
-            state.pointerId !== null &&
-            element.releasePointerCapture
-        ) {
-
-            try {
-
-                element.releasePointerCapture(
-                    state.pointerId
-                );
-
-            } catch {}
-
-        }
-
-
-        if (
-            state.moved
-        ) {
-
-            emit(
+        document.dispatchEvent(
+            new CustomEvent(
                 "plugindex:manipulationend",
                 {
-                    element,
-
-                    mode:
-                        state.mode,
-
-                    changed:
-                        true
+                    detail: {
+                        element,
+                        type:
+                            active.type,
+                        moved:
+                            active.moved
+                    }
                 }
-            );
-
-        }
-
-
-        state.active =
-            null;
-
-
-        state.mode =
-            null;
-
-
-        state.pointerId =
-            null;
-
-
-        state.resizeHandle =
-            null;
-
-
-        state.historyBefore =
-            null;
-
-
-        updateHandles(
-            selected()
+            )
         );
 
+        document.dispatchEvent(
+            new CustomEvent(
+                "plugindex:elementchange",
+                {
+                    detail: {
+                        element,
+                        type:
+                            active.type
+                    }
+                }
+            )
+        );
+
+        active = null;
     }
 
+    // --------------------------------------------------
+    // POINTER DOWN
+    // --------------------------------------------------
 
-    /* ============================================================
-       POINTERDOWN
-    ============================================================ */
-
-    function onPointerDown(
-        event
-    ) {
-
-        const target =
-            event.target;
-
-
-        /*
-         * Handle de transformación.
-         */
-
-        const handle =
-            target.closest(
-                "[data-handle]"
+    function onPointerDown(event) {
+        const element =
+            event.target.closest(
+                ELEMENT_SELECTOR
             );
 
+        if (!element) return;
 
-        if (handle) {
+        /*
+         * No permitir que los handles sean interpretados
+         * como parte del elemento.
+         */
 
-            const element =
-                selected();
+        const resize =
+            event.target.closest(
+                HANDLE_SELECTOR
+            );
 
-
-            if (!element) {
-                return;
-            }
-
-
-            const type =
-                handle.dataset.handle;
-
-
-            if (
-                type === "rotate"
-            ) {
-
-                begin(
-                    event,
-                    element,
-                    "rotate"
-                );
-
-
-                startRotation(
-                    element
-                );
-
-
-            } else {
-
-                state.resizeHandle =
-                    type;
-
-
-                begin(
-                    event,
-                    element,
-                    "resize"
-                );
-
-            }
-
+        if (resize) {
+            beginResize(
+                event,
+                element,
+                resize.dataset.resize
+            );
 
             return;
-
         }
 
-
-        /*
-         * Objeto.
-         */
-
-        const element =
-            target.closest(
-                ROOT_SELECTOR
+        const rotate =
+            event.target.closest(
+                ROTATE_SELECTOR
             );
 
-
-        if (
-            !element ||
-            !state.root.contains(
+        if (rotate) {
+            beginRotate(
+                event,
                 element
-            )
-        ) {
-
-            return;
-
-        }
-
-
-        /*
-         * Si está bloqueado no hacemos nada.
-         */
-
-        if (
-            isLocked(element)
-        ) {
-            return;
-        }
-
-
-        /*
-         * Seleccionar.
-         */
-
-        const additive =
-            event.shiftKey ||
-            event.ctrlKey ||
-            event.metaKey;
-
-
-        if (
-            !window.PluginDexSelection
-        ) {
-
-            return;
-
-        }
-
-
-        window.PluginDexSelection.select(
-            element,
-            {
-                additive
-            }
-        );
-
-
-        /*
-         * Un toque empieza movimiento,
-         * pero no lo consideramos movimiento
-         * hasta superar MOVE_THRESHOLD.
-         *
-         * Esto hace que un botón no se
-         * active accidentalmente.
-         */
-
-        begin(
-            event,
-            element,
-            "move"
-        );
-
-    }
-
-
-    /* ============================================================
-       POINTERMOVE
-    ============================================================ */
-
-    function onPointerMove(
-        event
-    ) {
-
-        if (
-            state.pointerId === null
-        ) {
-            return;
-        }
-
-
-        if (
-            event.pointerId !==
-            state.pointerId
-        ) {
-            return;
-        }
-
-
-        move(
-            event
-        );
-
-    }
-
-
-    /* ============================================================
-       POINTERUP
-    ============================================================ */
-
-    function onPointerUp(
-        event
-    ) {
-
-        if (
-            state.pointerId === null
-        ) {
-            return;
-        }
-
-
-        if (
-            event.pointerId !==
-            state.pointerId
-        ) {
-            return;
-        }
-
-
-        end(
-            event
-        );
-
-    }
-
-
-    /* ============================================================
-       PREVENIR CLICK DEL BOTÓN
-    ============================================================ */
-
-    function preventEditorClick(
-        event
-    ) {
-
-        /*
-         * Si acabamos de arrastrar un botón,
-         * el click generado después del pointerup
-         * NO debe activar el botón.
-         */
-
-        if (
-            state.suppressClick
-        ) {
-
-            event.preventDefault();
-
-            event.stopPropagation();
-
-            state.suppressClick =
-                false;
-
-        }
-
-    }
-
-
-    /* ============================================================
-       ESTILO DE INTERACCIÓN
-    ============================================================ */
-
-    function injectInteractionStyles() {
-
-        if (
-            document.getElementById(
-                "plugindex-manipulator-runtime"
-            )
-        ) {
-            return;
-        }
-
-
-        const style =
-            document.createElement(
-                "style"
             );
 
+            return;
+        }
 
-        style.id =
-            "plugindex-manipulator-runtime";
-
-
-        style.textContent = `
-
-            .page-element {
-                touch-action: none;
-                user-select: none;
-                -webkit-user-select: none;
-                -webkit-touch-callout: none;
-            }
-
-            .page-element > button,
-            .page-element button,
-            .page-element input,
-            .page-element textarea,
-            .page-element select {
-                pointer-events: none;
-            }
-
-            .editor-transform-box {
-                position: absolute;
-                z-index: 99999;
-                pointer-events: none;
-                box-sizing: border-box;
-                border: 1px solid rgba(255,255,255,.78);
-                border-radius: 4px;
-                transform-origin: center;
-            }
-
-            .editor-handle {
-                position: absolute;
-                width: ${HANDLE_SIZE}px;
-                height: ${HANDLE_SIZE}px;
-                min-width: ${HANDLE_SIZE}px;
-                min-height: ${HANDLE_SIZE}px;
-                padding: 0;
-                margin: 0;
-                border-radius: 50%;
-                border: 1px solid rgba(255,255,255,.9);
-                background: rgba(12,12,14,.94);
-                box-shadow:
-                    0 2px 10px rgba(0,0,0,.35),
-                    inset 0 0 0 2px rgba(255,255,255,.08);
-                pointer-events: auto;
-                cursor: nwse-resize;
-                touch-action: none;
-            }
-
-            .editor-handle-nw {
-                left: 0;
-                top: 0;
-                transform: translate(-50%,-50%);
-                cursor: nwse-resize;
-            }
-
-            .editor-handle-n {
-                left: 50%;
-                top: 0;
-                transform: translate(-50%,-50%);
-                cursor: ns-resize;
-            }
-
-            .editor-handle-ne {
-                right: 0;
-                top: 0;
-                transform: translate(50%,-50%);
-                cursor: nesw-resize;
-            }
-
-            .editor-handle-e {
-                right: 0;
-                top: 50%;
-                transform: translate(50%,-50%);
-                cursor: ew-resize;
-            }
-
-            .editor-handle-se {
-                right: 0;
-                bottom: 0;
-                transform: translate(50%,50%);
-                cursor: nwse-resize;
-            }
-
-            .editor-handle-s {
-                left: 50%;
-                bottom: 0;
-                transform: translate(-50%,50%);
-                cursor: ns-resize;
-            }
-
-            .editor-handle-sw {
-                left: 0;
-                bottom: 0;
-                transform: translate(-50%,50%);
-                cursor: nesw-resize;
-            }
-
-            .editor-handle-w {
-                left: 0;
-                top: 50%;
-                transform: translate(-50%,-50%);
-                cursor: ew-resize;
-            }
-
-            .editor-rotation-handle {
-                position: absolute;
-                left: 50%;
-                top: -30px;
-                width: 20px;
-                height: 20px;
-                transform: translateX(-50%);
-                border-radius: 50%;
-                border: 1px solid rgba(255,255,255,.85);
-                background: rgba(10,10,12,.96);
-                color: white;
-                pointer-events: auto;
-                cursor: grab;
-                touch-action: none;
-                box-shadow: 0 3px 12px rgba(0,0,0,.4);
-            }
-
-            .editor-rotation-handle::before {
-                content: "↻";
-                position: absolute;
-                inset: 0;
-                display: grid;
-                place-items: center;
-                font-size: 12px;
-            }
-
-            .editor-smart-guide {
-                position: absolute;
-                z-index: 99998;
-                pointer-events: none;
-                background: rgba(255,255,255,.55);
-            }
-
-            .editor-smart-guide.guide-vertical {
-                top: 0;
-                bottom: 0;
-                width: 1px;
-            }
-
-            .editor-smart-guide.guide-horizontal {
-                left: 0;
-                right: 0;
-                height: 1px;
-            }
-
-            .page-element.is-manipulating {
-                cursor: grabbing !important;
-            }
-
-            .plugindex-manipulating,
-            .plugindex-manipulating * {
-                cursor: grabbing !important;
-            }
-
-            body.preview-mode .editor-transform-box,
-            body.preview-mode .editor-smart-guide {
-                display: none !important;
-            }
-
-            body.preview-mode .page-element > button,
-            body.preview-mode .page-element button {
-                pointer-events: auto;
-            }
-
-        `;
-
-
-        document.head.appendChild(
-            style
-        );
-
-    }
-
-
-    /* ============================================================
-       SELECCIÓN CAMBIA
-    ============================================================ */
-
-    function onSelectionChange() {
-
-        const element =
-            selected();
-
+        /*
+         * Los elementos se controlan desde el editor.
+         * Los controles internos no deben ejecutar acciones
+         * mientras estamos editando.
+         */
 
         if (
-            state.active
+            event.target.closest(
+                "input, textarea, select"
+            )
         ) {
             return;
         }
 
-
-        createHandles(
+        beginMove(
+            event,
             element
         );
-
     }
 
+    // --------------------------------------------------
+    // POINTER MOVE
+    // --------------------------------------------------
 
-    /* ============================================================
-       RESIZE WINDOW
-    ============================================================ */
-
-    function setupResizeObserver() {
+    function onPointerMove(event) {
+        if (!active) return;
 
         if (
-            !window.ResizeObserver
+            active.type === "move"
+        ) {
+            moveElement(event);
+        }
+
+        else if (
+            active.type === "resize"
+        ) {
+            resizeElement(event);
+        }
+
+        else if (
+            active.type === "rotate"
+        ) {
+            rotateElement(event);
+        }
+    }
+
+    // --------------------------------------------------
+    // SELECCIÓN CAMBIÓ
+    // --------------------------------------------------
+
+    function onSelectionChange(event) {
+        const selected =
+            event.detail?.elements ||
+            [];
+
+        document
+            .querySelectorAll(
+                ".page-element, .pd-element"
+            )
+            .forEach(element => {
+                const isSelected =
+                    selected.includes(
+                        element
+                    ) ||
+                    element.classList.contains(
+                        "editor-selected"
+                    ) ||
+                    element.classList.contains(
+                        "selected"
+                    );
+
+                if (isSelected) {
+                    createHandles(element);
+                } else {
+                    removeHandles(element);
+                }
+            });
+    }
+
+    // --------------------------------------------------
+    // CLICK
+    // --------------------------------------------------
+
+    let suppressClick = false;
+
+    document.addEventListener(
+        "click",
+        event => {
+            if (!suppressClick) return;
+
+            suppressClick = false;
+
+            event.preventDefault();
+            event.stopPropagation();
+        },
+        true
+    );
+
+    // --------------------------------------------------
+    // EVENTOS
+    // --------------------------------------------------
+
+    document.addEventListener(
+        "pointerdown",
+        onPointerDown,
+        {
+            passive: false
+        }
+    );
+
+    document.addEventListener(
+        "pointermove",
+        onPointerMove,
+        {
+            passive: false
+        }
+    );
+
+    document.addEventListener(
+        "pointerup",
+        event => {
+            if (
+                active?.moved
+            ) {
+                suppressClick = true;
+            }
+
+            finish(event);
+        },
+        {
+            passive: false
+        }
+    );
+
+    document.addEventListener(
+        "pointercancel",
+        finish,
+        {
+            passive: false
+        }
+    );
+
+    document.addEventListener(
+        "plugindex:selectionchange",
+        onSelectionChange
+    );
+
+    // --------------------------------------------------
+    // RESIZE DEL CANVAS
+    // --------------------------------------------------
+
+    function watchCanvas() {
+        const canvas =
+            getCanvas();
+
+        if (!canvas) return;
+
+        if (
+            typeof ResizeObserver ===
+            "undefined"
         ) {
             return;
         }
 
-
         const observer =
-            new ResizeObserver(
-                () => {
+            new ResizeObserver(() => {
+                normalizeAll();
 
-                    if (
-                        state.active
-                    ) {
-                        updateHandles(
-                            state.active
-                        );
+                getSelectedElements()
+                    .forEach(
+                        refreshHandles
+                    );
+            });
 
-                    } else {
+        observer.observe(canvas);
 
-                        updateHandles(
-                            selected()
-                        );
-
-                    }
-
-                }
-            );
-
-
-        if (state.root) {
-
-            observer.observe(
-                state.root
-            );
-
-        }
-
+        selectionObserver =
+            observer;
     }
 
-
-    /* ============================================================
-       INIT
-    ============================================================ */
-
-    function init() {
-
-        state.root =
-            getRoot();
-
-
-        if (!state.root) {
-
-            console.warn(
-                "[PluginDex] No se encontró #designPage."
-            );
-
-            return;
-
-        }
-
-
-        injectInteractionStyles();
-
-
-        state.root.addEventListener(
-            "pointerdown",
-            onPointerDown,
-            {
-                passive: false
-            }
-        );
-
-
-        window.addEventListener(
-            "pointermove",
-            onPointerMove,
-            {
-                passive: false
-            }
-        );
-
-
-        window.addEventListener(
-            "pointerup",
-            onPointerUp,
-            {
-                passive: false
-            }
-        );
-
-
-        window.addEventListener(
-            "pointercancel",
-            onPointerUp,
-            {
-                passive: false
-            }
-        );
-
-
-        document.addEventListener(
-            "click",
-            preventEditorClick,
-            true
-        );
-
-
-        document.addEventListener(
-            "plugindex:selectionchange",
-            onSelectionChange
-        );
-
-
-        setupResizeObserver();
-
-
-        onSelectionChange();
-
-
-        console.log(
-            "[PluginDex] Manipulador Canva iniciado."
-        );
-
-    }
-
-
-    /* ============================================================
-       API
-    ============================================================ */
+    // --------------------------------------------------
+    // API
+    // --------------------------------------------------
 
     window.PluginDexManipulator = {
+        createHandles,
+        removeHandles,
+        refreshHandles,
+        refreshAllHandles,
 
-        getState() {
+        normalizeElement,
+        normalizeAll,
 
-            return {
-                ...state
-            };
+        getGeometry:
+            readGeometry,
 
+        applyGeometry,
+
+        getCanvas,
+
+        getCanvasSize,
+
+        getCanvasScale,
+
+        isManipulating() {
+            return !!active;
         },
 
-        refresh() {
+        cancel() {
+            if (!active) return;
 
-            updateHandles(
-                selected()
+            active.element.classList.remove(
+                "editor-moving",
+                "editor-resizing",
+                "editor-rotating"
             );
 
-        },
+            removeGuides();
 
-        removeHandles,
-
-        createHandles
-
+            active = null;
+        }
     };
 
+    // --------------------------------------------------
+    // INIT
+    // --------------------------------------------------
 
-    /* ============================================================
-       START
-    ============================================================ */
+    function init() {
+        /*
+         * Esperamos a que el resto del editor haya construido
+         * el lienzo.
+         */
+
+        requestAnimationFrame(() => {
+            normalizeAll();
+            refreshAllHandles();
+            watchCanvas();
+        });
+    }
 
     if (
         document.readyState ===
         "loading"
     ) {
-
         document.addEventListener(
             "DOMContentLoaded",
             init,
@@ -2110,11 +1789,7 @@
                 once: true
             }
         );
-
     } else {
-
         init();
-
     }
-
 })();
