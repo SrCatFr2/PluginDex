@@ -1,17 +1,38 @@
-/* =============================================================
+/* ============================================================
    PLUGINDEX
    APP ENGINE
    funciones/app.js
-============================================================= */
+
+   RESPONSABILIDAD:
+   - Estado general
+   - Proyecto / localStorage
+   - Historial
+   - Creación de elementos
+   - Inspector
+   - Capas
+   - Zoom
+   - Wallpaper
+   - Preview
+   - Integración con módulos externos
+
+   NO RESPONSABILIDAD:
+   - Drag de elementos
+   - Resize de elementos
+   - Rotación
+   - Selección física
+
+   Eso pertenece a:
+   editor/seleccion.js
+   editor/manipulador.js
+============================================================ */
 
 (() => {
 
     "use strict";
 
-
-    /* =========================================================
+    /* ============================================================
        DOM
-    ========================================================= */
+    ============================================================ */
 
     const $ = (selector, root = document) =>
         root.querySelector(selector);
@@ -20,40 +41,82 @@
         [...root.querySelectorAll(selector)];
 
 
-    const app = $("#app");
-    const workspace = $("#workspace");
+    const app =
+        $("#app");
 
-    const designPage = $("#designPage");
-    const canvasStage = $("#canvasStage");
+    const workspace =
+        $("#workspace");
 
-    const zoomValue = $("#zoomValue");
+    const designPage =
+        $("#designPage");
 
-    const inspector = $("#inspector");
-    const inspectorEmpty = $("#inspectorEmpty");
-    const inspectorProperties = $("#inspectorProperties");
+    const canvasStage =
+        $("#canvasStage");
 
-    const selectedElementName = $("#selectedElementName");
-
-    const opacityRange = $("#opacityRange");
-    const opacityValue = $("#opacityValue");
-
-    const scaleRange = $("#scaleRange");
-    const scaleValue = $("#scaleValue");
-
-    const customColor = $("#customColor");
-
-    const smokeToggle = $("#smokeToggle");
-    const motionToggle = $("#motionToggle");
-
-    const wallpaper = $("#wallpaper");
-
-    const toast = $("#toast");
-    const toastText = $("#toastText");
+    const zoomValue =
+        $("#zoomValue");
 
 
-    /* =========================================================
+    /* ============================================================
+       INSPECTOR
+    ============================================================ */
+
+    const inspector =
+        $("#inspector");
+
+    const inspectorEmpty =
+        $("#inspectorEmpty");
+
+    const inspectorProperties =
+        $("#inspectorProperties");
+
+    const selectedElementName =
+        $("#selectedElementName");
+
+    const opacityRange =
+        $("#opacityRange");
+
+    const opacityValue =
+        $("#opacityValue");
+
+    const scaleRange =
+        $("#scaleRange");
+
+    const scaleValue =
+        $("#scaleValue");
+
+    const customColor =
+        $("#customColor");
+
+
+    /* ============================================================
+       AMBIENTE
+    ============================================================ */
+
+    const smokeToggle =
+        $("#smokeToggle");
+
+    const motionToggle =
+        $("#motionToggle");
+
+    const wallpaper =
+        $("#wallpaper");
+
+
+    /* ============================================================
+       UI
+    ============================================================ */
+
+    const toast =
+        $("#toast");
+
+    const toastText =
+        $("#toastText");
+
+
+    /* ============================================================
        ESTADO
-    ========================================================= */
+    ============================================================ */
 
     const state = {
 
@@ -79,176 +142,404 @@
 
         toastTimer: null,
 
-        elementCounter: 10
+        elementCounter: 10,
+
+        initialized: false
 
     };
 
 
-    /* =========================================================
+    /* ============================================================
        CONSTANTES
-    ========================================================= */
+    ============================================================ */
 
-    const STORAGE_KEY = "plugindex-project-v4";
+    const STORAGE_KEY =
+        "plugindex-project-v5";
 
-    const ZOOM_MIN = 0.5;
-    const ZOOM_MAX = 2;
+    const BLOCK_STORAGE_KEY =
+        "plugindex-blocks-v1";
+
+    const ZOOM_MIN =
+        0.5;
+
+    const ZOOM_MAX =
+        2;
+
+    const MAX_HISTORY =
+        60;
 
 
-    /* =========================================================
+    /* ============================================================
        UTILIDADES
-    ========================================================= */
+    ============================================================ */
 
-    function clamp(value, min, max) {
+    function clamp(
+        value,
+        min,
+        max
+    ) {
+
         return Math.min(
-            Math.max(value, min),
+            Math.max(
+                value,
+                min
+            ),
             max
         );
+
+    }
+
+
+    function number(
+        value,
+        fallback = 0
+    ) {
+
+        const parsed =
+            Number(value);
+
+        return Number.isFinite(parsed)
+            ? parsed
+            : fallback;
+
     }
 
 
     function escapeHTML(value) {
 
         return String(value)
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
-
-    }
-
-
-    function getElementId(element) {
-
-        return element?.dataset?.elementId || null;
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+            .replaceAll(
+                '"',
+                "&quot;"
+            )
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
 
     }
 
 
     function getElements() {
 
+        if (!designPage) {
+            return [];
+        }
+
         return $$(".page-element", designPage);
 
     }
 
 
-    function getSelected() {
+    function getElementId(element) {
 
-        return state.selected;
+        return (
+            element?.dataset?.elementId ||
+            null
+        );
 
     }
 
 
-    /* =========================================================
+    function findElement(id) {
+
+        if (!id) {
+            return null;
+        }
+
+        return getElements().find(
+            element =>
+                element.dataset.elementId === id
+        ) || null;
+
+    }
+
+
+    /* ============================================================
        TOAST
-    ========================================================= */
+    ============================================================ */
 
     function showToast(message) {
 
-        if (!toast || !toastText) return;
+        if (!toast || !toastText) {
+            return;
+        }
 
-        toastText.textContent = message;
+        toastText.textContent =
+            message;
 
-        toast.classList.add("visible");
+        toast.classList.add(
+            "visible"
+        );
 
-        clearTimeout(state.toastTimer);
+        clearTimeout(
+            state.toastTimer
+        );
 
-        state.toastTimer = setTimeout(() => {
+        state.toastTimer =
+            setTimeout(() => {
 
-            toast.classList.remove("visible");
+                toast.classList.remove(
+                    "visible"
+                );
 
-        }, 1800);
+            }, 1800);
 
     }
 
 
-    /* =========================================================
-       PROYECTO
-    ========================================================= */
+    /* ============================================================
+       ELEMENT STATE
+    ============================================================ */
 
-    function serializeProject() {
+    function getElementPosition(element) {
+
+        if (!element) {
+            return {
+                x: 0,
+                y: 0
+            };
+        }
+
+        /*
+         * El manipulador nuevo trabaja con
+         * left/top.
+         *
+         * Pero mantenemos --element-x / --element-y
+         * para compatibilidad con proyectos antiguos.
+         */
+
+        const left =
+            parseFloat(
+                element.style.left
+            );
+
+        const top =
+            parseFloat(
+                element.style.top
+            );
+
+        const variableX =
+            parseFloat(
+                element.style.getPropertyValue(
+                    "--element-x"
+                )
+            );
+
+        const variableY =
+            parseFloat(
+                element.style.getPropertyValue(
+                    "--element-y"
+                )
+            );
 
         return {
 
-            version: 4,
+            x: Number.isFinite(left)
+                ? left
+                : (
+                    Number.isFinite(variableX)
+                        ? variableX
+                        : 0
+                ),
 
-            zoom: state.zoom,
-
-            wallpaper: state.wallpaper,
-
-            smoke: state.smoke,
-
-            motion: state.motion,
-
-            elementCounter: state.elementCounter,
-
-            elements: getElements().map(element => {
-
-                const editable =
-                    $(".editable-text", element);
-
-                const computed =
-                    getComputedStyle(element);
-
-                return {
-
-                    id: element.dataset.elementId,
-
-                    type: element.dataset.elementType,
-
-                    text: editable
-                        ? editable.textContent.trim()
-                        : "",
-
-                    x:
-                        parseFloat(
-                            element.style.getPropertyValue(
-                                "--element-x"
-                            )
-                        ) || 0,
-
-                    y:
-                        parseFloat(
-                            element.style.getPropertyValue(
-                                "--element-y"
-                            )
-                        ) || 0,
-
-                    opacity:
-                        parseFloat(
-                            element.style.opacity ||
-                            computed.opacity ||
-                            "1"
-                        ),
-
-                    scale:
-                        parseFloat(
-                            element.dataset.scale ||
-                            "1"
-                        ),
-
-                    color:
-                        element.dataset.color ||
-                        null
-
-                };
-
-            })
+            y: Number.isFinite(top)
+                ? top
+                : (
+                    Number.isFinite(variableY)
+                        ? variableY
+                        : 0
+                )
 
         };
 
     }
 
 
-    function saveProject(silent = false) {
+    function syncElementPosition(element) {
+
+        if (!element) {
+            return;
+        }
+
+        const position =
+            getElementPosition(
+                element
+            );
+
+        element.style.setProperty(
+            "--element-x",
+            `${position.x}px`
+        );
+
+        element.style.setProperty(
+            "--element-y",
+            `${position.y}px`
+        );
+
+    }
+
+
+    function getElementText(element) {
+
+        if (!element) {
+            return "";
+        }
+
+        const editable =
+            $(".editable-text", element);
+
+        if (editable) {
+            return editable.textContent.trim();
+        }
+
+        const placeholder =
+            $(".generated-image-placeholder span", element);
+
+        if (placeholder) {
+            return placeholder.textContent.trim();
+        }
+
+        return "";
+
+    }
+
+
+    /* ============================================================
+       PROYECTO
+    ============================================================ */
+
+    function serializeProject() {
+
+        return {
+
+            version: 5,
+
+            zoom:
+                state.zoom,
+
+            wallpaper:
+                state.wallpaper,
+
+            smoke:
+                state.smoke,
+
+            motion:
+                state.motion,
+
+            elementCounter:
+                state.elementCounter,
+
+            elements:
+                getElements().map(
+                    element => {
+
+                        syncElementPosition(
+                            element
+                        );
+
+                        const position =
+                            getElementPosition(
+                                element
+                            );
+
+                        const computed =
+                            getComputedStyle(
+                                element
+                            );
+
+                        return {
+
+                            id:
+                                element.dataset.elementId,
+
+                            type:
+                                element.dataset.elementType ||
+                                "element",
+
+                            text:
+                                getElementText(
+                                    element
+                                ),
+
+                            x:
+                                position.x,
+
+                            y:
+                                position.y,
+
+                            width:
+                                element.style.width ||
+                                "",
+
+                            height:
+                                element.style.height ||
+                                "",
+
+                            rotation:
+                                element.style.getPropertyValue(
+                                    "--editor-rotation"
+                                ) || "0deg",
+
+                            opacity:
+                                number(
+                                    element.style.opacity ||
+                                    computed.opacity,
+                                    1
+                                ),
+
+                            scale:
+                                number(
+                                    element.dataset.scale,
+                                    1
+                                ),
+
+                            color:
+                                element.dataset.color ||
+                                null,
+
+                            locked:
+                                element.dataset.locked ===
+                                "true",
+
+                            hidden:
+                                element.dataset.hidden ===
+                                "true"
+
+                        };
+
+                    }
+                )
+
+        };
+
+    }
+
+
+    function saveProject(
+        silent = false
+    ) {
 
         try {
 
+            const project =
+                serializeProject();
+
             localStorage.setItem(
                 STORAGE_KEY,
-                JSON.stringify(
-                    serializeProject()
-                )
+                JSON.stringify(project)
             );
 
             if (!silent) {
@@ -266,9 +557,13 @@
                 error
             );
 
-            showToast(
-                "No se pudo guardar"
-            );
+            if (!silent) {
+
+                showToast(
+                    "No se pudo guardar"
+                );
+
+            }
 
         }
 
@@ -281,11 +576,17 @@
             state.saveTimer
         );
 
-        state.saveTimer = setTimeout(() => {
+        state.saveTimer =
+            setTimeout(
+                () => {
 
-            saveProject(true);
+                    saveProject(
+                        true
+                    );
 
-        }, 450);
+                },
+                400
+            );
 
     }
 
@@ -299,66 +600,61 @@
                     STORAGE_KEY
                 );
 
-            if (!raw) return false;
+            if (!raw) {
+                return false;
+            }
 
             const data =
                 JSON.parse(raw);
 
-            if (!data || typeof data !== "object") {
+            if (
+                !data ||
+                typeof data !== "object"
+            ) {
                 return false;
             }
 
 
-            if (
-                Number.isFinite(data.zoom)
-            ) {
-
-                state.zoom = clamp(
-                    data.zoom,
+            state.zoom =
+                clamp(
+                    number(
+                        data.zoom,
+                        1
+                    ),
                     ZOOM_MIN,
                     ZOOM_MAX
                 );
 
-            }
+
+            state.wallpaper =
+                typeof data.wallpaper === "string"
+                    ? data.wallpaper
+                    : "black";
 
 
-            if (typeof data.wallpaper === "string") {
-
-                state.wallpaper =
-                    data.wallpaper;
-
-            }
+            state.smoke =
+                data.smoke !== false;
 
 
-            if (typeof data.smoke === "boolean") {
-
-                state.smoke =
-                    data.smoke;
-
-            }
+            state.motion =
+                data.motion !== false;
 
 
-            if (typeof data.motion === "boolean") {
-
-                state.motion =
-                    data.motion;
-
-            }
+            state.elementCounter =
+                Math.max(
+                    10,
+                    number(
+                        data.elementCounter,
+                        10
+                    )
+                );
 
 
             if (
-                Number.isFinite(
-                    data.elementCounter
+                Array.isArray(
+                    data.elements
                 )
             ) {
-
-                state.elementCounter =
-                    data.elementCounter;
-
-            }
-
-
-            if (Array.isArray(data.elements)) {
 
                 restoreElements(
                     data.elements
@@ -372,7 +668,7 @@
         } catch (error) {
 
             console.warn(
-                "[PluginDex] Proyecto inválido:",
+                "[PluginDex] No se pudo cargar el proyecto:",
                 error
             );
 
@@ -383,53 +679,116 @@
     }
 
 
-    function restoreElements(elements) {
+    function restoreElements(
+        elements
+    ) {
+
+        if (!designPage) {
+            return;
+        }
 
         getElements().forEach(
-            element => element.remove()
+            element =>
+                element.remove()
         );
 
-        elements.forEach(data => {
 
-            createElement(
-                data.type,
-                {
-                    id: data.id,
-                    text: data.text,
-                    x: data.x,
-                    y: data.y,
-                    opacity: data.opacity,
-                    scale: data.scale,
-                    color: data.color
-                },
-                false
-            );
+        elements.forEach(
+            data => {
 
-        });
+                createElement(
+                    data.type,
+                    {
+                        id:
+                            data.id,
+
+                        text:
+                            data.text,
+
+                        x:
+                            data.x,
+
+                        y:
+                            data.y,
+
+                        width:
+                            data.width,
+
+                        height:
+                            data.height,
+
+                        rotation:
+                            data.rotation,
+
+                        opacity:
+                            data.opacity,
+
+                        scale:
+                            data.scale,
+
+                        color:
+                            data.color,
+
+                        locked:
+                            data.locked,
+
+                        hidden:
+                            data.hidden
+                    },
+                    false
+                );
+
+            }
+        );
 
     }
 
 
-    /* =========================================================
+    /* ============================================================
        HISTORIAL
-    ========================================================= */
+    ============================================================ */
+
+    function getSnapshot() {
+
+        return JSON.stringify(
+            serializeProject()
+        );
+
+    }
+
+
+    function createInitialHistory() {
+
+        const snapshot =
+            getSnapshot();
+
+        state.history = [
+            snapshot
+        ];
+
+        state.historyIndex = 0;
+
+    }
+
 
     function captureHistory() {
 
-        if (state.historyLock) {
+        if (
+            state.historyLock
+        ) {
             return;
         }
 
         const snapshot =
-            JSON.stringify(
-                serializeProject()
-            );
+            getSnapshot();
 
-
-        if (
+        const current =
             state.history[
                 state.historyIndex
-            ] === snapshot
+            ];
+
+        if (
+            current === snapshot
         ) {
             return;
         }
@@ -448,7 +807,8 @@
 
 
         if (
-            state.history.length > 50
+            state.history.length >
+            MAX_HISTORY
         ) {
 
             state.history.shift();
@@ -462,41 +822,63 @@
     }
 
 
-    function restoreSnapshot(snapshot) {
+    function restoreSnapshot(
+        snapshot
+    ) {
 
-        if (!snapshot) return;
+        if (!snapshot) {
+            return;
+        }
 
         try {
 
             const data =
-                JSON.parse(snapshot);
+                JSON.parse(
+                    snapshot
+                );
 
-            state.historyLock = true;
+            state.historyLock =
+                true;
+
 
             state.zoom =
                 clamp(
-                    Number(data.zoom) || 1,
+                    number(
+                        data.zoom,
+                        1
+                    ),
                     ZOOM_MIN,
                     ZOOM_MAX
                 );
 
+
             state.wallpaper =
-                data.wallpaper || "black";
+                data.wallpaper ||
+                "black";
+
 
             state.smoke =
                 data.smoke !== false;
 
+
             state.motion =
                 data.motion !== false;
 
+
             state.elementCounter =
-                Number(
-                    data.elementCounter
-                ) || 10;
+                Math.max(
+                    10,
+                    number(
+                        data.elementCounter,
+                        10
+                    )
+                );
 
 
             restoreElements(
-                Array.isArray(data.elements)
+                Array.isArray(
+                    data.elements
+                )
                     ? data.elements
                     : []
             );
@@ -510,18 +892,20 @@
 
             applyMotion();
 
-            selectElement(null);
+
+            clearSelection();
 
         } catch (error) {
 
             console.error(
-                "[PluginDex] Error restaurando:",
+                "[PluginDex] Error restaurando snapshot:",
                 error
             );
 
         } finally {
 
-            state.historyLock = false;
+            state.historyLock =
+                false;
 
         }
 
@@ -585,13 +969,15 @@
     }
 
 
-    /* =========================================================
+    /* ============================================================
        ZOOM
-    ========================================================= */
+    ============================================================ */
 
     function applyZoom() {
 
-        if (!canvasStage) return;
+        if (!canvasStage) {
+            return;
+        }
 
         canvasStage.style.setProperty(
             "--canvas-zoom",
@@ -615,12 +1001,17 @@
 
         state.zoom =
             clamp(
-                Number(value),
+                number(
+                    value,
+                    1
+                ),
                 ZOOM_MIN,
                 ZOOM_MAX
             );
 
         applyZoom();
+
+        scheduleSave();
 
     }
 
@@ -645,14 +1036,16 @@
 
     function resetZoom() {
 
-        setZoom(1);
+        setZoom(
+            1
+        );
 
     }
 
 
-    /* =========================================================
+    /* ============================================================
        WALLPAPER
-    ========================================================= */
+    ============================================================ */
 
     const wallpaperPresets = {
 
@@ -704,7 +1097,9 @@
         }
 
 
-        $$("[data-wallpaper]").forEach(
+        $$(
+            "[data-wallpaper]"
+        ).forEach(
             button => {
 
                 button.classList.toggle(
@@ -719,7 +1114,9 @@
     }
 
 
-    function setWallpaper(name) {
+    function setWallpaper(
+        name
+    ) {
 
         if (
             !wallpaperPresets[name]
@@ -731,6 +1128,7 @@
         state.wallpaper =
             name;
 
+
         applyWallpaper();
 
         captureHistory();
@@ -740,9 +1138,9 @@
     }
 
 
-    /* =========================================================
+    /* ============================================================
        HUMO
-    ========================================================= */
+    ============================================================ */
 
     function applySmoke() {
 
@@ -759,13 +1157,32 @@
 
         }
 
+
+        if (
+            window.PluginDexOptimization
+        ) {
+
+            window.PluginDexOptimization
+                .setEffects?.({
+
+                    smoke:
+                        state.smoke
+
+                });
+
+        }
+
     }
 
 
-    function setSmoke(enabled) {
+    function setSmoke(
+        enabled
+    ) {
 
         state.smoke =
-            Boolean(enabled);
+            Boolean(
+                enabled
+            );
 
         applySmoke();
 
@@ -776,9 +1193,9 @@
     }
 
 
-    /* =========================================================
+    /* ============================================================
        MOVIMIENTO
-    ========================================================= */
+    ============================================================ */
 
     function applyMotion() {
 
@@ -801,8 +1218,11 @@
         ) {
 
             window.PluginDexOptimization
-                .setEffects({
-                    motion: state.motion
+                .setEffects?.({
+
+                    motion:
+                        state.motion
+
                 });
 
         }
@@ -810,10 +1230,14 @@
     }
 
 
-    function setMotion(enabled) {
+    function setMotion(
+        enabled
+    ) {
 
         state.motion =
-            Boolean(enabled);
+            Boolean(
+                enabled
+            );
 
         applyMotion();
 
@@ -824,17 +1248,73 @@
     }
 
 
-    /* =========================================================
+    /* ============================================================
        SELECCIÓN
-    ========================================================= */
+       IMPORTANTE:
+       app.js NO vuelve a implementar selección física.
+       Usa editor/seleccion.js.
+    ============================================================ */
 
-    function selectElement(element) {
+    function getSelected() {
+
+        if (
+            window.PluginDexSelection
+        ) {
+
+            return (
+                window.PluginDexSelection
+                    .getSelected?.() ||
+                null
+            );
+
+        }
+
+        return state.selected;
+
+    }
+
+
+    function selectElement(
+        element
+    ) {
+
+        if (
+            window.PluginDexSelection
+        ) {
+
+            if (element) {
+
+                window.PluginDexSelection
+                    .select(
+                        element
+                    );
+
+            } else {
+
+                window.PluginDexSelection
+                    .clear();
+
+            }
+
+            return;
+
+        }
+
+
+        /*
+         * Fallback mínimo por si el módulo
+         * todavía no está cargado.
+         */
+
+        state.selected =
+            element || null;
+
 
         getElements().forEach(
             item => {
 
                 item.classList.toggle(
-                    "selected",
+                    "editor-selected",
                     item === element
                 );
 
@@ -842,33 +1322,39 @@
         );
 
 
-        state.selected =
-            element || null;
-
-
-        if (!element) {
-
-            showEmptyInspector();
-
-            updateLayerSelection(
-                null
-            );
-
-            return;
-
-        }
-
-
-        showInspector(
-            element
-        );
-
-        updateLayerSelection(
+        updateInspector(
             element
         );
 
     }
 
+
+    function clearSelection() {
+
+        if (
+            window.PluginDexSelection
+        ) {
+
+            window.PluginDexSelection
+                .clear();
+
+            return;
+
+        }
+
+        state.selected =
+            null;
+
+        updateInspector(
+            null
+        );
+
+    }
+
+
+    /* ============================================================
+       INSPECTOR
+    ============================================================ */
 
     function showEmptyInspector() {
 
@@ -899,7 +1385,7 @@
     }
 
 
-    function showInspector(element) {
+    function showInspector() {
 
         if (inspector) {
 
@@ -925,6 +1411,32 @@
 
         }
 
+    }
+
+
+    function updateInspector(
+        element
+    ) {
+
+        state.selected =
+            element || null;
+
+
+        if (!element) {
+
+            showEmptyInspector();
+
+            updateLayerSelection(
+                null
+            );
+
+            return;
+
+        }
+
+
+        showInspector();
+
 
         const type =
             element.dataset.elementType ||
@@ -933,13 +1445,17 @@
 
         const names = {
 
-            heading: "Título",
+            heading:
+                "Título",
 
-            text: "Texto",
+            text:
+                "Texto",
 
-            button: "Botón",
+            button:
+                "Botón",
 
-            image: "Imagen"
+            image:
+                "Imagen"
 
         };
 
@@ -954,16 +1470,24 @@
 
 
         const opacity =
-            parseFloat(
-                element.style.opacity ||
-                "1"
+            clamp(
+                number(
+                    element.style.opacity,
+                    1
+                ),
+                0.2,
+                1
             );
 
 
         const scale =
-            parseFloat(
-                element.dataset.scale ||
-                "1"
+            clamp(
+                number(
+                    element.dataset.scale,
+                    1
+                ),
+                0.5,
+                1.8
             );
 
 
@@ -1011,10 +1535,17 @@
             element.dataset.color
         );
 
+
+        updateLayerSelection(
+            element
+        );
+
     }
 
 
-    function updateColorButtons(color) {
+    function updateColorButtons(
+        color
+    ) {
 
         $$(".color-chip").forEach(
             chip => {
@@ -1039,431 +1570,29 @@
                 customColor.value =
                     color;
 
-            } catch {
-
-                // Color inválido.
-            }
+            } catch {}
 
         }
 
     }
 
-
-    /* =========================================================
-       CAPAS
-    ========================================================= */
-
-    function updateLayerSelection(
-        element
-    ) {
-
-        const id =
-            getElementId(element);
-
-
-        $$("[data-layer-select]").forEach(
-            layer => {
-
-                layer.classList.toggle(
-                    "active",
-                    layer.dataset.layerSelect ===
-                    id
-                );
-
-            }
-        );
-
-    }
-
-
-    function selectLayer(id) {
-
-        const element =
-            getElements().find(
-                item =>
-                    item.dataset.elementId ===
-                    id
-            );
-
-
-        if (element) {
-
-            selectElement(
-                element
-            );
-
-        }
-
-    }
-
-
-    /* =========================================================
-       ELEMENTOS
-    ========================================================= */
-
-    function nextElementId(type) {
-
-        state.elementCounter++;
-
-        return `${type}-${state.elementCounter}`;
-
-    }
-
-
-    function getDefaultText(type) {
-
-        const texts = {
-
-            heading:
-                "Nuevo título",
-
-            text:
-                "Nuevo texto",
-
-            button:
-                "Botón",
-
-            image:
-                "Imagen"
-
-        };
-
-
-        return (
-            texts[type] ||
-            "Elemento"
-        );
-
-    }
-
-
-    function createElement(
-        type,
-        options = {},
-        record = true
-    ) {
-
-        const validTypes = [
-            "heading",
-            "text",
-            "button",
-            "image"
-        ];
-
-
-        if (
-            !validTypes.includes(type)
-        ) {
-
-            return null;
-
-        }
-
-
-        const id =
-            options.id ||
-            nextElementId(type);
-
-
-        const element =
-            document.createElement(
-                type === "button"
-                    ? "button"
-                    : "div"
-            );
-
-
-        element.className =
-            `page-element page-${type}`;
-
-
-        element.dataset.element =
-            "";
-
-        element.dataset.elementId =
-            id;
-
-        element.dataset.elementType =
-            type;
-
-
-        element.style.setProperty(
-            "--element-x",
-            `${Number(
-                options.x ?? 100
-            )}px`
-        );
-
-
-        element.style.setProperty(
-            "--element-y",
-            `${Number(
-                options.y ?? 100
-            )}px`
-        );
-
-
-        const opacity =
-            Number(
-                options.opacity ?? 1
-            );
-
-
-        const scale =
-            Number(
-                options.scale ?? 1
-            );
-
-
-        element.style.opacity =
-            clamp(
-                opacity,
-                0.2,
-                1
-            );
-
-
-        element.dataset.scale =
-            clamp(
-                scale,
-                0.5,
-                1.8
-            );
-
-
-        if (options.color) {
-
-            element.dataset.color =
-                options.color;
-
-        }
-
-
-        if (
-            type === "image"
-        ) {
-
-            element.innerHTML = `
-
-                <div class="generated-image-placeholder">
-
-                    <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                    >
-                        <rect
-                            x="4"
-                            y="5"
-                            width="16"
-                            height="14"
-                            rx="2"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                        />
-
-                        <circle
-                            cx="9"
-                            cy="10"
-                            r="1.5"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                        />
-
-                        <path
-                            d="m5 17 4-4 3 3 2-2 5 5"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            stroke-linejoin="round"
-                        />
-                    </svg>
-
-                    <span>
-                        ${escapeHTML(
-                            options.text ||
-                            "Imagen"
-                        )}
-                    </span>
-
-                </div>
-
-            `;
-
-        } else {
-
-            const span =
-                document.createElement(
-                    "span"
-                );
-
-            span.className =
-                "editable-text";
-
-            span.textContent =
-                options.text ||
-                getDefaultText(type);
-
-
-            element.appendChild(
-                span
-            );
-
-        }
-
-
-        designPage.appendChild(
-            element
-        );
-
-
-        setupElement(
-            element
-        );
-
-
-        if (record) {
-
-            captureHistory();
-
-            scheduleSave();
-
-        }
-
-
-        return element;
-
-    }
-
-
-    function setupElement(element) {
-
-        if (
-            element.dataset.initialized ===
-            "true"
-        ) {
-
-            return;
-
-        }
-
-
-        element.dataset.initialized =
-            "true";
-
-
-        element.addEventListener(
-            "pointerdown",
-            event => {
-
-                if (
-                    event.button !== 0 &&
-                    event.pointerType ===
-                    "mouse"
-                ) {
-                    return;
-                }
-
-
-                if (
-                    event.target.closest(
-                        "button"
-                    ) &&
-                    element.tagName !==
-                    "BUTTON"
-                ) {
-                    return;
-                }
-
-
-                event.stopPropagation();
-
-                selectElement(
-                    element
-                );
-
-            }
-        );
-
-
-        element.addEventListener(
-            "dblclick",
-            event => {
-
-                event.stopPropagation();
-
-                editElementText(
-                    element
-                );
-
-            }
-        );
-
-    }
-
-
-    function editElementText(element) {
-
-        const editable =
-            $(".editable-text", element);
-
-
-        if (!editable) {
-            return;
-        }
-
-
-        const current =
-            editable.textContent.trim();
-
-
-        const next =
-            window.prompt(
-                "Editar texto",
-                current
-            );
-
-
-        if (
-            next === null
-        ) {
-
-            return;
-
-        }
-
-
-        editable.textContent =
-            next;
-
-
-        captureHistory();
-
-        scheduleSave();
-
-        showToast(
-            "Texto actualizado"
-        );
-
-    }
-
-
-    /* =========================================================
-       INSPECTOR
-    ========================================================= */
 
     function updateSelectedOpacity(
-        value
+        value,
+        commit = false
     ) {
 
         const element =
             getSelected();
 
-
-        if (!element) return;
+        if (!element) {
+            return;
+        }
 
 
         const opacity =
             clamp(
-                Number(value) / 100,
+                number(value) / 100,
                 0.2,
                 1
             );
@@ -1483,25 +1612,33 @@
         }
 
 
+        if (commit) {
+
+            captureHistory();
+
+        }
+
         scheduleSave();
 
     }
 
 
     function updateSelectedScale(
-        value
+        value,
+        commit = false
     ) {
 
         const element =
             getSelected();
 
-
-        if (!element) return;
+        if (!element) {
+            return;
+        }
 
 
         const scale =
             clamp(
-                Number(value) / 100,
+                number(value) / 100,
                 0.5,
                 1.8
             );
@@ -1527,6 +1664,12 @@
         }
 
 
+        if (commit) {
+
+            captureHistory();
+
+        }
+
         scheduleSave();
 
     }
@@ -1539,8 +1682,17 @@
         const element =
             getSelected();
 
+        if (!element) {
+            return;
+        }
 
-        if (!element) return;
+
+        if (
+            typeof color !== "string" ||
+            !color
+        ) {
+            return;
+        }
 
 
         element.dataset.color =
@@ -1592,16 +1744,700 @@
     }
 
 
-    /* =========================================================
+    /* ============================================================
+       CAPAS
+    ============================================================ */
+
+    function updateLayerSelection(
+        element
+    ) {
+
+        const id =
+            getElementId(
+                element
+            );
+
+
+        $$(
+            "[data-layer-select]"
+        ).forEach(
+            layer => {
+
+                layer.classList.toggle(
+                    "active",
+                    layer.dataset.layerSelect ===
+                    id
+                );
+
+            }
+        );
+
+    }
+
+
+    function selectLayer(
+        id
+    ) {
+
+        const element =
+            findElement(
+                id
+            );
+
+
+        if (!element) {
+            return;
+        }
+
+
+        selectElement(
+            element
+        );
+
+    }
+
+
+    function refreshLayers() {
+
+        const layers =
+            $$(
+                "[data-layer-select]"
+            );
+
+        if (!layers.length) {
+            return;
+        }
+
+
+        const selected =
+            getSelected();
+
+
+        layers.forEach(
+            layer => {
+
+                const id =
+                    layer.dataset.layerSelect;
+
+                layer.classList.toggle(
+                    "active",
+                    selected &&
+                    selected.dataset.elementId === id
+                );
+
+            }
+        );
+
+    }
+
+
+    /* ============================================================
+       ELEMENTOS
+    ============================================================ */
+
+    function nextElementId(
+        type
+    ) {
+
+        state.elementCounter++;
+
+        return `${type}-${state.elementCounter}`;
+
+    }
+
+
+    function getDefaultText(
+        type
+    ) {
+
+        const texts = {
+
+            heading:
+                "Nuevo título",
+
+            text:
+                "Nuevo texto",
+
+            button:
+                "Botón",
+
+            image:
+                "Imagen"
+
+        };
+
+
+        return (
+            texts[type] ||
+            "Elemento"
+        );
+
+    }
+
+
+    function applyElementData(
+        element,
+        options
+    ) {
+
+        const x =
+            number(
+                options.x,
+                100
+            );
+
+        const y =
+            number(
+                options.y,
+                100
+            );
+
+
+        /*
+         * Compatibilidad:
+         * el sistema viejo usa variables,
+         * el manipulador nuevo usa left/top.
+         */
+
+        element.style.left =
+            `${x}px`;
+
+        element.style.top =
+            `${y}px`;
+
+
+        element.style.setProperty(
+            "--element-x",
+            `${x}px`
+        );
+
+        element.style.setProperty(
+            "--element-y",
+            `${y}px`
+        );
+
+
+        if (
+            options.width
+        ) {
+
+            element.style.width =
+                options.width;
+
+        }
+
+
+        if (
+            options.height
+        ) {
+
+            element.style.height =
+                options.height;
+
+        }
+
+
+        if (
+            options.rotation !== undefined
+        ) {
+
+            element.style.setProperty(
+                "--editor-rotation",
+                String(
+                    options.rotation
+                ).includes("deg")
+                    ? options.rotation
+                    : `${options.rotation}deg`
+            );
+
+        }
+
+
+        const opacity =
+            clamp(
+                number(
+                    options.opacity,
+                    1
+                ),
+                0.2,
+                1
+            );
+
+
+        const scale =
+            clamp(
+                number(
+                    options.scale,
+                    1
+                ),
+                0.5,
+                1.8
+            );
+
+
+        element.style.opacity =
+            opacity;
+
+
+        element.dataset.scale =
+            scale;
+
+
+        element.style.setProperty(
+            "--element-scale",
+            scale
+        );
+
+
+        if (
+            options.color
+        ) {
+
+            element.dataset.color =
+                options.color;
+
+            element.style.setProperty(
+                "--element-color",
+                options.color
+            );
+
+        }
+
+
+        if (
+            options.locked
+        ) {
+
+            element.dataset.locked =
+                "true";
+
+        }
+
+
+        if (
+            options.hidden
+        ) {
+
+            element.dataset.hidden =
+                "true";
+
+            element.hidden =
+                true;
+
+        }
+
+    }
+
+
+    function createElement(
+        type,
+        options = {},
+        record = true
+    ) {
+
+        const validTypes = [
+
+            "heading",
+            "text",
+            "button",
+            "image"
+
+        ];
+
+
+        if (
+            !validTypes.includes(
+                type
+            )
+        ) {
+
+            return null;
+
+        }
+
+
+        if (!designPage) {
+
+            console.error(
+                "[PluginDex] designPage no encontrado."
+            );
+
+            return null;
+
+        }
+
+
+        const id =
+            options.id ||
+            nextElementId(
+                type
+            );
+
+
+        const element =
+            document.createElement(
+                type === "button"
+                    ? "button"
+                    : "div"
+            );
+
+
+        element.className =
+            `page-element page-${type}`;
+
+
+        element.dataset.element =
+            "";
+
+
+        element.dataset.elementId =
+            id;
+
+
+        element.dataset.elementType =
+            type;
+
+
+        element.dataset.scale =
+            "1";
+
+
+        /*
+         * IMPORTANTE:
+         * no añadimos listeners de drag aquí.
+         * El manipulador externo se encarga de ello.
+         */
+
+
+        if (
+            type === "image"
+        ) {
+
+            element.innerHTML = `
+
+                <div class="generated-image-placeholder">
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        aria-hidden="true"
+                    >
+
+                        <rect
+                            x="4"
+                            y="5"
+                            width="16"
+                            height="14"
+                            rx="2"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                        />
+
+                        <circle
+                            cx="9"
+                            cy="10"
+                            r="1.5"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                        />
+
+                        <path
+                            d="m5 17 4-4 3 3 2-2 5 5"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            stroke-linejoin="round"
+                        />
+
+                    </svg>
+
+                    <span>
+                        ${escapeHTML(
+                            options.text ||
+                            "Imagen"
+                        )}
+                    </span>
+
+                </div>
+
+            `;
+
+        } else {
+
+            const span =
+                document.createElement(
+                    "span"
+                );
+
+
+            span.className =
+                "editable-text";
+
+
+            span.textContent =
+                options.text ||
+                getDefaultText(
+                    type
+                );
+
+
+            span.contentEditable =
+                "false";
+
+
+            element.appendChild(
+                span
+            );
+
+        }
+
+
+        applyElementData(
+            element,
+            options
+        );
+
+
+        designPage.appendChild(
+            element
+        );
+
+
+        /*
+         * El manipulador/selector trabajan
+         * por delegación y por selector.
+         * No necesitamos registrar listeners
+         * individuales aquí.
+         */
+
+
+        if (record) {
+
+            captureHistory();
+
+            scheduleSave();
+
+        }
+
+
+        refreshEditorModules();
+
+
+        return element;
+
+    }
+
+
+    /* ============================================================
+       TEXTO
+    ============================================================ */
+
+    function editElementText(
+        element
+    ) {
+
+        if (!element) {
+            return;
+        }
+
+
+        const editable =
+            $(".editable-text", element);
+
+
+        if (!editable) {
+            return;
+        }
+
+
+        const current =
+            editable.textContent.trim();
+
+
+        /*
+         * Evitamos prompt en móvil si existe
+         * una API futura de edición.
+         */
+
+        const next =
+            window.prompt(
+                "Editar texto",
+                current
+            );
+
+
+        if (next === null) {
+            return;
+        }
+
+
+        editable.textContent =
+            next;
+
+
+        captureHistory();
+
+        scheduleSave();
+
+        showToast(
+            "Texto actualizado"
+        );
+
+    }
+
+
+    function setupTextEditing() {
+
+        if (!designPage) {
+            return;
+        }
+
+
+        /*
+         * Un único listener delegado.
+         * Mucho más barato que un listener
+         * por elemento.
+         */
+
+        designPage.addEventListener(
+            "dblclick",
+            event => {
+
+                const element =
+                    event.target.closest(
+                        ".page-element"
+                    );
+
+
+                if (!element) {
+                    return;
+                }
+
+
+                if (
+                    event.target.closest(
+                        ".editor-handle"
+                    )
+                ) {
+                    return;
+                }
+
+
+                editElementText(
+                    element
+                );
+
+            }
+        );
+
+    }
+
+
+    /* ============================================================
+       EVENTOS DEL MANIPULADOR
+    ============================================================ */
+
+    function setupEditorIntegration() {
+
+        document.addEventListener(
+            "plugindex:selectionchange",
+            event => {
+
+                const element =
+                    event.detail?.element ||
+                    null;
+
+
+                state.selected =
+                    element;
+
+
+                updateInspector(
+                    element
+                );
+
+
+                refreshLayers();
+
+            }
+        );
+
+
+        document.addEventListener(
+            "plugindex:elementchange",
+            event => {
+
+                const element =
+                    event.detail?.element ||
+                    getSelected();
+
+
+                if (element) {
+
+                    syncElementPosition(
+                        element
+                    );
+
+                    updateInspector(
+                        element
+                    );
+
+                }
+
+
+                /*
+                 * Guardado ligero durante edición.
+                 * El historial definitivo se captura
+                 * al terminar la operación si el
+                 * manipulador lo notifica.
+                 */
+
+                scheduleSave();
+
+            }
+        );
+
+
+        document.addEventListener(
+            "plugindex:manipulationend",
+            event => {
+
+                const element =
+                    event.detail?.element ||
+                    getSelected();
+
+
+                if (element) {
+
+                    syncElementPosition(
+                        element
+                    );
+
+                }
+
+
+                captureHistory();
+
+                scheduleSave();
+
+            }
+        );
+
+    }
+
+
+    function refreshEditorModules() {
+
+        window.PluginDexSelection
+            ?.refresh?.();
+
+    }
+
+
+    /* ============================================================
        EVENTOS GENERALES
-    ========================================================= */
+    ============================================================ */
 
-    function setupGlobalEvents() {
-
-
-        /* -----------------------------------------------------
-           ACCIONES
-        ----------------------------------------------------- */
+    function setupActions() {
 
         document.addEventListener(
             "click",
@@ -1626,14 +2462,10 @@
 
                     case "add":
 
-                        if (
-                            window.PluginDexWindows
-                        ) {
-
-                            window.PluginDexWindows
-                                .open("elements");
-
-                        }
+                        window.PluginDexWindows
+                            ?.open?.(
+                                "elements"
+                            );
 
                         break;
 
@@ -1682,14 +2514,8 @@
 
                     case "reset-layout":
 
-                        if (
-                            window.PluginDexWindows
-                        ) {
-
-                            window.PluginDexWindows
-                                .reset();
-
-                        }
+                        window.PluginDexWindows
+                            ?.reset?.();
 
                         break;
 
@@ -1700,15 +2526,26 @@
 
                         break;
 
+
+                    case "clear-selection":
+
+                        clearSelection();
+
+                        break;
+
                 }
 
             }
         );
 
+    }
 
-        /* -----------------------------------------------------
-           CREAR ELEMENTOS
-        ----------------------------------------------------- */
+
+    /* ============================================================
+       CREACIÓN
+    ============================================================ */
+
+    function setupCreation() {
 
         document.addEventListener(
             "click",
@@ -1735,25 +2572,42 @@
                     );
 
 
-                if (element) {
-
-                    selectElement(
-                        element
-                    );
-
-                    showToast(
-                        `${type} añadido`
-                    );
-
+                if (!element) {
+                    return;
                 }
+
+
+                selectElement(
+                    element
+                );
+
+
+                /*
+                 * Cerramos la ventana de elementos
+                 * si existe.
+                 */
+
+                window.PluginDexWindows
+                    ?.close?.(
+                        "elements"
+                    );
+
+
+                showToast(
+                    `${type} añadido`
+                );
 
             }
         );
 
+    }
 
-        /* -----------------------------------------------------
-           CAPAS
-        ----------------------------------------------------- */
+
+    /* ============================================================
+       CAPAS
+    ============================================================ */
+
+    function setupLayers() {
 
         document.addEventListener(
             "click",
@@ -1777,10 +2631,14 @@
             }
         );
 
+    }
 
-        /* -----------------------------------------------------
-           WALLPAPER
-        ----------------------------------------------------- */
+
+    /* ============================================================
+       WALLPAPER
+    ============================================================ */
+
+    function setupWallpaper() {
 
         document.addEventListener(
             "click",
@@ -1804,10 +2662,14 @@
             }
         );
 
+    }
 
-        /* -----------------------------------------------------
-           OPACIDAD
-        ----------------------------------------------------- */
+
+    /* ============================================================
+       INSPECTOR EVENTS
+    ============================================================ */
+
+    function setupInspector() {
 
         if (opacityRange) {
 
@@ -1835,10 +2697,6 @@
         }
 
 
-        /* -----------------------------------------------------
-           ESCALA
-        ----------------------------------------------------- */
-
         if (scaleRange) {
 
             scaleRange.addEventListener(
@@ -1865,10 +2723,6 @@
         }
 
 
-        /* -----------------------------------------------------
-           COLOR
-        ----------------------------------------------------- */
-
         document.addEventListener(
             "click",
             event => {
@@ -1884,9 +2738,15 @@
                 }
 
 
-                updateSelectedColor(
+                if (
                     chip.dataset.color
-                );
+                ) {
+
+                    updateSelectedColor(
+                        chip.dataset.color
+                    );
+
+                }
 
             }
         );
@@ -1907,10 +2767,14 @@
 
         }
 
+    }
 
-        /* -----------------------------------------------------
-           HUMO
-        ----------------------------------------------------- */
+
+    /* ============================================================
+       TOGGLES
+    ============================================================ */
+
+    function setupToggles() {
 
         if (smokeToggle) {
 
@@ -1928,10 +2792,6 @@
         }
 
 
-        /* -----------------------------------------------------
-           MOVIMIENTO
-        ----------------------------------------------------- */
-
         if (motionToggle) {
 
             motionToggle.addEventListener(
@@ -1947,78 +2807,53 @@
 
         }
 
-
-        /* -----------------------------------------------------
-           CLICK EN CANVAS
-        ----------------------------------------------------- */
-
-        if (designPage) {
-
-            designPage.addEventListener(
-                "pointerdown",
-                event => {
-
-                    if (
-                        event.target ===
-                        designPage
-                    ) {
-
-                        selectElement(
-                            null
-                        );
-
-                    }
-
-                }
-            );
-
-        }
+    }
 
 
-        /* -----------------------------------------------------
-           WHEEL ZOOM
-        ----------------------------------------------------- */
+    /* ============================================================
+       PREVIEW
+    ============================================================ */
 
-        if (canvasStage) {
+    function togglePreview() {
 
-            canvasStage.addEventListener(
-                "wheel",
-                event => {
-
-                    if (
-                        !event.ctrlKey &&
-                        !event.metaKey
-                    ) {
-                        return;
-                    }
+        state.preview =
+            !state.preview;
 
 
-                    event.preventDefault();
+        document.body.classList.toggle(
+            "preview-mode",
+            state.preview
+        );
 
 
-                    const amount =
-                        event.deltaY > 0
-                            ? -0.05
-                            : 0.05;
+        if (
+            window.PluginDexSelection
+        ) {
 
+            if (state.preview) {
 
-                    setZoom(
-                        state.zoom +
-                        amount
-                    );
+                window.PluginDexSelection
+                    .clear();
 
-                },
-                {
-                    passive: false
-                }
-            );
+            }
 
         }
 
 
-        /* -----------------------------------------------------
-           TECLADO
-        ----------------------------------------------------- */
+        showToast(
+            state.preview
+                ? "Vista previa"
+                : "Editor"
+        );
+
+    }
+
+
+    /* ============================================================
+       TECLADO
+    ============================================================ */
+
+    function setupKeyboard() {
 
         document.addEventListener(
             "keydown",
@@ -2029,10 +2864,13 @@
                     event.metaKey;
 
 
+                /*
+                 * Guardar
+                 */
+
                 if (
                     modifier &&
-                    event.key.toLowerCase() ===
-                    "s"
+                    event.key.toLowerCase() === "s"
                 ) {
 
                     event.preventDefault();
@@ -2044,13 +2882,17 @@
                 }
 
 
+                /*
+                 * Undo
+                 */
+
                 if (
                     modifier &&
-                    event.key.toLowerCase() ===
-                    "z"
+                    event.key.toLowerCase() === "z"
                 ) {
 
                     event.preventDefault();
+
 
                     if (event.shiftKey) {
 
@@ -2067,10 +2909,13 @@
                 }
 
 
+                /*
+                 * Redo
+                 */
+
                 if (
                     modifier &&
-                    event.key.toLowerCase() ===
-                    "y"
+                    event.key.toLowerCase() === "y"
                 ) {
 
                     event.preventDefault();
@@ -2082,361 +2927,261 @@
                 }
 
 
-                if (
-                    event.key ===
-                    "Escape"
-                ) {
-
-                    selectElement(
-                        null
-                    );
-
-                }
-
-            }
-        );
-
-    }
-
-
-    /* =========================================================
-       PREVIEW
-    ========================================================= */
-
-    function togglePreview() {
-
-        state.preview =
-            !state.preview;
-
-
-        document.body.classList.toggle(
-            "preview-mode",
-            state.preview
-        );
-
-
-        if (state.preview) {
-
-            showToast(
-                "Vista previa"
-            );
-
-        } else {
-
-            showToast(
-                "Editor"
-            );
-
-        }
-
-    }
-
-
-    /* =========================================================
-       ARRASTRE DE ELEMENTOS
-    ========================================================= */
-
-    let elementDrag = null;
-
-    let elementDragFrame = 0;
-
-
-    function setupElementDragging() {
-
-        if (!designPage) {
-            return;
-        }
-
-
-        designPage.addEventListener(
-            "pointerdown",
-            event => {
-
-                const element =
-                    event.target.closest(
-                        ".page-element"
-                    );
-
-
-                if (!element) {
-                    return;
-                }
-
+                /*
+                 * Escape
+                 */
 
                 if (
-                    event.pointerType ===
-                    "mouse" &&
-                    event.button !== 0
+                    event.key === "Escape"
                 ) {
-                    return;
+
+                    if (
+                        state.preview
+                    ) {
+
+                        togglePreview();
+
+                    } else {
+
+                        clearSelection();
+
+                    }
+
                 }
 
+
+                /*
+                 * Delete / Backspace
+                 */
 
                 if (
-                    event.target.closest(
-                        "button"
-                    ) &&
-                    element.tagName !==
-                    "BUTTON"
+                    event.key === "Delete" ||
+                    event.key === "Backspace"
                 ) {
-                    return;
-                }
+
+                    const active =
+                        document.activeElement;
 
 
-                const rect =
-                    element.getBoundingClientRect();
-
-
-                const pageRect =
-                    designPage.getBoundingClientRect();
-
-
-                const zoom =
-                    state.zoom;
-
-
-                const startX =
-                    event.clientX;
-
-
-                const startY =
-                    event.clientY;
-
-
-                const startLeft =
-                    parseFloat(
-                        element.style.getPropertyValue(
-                            "--element-x"
+                    if (
+                        active &&
+                        (
+                            active.tagName === "INPUT" ||
+                            active.tagName === "TEXTAREA" ||
+                            active.isContentEditable
                         )
-                    ) || 0;
+                    ) {
+
+                        return;
+
+                    }
 
 
-                const startTop =
-                    parseFloat(
-                        element.style.getPropertyValue(
-                            "--element-y"
-                        )
-                    ) || 0;
+                    deleteSelected();
 
-
-                elementDrag = {
-
-                    element,
-
-                    startX,
-
-                    startY,
-
-                    startLeft,
-
-                    startTop,
-
-                    zoom,
-
-                    currentX: startX,
-
-                    currentY: startY
-
-                };
-
-
-                selectElement(
-                    element
-                );
-
-
-                element.classList.add(
-                    "is-dragging"
-                );
-
-
-                element.setPointerCapture(
-                    event.pointerId
-                );
-
-
-                event.preventDefault();
-
-            }
-        );
-
-
-        designPage.addEventListener(
-            "pointermove",
-            event => {
-
-                if (!elementDrag) {
-                    return;
                 }
 
-
-                elementDrag.currentX =
-                    event.clientX;
-
-                elementDrag.currentY =
-                    event.clientY;
-
-
-                if (
-                    elementDragFrame
-                ) {
-                    return;
-                }
-
-
-                elementDragFrame =
-                    requestAnimationFrame(
-                        updateElementDrag
-                    );
-
             }
-        );
-
-
-        designPage.addEventListener(
-            "pointerup",
-            finishElementDrag
-        );
-
-
-        designPage.addEventListener(
-            "pointercancel",
-            finishElementDrag
         );
 
     }
 
 
-    function updateElementDrag() {
+    /* ============================================================
+       BORRAR ELEMENTO
+    ============================================================ */
 
-        elementDragFrame = 0;
-
-
-        if (!elementDrag) {
-            return;
-        }
-
-
-        const drag =
-            elementDrag;
-
-
-        const dx =
-            (
-                drag.currentX -
-                drag.startX
-            ) / drag.zoom;
-
-
-        const dy =
-            (
-                drag.currentY -
-                drag.startY
-            ) / drag.zoom;
-
-
-        const x =
-            drag.startLeft +
-            dx;
-
-
-        const y =
-            drag.startTop +
-            dy;
-
-
-        drag.element.style.setProperty(
-            "--element-x",
-            `${x}px`
-        );
-
-
-        drag.element.style.setProperty(
-            "--element-y",
-            `${y}px`
-        );
-
-    }
-
-
-    function finishElementDrag() {
-
-        if (!elementDrag) {
-            return;
-        }
-
-
-        if (elementDragFrame) {
-
-            cancelAnimationFrame(
-                elementDragFrame
-            );
-
-            elementDragFrame = 0;
-
-            updateElementDrag();
-
-        }
-
+    function deleteSelected() {
 
         const element =
-            elementDrag.element;
+            getSelected();
 
 
-        element.classList.remove(
-            "is-dragging"
-        );
+        if (!element) {
+            return;
+        }
 
 
-        elementDrag = null;
+        const id =
+            getElementId(
+                element
+            );
 
+
+        element.remove();
+
+
+        clearSelection();
 
         captureHistory();
 
         scheduleSave();
 
-    }
+
+        /*
+         * Actualizar cualquier capa
+         * externa si existe.
+         */
+
+        refreshEditorModules();
+
+        refreshLayers();
 
 
-    /* =========================================================
-       INICIALIZACIÓN DE ELEMENTOS
-    ========================================================= */
+        showToast(
+            "Elemento eliminado"
+        );
 
-    function initializeElements() {
 
-        getElements().forEach(
-            setupElement
+        /*
+         * Aviso opcional para otros sistemas.
+         */
+
+        document.dispatchEvent(
+            new CustomEvent(
+                "plugindex:elementdelete",
+                {
+                    detail: {
+                        id
+                    }
+                }
+            )
         );
 
     }
 
 
-    /* =========================================================
-       ESTADO INICIAL
-    ========================================================= */
+    /* ============================================================
+       DUPLICAR
+    ============================================================ */
 
-    function createInitialHistory() {
+    function duplicateSelected() {
 
-        state.history = [
-            JSON.stringify(
-                serializeProject()
-            )
-        ];
+        const original =
+            getSelected();
 
-        state.historyIndex = 0;
+
+        if (!original) {
+            return null;
+        }
+
+
+        const type =
+            original.dataset.elementType;
+
+
+        const position =
+            getElementPosition(
+                original
+            );
+
+
+        const duplicate =
+            createElement(
+                type,
+                {
+
+                    text:
+                        getElementText(
+                            original
+                        ),
+
+                    x:
+                        position.x + 24,
+
+                    y:
+                        position.y + 24,
+
+                    width:
+                        original.style.width,
+
+                    height:
+                        original.style.height,
+
+                    rotation:
+                        original.style.getPropertyValue(
+                            "--editor-rotation"
+                        ) || "0deg",
+
+                    opacity:
+                        number(
+                            original.style.opacity,
+                            1
+                        ),
+
+                    scale:
+                        number(
+                            original.dataset.scale,
+                            1
+                        ),
+
+                    color:
+                        original.dataset.color ||
+                        null
+
+                }
+            );
+
+
+        if (duplicate) {
+
+            selectElement(
+                duplicate
+            );
+
+            showToast(
+                "Elemento duplicado"
+            );
+
+        }
+
+
+        return duplicate;
 
     }
 
 
-    /* =========================================================
+    /* ============================================================
+       EVENTO DE DUPLICAR
+    ============================================================ */
+
+    function setupDuplicate() {
+
+        document.addEventListener(
+            "click",
+            event => {
+
+                const button =
+                    event.target.closest(
+                        "[data-action='duplicate']"
+                    );
+
+
+                if (!button) {
+                    return;
+                }
+
+
+                duplicateSelected();
+
+            }
+        );
+
+    }
+
+
+    /* ============================================================
        OPTIMIZACIÓN
-    ========================================================= */
+    ============================================================ */
 
     function connectOptimization() {
 
         if (
             !window.PluginDexOptimization
         ) {
+            console.warn(
+                "[PluginDex] Optimización no encontrada."
+            );
 
             return;
 
@@ -2446,12 +3191,24 @@
         window.PluginDexOptimization
             .init?.();
 
+
+        window.PluginDexOptimization
+            .setEffects?.({
+
+                smoke:
+                    state.smoke,
+
+                motion:
+                    state.motion
+
+            });
+
     }
 
 
-    /* =========================================================
+    /* ============================================================
        VENTANAS
-    ========================================================= */
+    ============================================================ */
 
     function connectWindows() {
 
@@ -2468,21 +3225,61 @@
         }
 
 
-        window.PluginDexWindows.init?.({
+        window.PluginDexWindows
+            .init?.({
 
-            container:
-                workspace
+                container:
+                    workspace
 
-        });
+            });
 
     }
 
 
-    /* =========================================================
-       RESIZE
-    ========================================================= */
+    /* ============================================================
+       BLOQUES
+    ============================================================ */
 
-    let resizeTimer = 0;
+    function connectBlocks() {
+
+        if (
+            !window.PluginDexBlocks
+        ) {
+
+            /*
+             * No hacemos nada.
+             * El editor sigue funcionando sin
+             * el sistema visual de bloques.
+             */
+
+            return;
+
+        }
+
+
+        /*
+         * El motor de bloques mantiene
+         * su propio estado.
+         *
+         * Aquí únicamente avisamos de que
+         * el proyecto ya está listo.
+         */
+
+        document.dispatchEvent(
+            new CustomEvent(
+                "plugindex:appready"
+            )
+        );
+
+    }
+
+
+    /* ============================================================
+       RESIZE
+    ============================================================ */
+
+    let resizeTimer =
+        0;
 
 
     function setupResize() {
@@ -2497,11 +3294,16 @@
 
 
                 resizeTimer =
-                    setTimeout(() => {
+                    setTimeout(
+                        () => {
 
-                        applyZoom();
+                            applyZoom();
 
-                    }, 120);
+                            refreshEditorModules();
+
+                        },
+                        100
+                    );
 
             },
             {
@@ -2512,9 +3314,9 @@
     }
 
 
-    /* =========================================================
-       ESTADO DE RENDIMIENTO
-    ========================================================= */
+    /* ============================================================
+       RENDIMIENTO
+    ============================================================ */
 
     function updatePerformanceLabel() {
 
@@ -2526,7 +3328,9 @@
             !label ||
             !window.PluginDexOptimization
         ) {
+
             return;
+
         }
 
 
@@ -2543,16 +3347,80 @@
     }
 
 
-    /* =========================================================
-       INICIO
-    ========================================================= */
+    /* ============================================================
+       ESTADO INICIAL
+    ============================================================ */
+
+    function ensureElementIds() {
+
+        getElements().forEach(
+            element => {
+
+                if (
+                    !element.dataset.elementId
+                ) {
+
+                    const type =
+                        element.dataset.elementType ||
+                        "element";
+
+
+                    element.dataset.elementId =
+                        nextElementId(
+                            type
+                        );
+
+                }
+
+
+                if (
+                    !element.dataset.elementType
+                ) {
+
+                    element.dataset.elementType =
+                        "element";
+
+                }
+
+
+                syncElementPosition(
+                    element
+                );
+
+            }
+        );
+
+    }
+
+
+    function initializeExistingElements() {
+
+        ensureElementIds();
+
+        refreshEditorModules();
+
+    }
+
+
+    /* ============================================================
+       INIT
+    ============================================================ */
 
     function init() {
+
+        if (
+            state.initialized
+        ) {
+
+            return;
+
+        }
+
 
         if (!app) {
 
             console.error(
-                "[PluginDex] App no encontrada."
+                "[PluginDex] #app no encontrado."
             );
 
             return;
@@ -2560,19 +3428,68 @@
         }
 
 
+        state.initialized =
+            true;
+
+
+        /*
+         * 1. Cargar proyecto.
+         */
+
         const loaded =
             loadProject();
 
 
-        initializeElements();
+        /*
+         * 2. Preparar elementos
+         * existentes.
+         */
+
+        initializeExistingElements();
 
 
-        setupGlobalEvents();
+        /*
+         * 3. Conectar sistemas externos
+         * antes de interacción.
+         */
 
-        setupElementDragging();
+        connectOptimization();
+
+        connectWindows();
+
+        connectBlocks();
+
+
+        /*
+         * 4. Eventos internos.
+         */
+
+        setupActions();
+
+        setupCreation();
+
+        setupLayers();
+
+        setupWallpaper();
+
+        setupInspector();
+
+        setupToggles();
+
+        setupTextEditing();
+
+        setupEditorIntegration();
+
+        setupKeyboard();
+
+        setupDuplicate();
 
         setupResize();
 
+
+        /*
+         * 5. Estado visual.
+         */
 
         applyZoom();
 
@@ -2583,61 +3500,68 @@
         applyMotion();
 
 
-        if (!loaded) {
+        /*
+         * 6. Historial.
+         *
+         * IMPORTANTE:
+         * solamente se crea aquí si no existe.
+         * El proyecto cargado también necesita
+         * tener su estado como punto inicial.
+         */
 
-            createInitialHistory();
-
-        } else {
-
-            createInitialHistory();
-
-        }
+        createInitialHistory();
 
 
         /*
-         * El inspector permanece oculto
-         * hasta seleccionar un elemento.
+         * 7. Nada seleccionado
+         * inicialmente.
          */
 
-        selectElement(
-            null
+        clearSelection();
+
+
+        /*
+         * 8. Guardado inicial.
+         */
+
+        saveProject(
+            true
         );
 
 
-        connectOptimization();
-
-        connectWindows();
+        /*
+         * 9. Estado de rendimiento.
+         */
 
         updatePerformanceLabel();
 
 
-        /*
-         * Guardado inicial silencioso.
-         */
-
-        saveProject(true);
-
-
         console.log(
-            "[PluginDex] Interface Engine iniciado."
+            "[PluginDex] Interface Engine v5 iniciado."
         );
 
     }
 
 
-    /* =========================================================
+    /* ============================================================
        API PÚBLICA
-    ========================================================= */
+    ============================================================ */
 
     window.PluginDexApp = {
 
         getState() {
 
             return {
-                ...state
+
+                ...state,
+
+                selected:
+                    getSelected()
+
             };
 
         },
+
 
         save() {
 
@@ -2645,34 +3569,69 @@
 
         },
 
+
         undo,
+
 
         redo,
 
+
         zoomIn,
+
 
         zoomOut,
 
+
         resetZoom,
+
 
         selectElement,
 
+
+        clearSelection,
+
+
         createElement,
+
+
+        deleteSelected,
+
+
+        duplicateSelected,
+
 
         setWallpaper,
 
+
         setSmoke,
+
 
         setMotion,
 
-        togglePreview
+
+        togglePreview,
+
+
+        getSelected,
+
+
+        findElement,
+
+
+        serializeProject,
+
+
+        captureHistory,
+
+
+        editElementText
 
     };
 
 
-    /* =========================================================
+    /* ============================================================
        DOM READY
-    ========================================================= */
+    ============================================================ */
 
     if (
         document.readyState ===
