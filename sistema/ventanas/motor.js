@@ -1,86 +1,79 @@
+/* =========================================================
+   PLUGINDEX
+   MOTOR DE VENTANAS V2
+   sistema/ventanas/motor.js
+========================================================= */
+
 (() => {
+
     "use strict";
 
-    const STORAGE_KEY = "plugindex-window-layout-v1";
-    const MOBILE_BREAKPOINT = 760;
+
+    /* =====================================================
+       CONFIGURACIÓN
+    ===================================================== */
+
+    const STORAGE_KEY =
+        "plugindex-window-layout-v2";
+
+    const MOBILE_BREAKPOINT = 700;
 
     const MIN_WIDTH = 240;
     const MIN_HEIGHT = 150;
 
     const state = {
+
         container: null,
+
         windows: new Map(),
+
         zIndex: 100,
+
         active: null,
-        mode: "__boot__",
-        saveTimer: 0,
-        resizeTimer: 0
+
+        mode: "desktop",
+
+        resizeTimer: null,
+
+        saveTimer: null,
+
+        initialized: false
+
     };
 
-    const $ = (selector, root = document) =>
-        root.querySelector(selector);
 
-    const $$ = (selector, root = document) =>
-        [...root.querySelectorAll(selector)];
+    /* =====================================================
+       UTILIDADES
+    ===================================================== */
 
     function isMobile() {
-        return window.innerWidth <= MOBILE_BREAKPOINT;
+
+        return (
+            window.innerWidth <=
+            MOBILE_BREAKPOINT
+        );
+
     }
 
-    function clamp(value, min, max) {
-        return Math.max(min, Math.min(max, value));
+
+    function clamp(
+        value,
+        min,
+        max
+    ) {
+
+        return Math.max(
+            min,
+            Math.min(max, value)
+        );
+
     }
 
-    function loadLayout() {
-        try {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            return raw ? JSON.parse(raw) : {};
-        } catch {
-            return {};
-        }
-    }
 
-    const layout = loadLayout();
+    function getContainer(
+        element
+    ) {
 
-    function saveLayout() {
-        clearTimeout(state.saveTimer);
-
-        state.saveTimer = setTimeout(() => {
-            const data = {};
-
-            state.windows.forEach((item, id) => {
-                const element = item.element;
-
-                const rect = element.getBoundingClientRect();
-
-                data[id] = {
-                    left: parseFloat(element.style.left) || 0,
-                    top: parseFloat(element.style.top) || 0,
-                    width: rect.width,
-                    height: rect.height,
-
-                    minimized:
-                        element.classList.contains(
-                            "is-minimized"
-                        ),
-
-                    maximized:
-                        element.classList.contains(
-                            "is-maximized"
-                        )
-                };
-            });
-
-            try {
-                localStorage.setItem(
-                    STORAGE_KEY,
-                    JSON.stringify(data)
-                );
-            } catch {}
-        }, 180);
-    }
-
-    function getContainer(element) {
         return (
             element.closest(
                 "[data-window-container]"
@@ -88,423 +81,300 @@
             state.container ||
             document.body
         );
+
     }
 
-    function focusWindow(item) {
-        if (!item) return;
 
-        state.zIndex += 1;
+    function getStoredLayout() {
+
+        try {
+
+            const raw =
+                localStorage.getItem(
+                    STORAGE_KEY
+                );
+
+            if (!raw) {
+                return {};
+            }
+
+            return JSON.parse(raw);
+
+        } catch {
+
+            return {};
+
+        }
+
+    }
+
+
+    const savedLayout =
+        getStoredLayout();
+
+
+    /* =====================================================
+       GUARDAR POSICIONES
+    ===================================================== */
+
+    function saveLayout() {
+
+        clearTimeout(
+            state.saveTimer
+        );
+
+        state.saveTimer =
+            setTimeout(() => {
+
+                const data = {};
+
+                state.windows.forEach(
+                    (item, id) => {
+
+                        const element =
+                            item.element;
+
+                        if (
+                            isMobile()
+                        ) {
+                            return;
+                        }
+
+                        data[id] = {
+
+                            left:
+                                parseFloat(
+                                    element.style.left
+                                ) || 0,
+
+                            top:
+                                parseFloat(
+                                    element.style.top
+                                ) || 0,
+
+                            width:
+                                element.offsetWidth,
+
+                            height:
+                                element.offsetHeight
+
+                        };
+
+                    }
+                );
+
+
+                try {
+
+                    localStorage.setItem(
+                        STORAGE_KEY,
+                        JSON.stringify(data)
+                    );
+
+                } catch {}
+
+            }, 250);
+
+    }
+
+
+    /* =====================================================
+       Z-INDEX
+    ===================================================== */
+
+    function focusWindow(
+        item
+    ) {
+
+        if (!item) {
+            return;
+        }
+
+
+        state.zIndex++;
+
 
         item.element.style.zIndex =
             state.zIndex;
 
-        state.windows.forEach(other => {
-            other.element.classList.toggle(
-                "is-focused",
-                other === item
-            );
-        });
+
+        state.windows.forEach(
+            other => {
+
+                other.element.classList.toggle(
+                    "is-focused",
+                    other === item
+                );
+
+            }
+        );
+
     }
 
-    function getStored(id) {
-        return layout[id] || null;
-    }
 
-    function setupInitialPosition(item) {
-        const element = item.element;
+    /* =====================================================
+       POSICIÓN INICIAL
+    ===================================================== */
 
-        if (isMobile()) {
+    function positionWindow(
+        item
+    ) {
+
+        if (
+            isMobile()
+        ) {
             return;
         }
 
+
+        const element =
+            item.element;
+
+
         const container =
-            getContainer(element);
+            getContainer(
+                element
+            );
+
 
         const containerRect =
             container.getBoundingClientRect();
 
-        const stored =
-            getStored(item.id);
 
-        const currentRect =
-            element.getBoundingClientRect();
+        const saved =
+            savedLayout[
+                item.id
+            ];
+
+
+        /*
+         * IMPORTANTE:
+         *
+         * Eliminamos right/bottom
+         * para que left/top sean
+         * los únicos responsables
+         * de la posición.
+         */
+
+        element.style.right =
+            "auto";
+
+        element.style.bottom =
+            "auto";
+
 
         let width =
-            stored?.width ||
-            currentRect.width ||
-            340;
+            saved?.width ||
+            element.offsetWidth ||
+            300;
+
 
         let height =
-            stored?.height ||
-            currentRect.height ||
-            360;
+            saved?.height ||
+            element.offsetHeight ||
+            300;
 
-        width = clamp(
-            width,
-            MIN_WIDTH,
-            Math.max(
-                MIN_WIDTH,
-                containerRect.width - 16
-            )
-        );
 
-        height = clamp(
-            height,
-            MIN_HEIGHT,
-            Math.max(
-                MIN_HEIGHT,
-                containerRect.height - 16
-            )
-        );
-
-        let left = stored?.left;
-        let top = stored?.top;
-
-        if (!Number.isFinite(left)) {
-            left =
-                containerRect.width -
-                width -
-                24;
-        }
-
-        if (!Number.isFinite(top)) {
-            top = 76;
-        }
-
-        left = clamp(
-            left,
-            8,
-            Math.max(
-                8,
-                containerRect.width -
-                width -
-                8
-            )
-        );
-
-        top = clamp(
-            top,
-            8,
-            Math.max(
-                8,
-                containerRect.height -
-                height -
-                8
-            )
-        );
-
-        element.style.width =
-            `${width}px`;
-
-        element.style.height =
-            `${height}px`;
-
-        element.style.left =
-            `${left}px`;
-
-        element.style.top =
-            `${top}px`;
-
-        if (stored?.minimized) {
-            element.classList.add(
-                "is-minimized"
-            );
-        }
-
-        if (stored?.maximized) {
-            element.classList.add(
-                "is-maximized"
-            );
-        }
-    }
-
-    function openWindow(id) {
-        const item =
-            state.windows.get(id);
-
-        if (!item) {
-            console.warn(
-                `[PluginDex] Ventana "${id}" no encontrada.`
-            );
-
-            return;
-        }
-
-        item.element.classList.add(
-            "is-open"
-        );
-
-        /*
-         * El inspector antiguo de PluginDex
-         * utiliza .visible.
-         */
-        if (id === "inspector") {
-            item.element.classList.add(
-                "visible"
-            );
-        }
-
-        focusWindow(item);
-
-        if (isMobile()) {
-            item.element.style.setProperty(
-                "--sheet-y",
-                "0px"
-            );
-        }
-
-        saveLayout();
-    }
-
-    function closeWindow(id) {
-        const item =
-            state.windows.get(id);
-
-        if (!item) return;
-
-        item.element.classList.remove(
-            "is-open",
-            "is-focused",
-            "is-minimized",
-            "is-maximized"
-        );
-
-        if (id === "inspector") {
-            item.element.classList.remove(
-                "visible"
-            );
-        }
-
-        if (
-            state.active &&
-            state.active.item === item
-        ) {
-            state.active = null;
-        }
-
-        saveLayout();
-    }
-
-    function toggleMinimize(item) {
-        if (!item) return;
-
-        item.element.classList.toggle(
-            "is-minimized"
-        );
-
-        focusWindow(item);
-
-        saveLayout();
-    }
-
-    function toggleMaximize(item) {
-        if (!item) return;
-
-        const element = item.element;
-
-        /*
-         * En móvil maximizar significa
-         * expandir el bottom sheet.
-         */
-        if (isMobile()) {
-            element.classList.toggle(
-                "is-maximized"
-            );
-
-            element.style.setProperty(
-                "--sheet-y",
-                "0px"
-            );
-
-            focusWindow(item);
-
-            return;
-        }
-
-        if (
-            !element.classList.contains(
-                "is-maximized"
-            )
-        ) {
-            item.previous = {
-                left: element.style.left,
-                top: element.style.top,
-                width: element.style.width,
-                height: element.style.height
-            };
-
-            element.classList.add(
-                "is-maximized"
-            );
-
-            element.style.left =
-                "12px";
-
-            element.style.top =
-                "12px";
-
-            element.style.width =
-                "calc(100% - 24px)";
-
-            element.style.height =
-                "calc(100% - 24px)";
-        } else {
-            element.classList.remove(
-                "is-maximized"
-            );
-
-            if (item.previous) {
-                element.style.left =
-                    item.previous.left;
-
-                element.style.top =
-                    item.previous.top;
-
-                element.style.width =
-                    item.previous.width;
-
-                element.style.height =
-                    item.previous.height;
-            }
-
-            item.previous = null;
-        }
-
-        focusWindow(item);
-
-        saveLayout();
-    }
-
-    /*
-     * ================================
-     * DRAG DESKTOP
-     * ================================
-     */
-
-    function beginDrag(event, item) {
-        if (isMobile()) {
-            beginSheetDrag(event, item);
-            return;
-        }
-
-        const element =
-            item.element;
-
-        if (
-            element.classList.contains(
-                "is-maximized"
-            )
-        ) {
-            return;
-        }
-
-        const target =
-            event.target;
-
-        if (
-            target.closest("button") ||
-            target.closest("input") ||
-            target.closest("select") ||
-            target.closest("textarea") ||
-            target.closest("[data-no-window-drag]")
-        ) {
-            return;
-        }
-
-        const container =
-            getContainer(element);
-
-        const containerRect =
-            container.getBoundingClientRect();
-
-        const elementRect =
-            element.getBoundingClientRect();
-
-        const startLeft =
-            parseFloat(
-                element.style.left
-            ) ||
-            (
-                elementRect.left -
-                containerRect.left
-            );
-
-        const startTop =
-            parseFloat(
-                element.style.top
-            ) ||
-            (
-                elementRect.top -
-                containerRect.top
-            );
-
-        state.active = {
-            type: "drag",
-            item,
-            pointerId: event.pointerId,
-
-            startX: event.clientX,
-            startY: event.clientY,
-
-            startLeft,
-            startTop
-        };
-
-        focusWindow(item);
-
-        element.classList.add(
-            "is-dragging"
-        );
-
-        try {
-            event.currentTarget.setPointerCapture(
-                event.pointerId
-            );
-        } catch {}
-
-        event.preventDefault();
-    }
-
-    function updateDrag(event) {
-        const active =
-            state.active;
-
-        if (
-            !active ||
-            active.type !== "drag" ||
-            active.pointerId !== event.pointerId
-        ) {
-            return;
-        }
-
-        const item =
-            active.item;
-
-        const element =
-            item.element;
-
-        const container =
-            getContainer(element);
-
-        const containerRect =
-            container.getBoundingClientRect();
-
-        const width =
-            element.offsetWidth;
-
-        const height =
-            element.offsetHeight;
-
-        const left =
+        width =
             clamp(
-                active.startLeft +
-                (
-                    event.clientX -
-                    active.startX
-                ),
+                width,
+                MIN_WIDTH,
+                Math.max(
+                    MIN_WIDTH,
+                    containerRect.width - 16
+                )
+            );
 
+
+        height =
+            clamp(
+                height,
+                MIN_HEIGHT,
+                Math.max(
+                    MIN_HEIGHT,
+                    containerRect.height - 16
+                )
+            );
+
+
+        let left =
+            Number.isFinite(
+                saved?.left
+            )
+                ? saved.left
+                : null;
+
+
+        let top =
+            Number.isFinite(
+                saved?.top
+            )
+                ? saved.top
+                : null;
+
+
+        /*
+         * Si no hay posición guardada,
+         * usamos la posición declarada
+         * originalmente en CSS.
+         */
+
+        if (
+            left === null
+        ) {
+
+            const computed =
+                getComputedStyle(
+                    element
+                );
+
+
+            const cssLeft =
+                parseFloat(
+                    computed.left
+                );
+
+
+            left =
+                Number.isFinite(
+                    cssLeft
+                )
+                    ? cssLeft
+                    : 20;
+
+        }
+
+
+        if (
+            top === null
+        ) {
+
+            const computed =
+                getComputedStyle(
+                    element
+                );
+
+
+            const cssTop =
+                parseFloat(
+                    computed.top
+                );
+
+
+            top =
+                Number.isFinite(
+                    cssTop
+                )
+                    ? cssTop
+                    : 20;
+
+        }
+
+
+        left =
+            clamp(
+                left,
                 8,
-
                 Math.max(
                     8,
                     containerRect.width -
@@ -513,16 +383,11 @@
                 )
             );
 
-        const top =
+
+        top =
             clamp(
-                active.startTop +
-                (
-                    event.clientY -
-                    active.startY
-                ),
-
+                top,
                 8,
-
                 Math.max(
                     8,
                     containerRect.height -
@@ -531,52 +396,373 @@
                 )
             );
 
+
+        element.style.width =
+            `${width}px`;
+
+
+        element.style.height =
+            `${height}px`;
+
+
         element.style.left =
             `${left}px`;
 
+
         element.style.top =
             `${top}px`;
+
     }
 
-    /*
-     * ================================
-     * RESIZE DESKTOP
-     * ================================
-     */
 
-    function beginResize(
-        event,
-        item,
-        handle
+    /* =====================================================
+       REGISTRAR
+    ===================================================== */
+
+    function register(
+        element
     ) {
-        if (isMobile()) return;
+
+        /*
+         * SOLO ventanas reales.
+         *
+         * El toolDock también tiene
+         * data-window="tools", pero
+         * NO debe entrar aquí.
+         */
+
+        if (
+            !element.classList.contains(
+                "window"
+            )
+        ) {
+
+            return null;
+
+        }
+
+
+        const id =
+            element.dataset.window;
+
+
+        if (!id) {
+            return null;
+        }
+
+
+        if (
+            state.windows.has(id)
+        ) {
+
+            return state.windows.get(
+                id
+            );
+
+        }
+
+
+        const item = {
+
+            id,
+
+            element,
+
+            drag: null,
+
+            resize: null
+
+        };
+
+
+        state.windows.set(
+            id,
+            item
+        );
+
+
+        element.classList.add(
+            "window-ready"
+        );
+
+
+        /*
+         * Posición inicial.
+         */
+
+        positionWindow(
+            item
+        );
+
+
+        /*
+         * Header.
+         */
+
+        const header =
+            element.querySelector(
+                "[data-window-drag]"
+            );
+
+
+        if (header) {
+
+            setupDrag(
+                item,
+                header
+            );
+
+        }
+
+
+        /*
+         * Resize.
+         */
+
+        if (
+            element.hasAttribute(
+                "data-window-resizable"
+            )
+        ) {
+
+            setupResize(
+                item
+            );
+
+        }
+
+
+        /*
+         * Click dentro de ventana
+         * = traer al frente.
+         */
+
+        element.addEventListener(
+            "pointerdown",
+            () => {
+
+                focusWindow(
+                    item
+                );
+
+            },
+            {
+                passive: true
+            }
+        );
+
+
+        return item;
+
+    }
+
+
+    /* =====================================================
+       REGISTRAR TODAS
+    ===================================================== */
+
+    function registerAll() {
+
+        document
+            .querySelectorAll(
+                ".window[data-window]"
+            )
+            .forEach(
+                register
+            );
+
+    }
+
+
+    /* =====================================================
+       DRAG
+    ===================================================== */
+
+    function setupDrag(
+        item,
+        header
+    ) {
+
+
+        header.addEventListener(
+            "pointerdown",
+            event => {
+
+                /*
+                 * No iniciar drag al tocar
+                 * controles del header.
+                 */
+
+                if (
+                    event.target.closest(
+                        "button"
+                    ) ||
+                    event.target.closest(
+                        "input"
+                    ) ||
+                    event.target.closest(
+                        "select"
+                    ) ||
+                    event.target.closest(
+                        "textarea"
+                    )
+                ) {
+
+                    return;
+
+                }
+
+
+                if (
+                    isMobile()
+                ) {
+
+                    startMobileDrag(
+                        item,
+                        event
+                    );
+
+                    return;
+
+                }
+
+
+                startDesktopDrag(
+                    item,
+                    event
+                );
+
+            }
+        );
+
+
+        header.addEventListener(
+            "pointermove",
+            event => {
+
+                if (
+                    !state.active
+                ) {
+
+                    return;
+
+                }
+
+
+                if (
+                    state.active.item !==
+                    item
+                ) {
+
+                    return;
+
+                }
+
+
+                if (
+                    state.active.type ===
+                    "drag"
+                ) {
+
+                    moveDesktopDrag(
+                        event
+                    );
+
+                }
+
+
+                if (
+                    state.active.type ===
+                    "sheet"
+                ) {
+
+                    moveMobileDrag(
+                        event
+                    );
+
+                }
+
+            }
+        );
+
+
+        header.addEventListener(
+            "pointerup",
+            finishPointer
+        );
+
+
+        header.addEventListener(
+            "pointercancel",
+            cancelPointer
+        );
+
+    }
+
+
+    /* =====================================================
+       DESKTOP DRAG START
+    ===================================================== */
+
+    function startDesktopDrag(
+        item,
+        event
+    ) {
 
         const element =
             item.element;
+
 
         if (
             element.classList.contains(
                 "is-maximized"
             )
         ) {
+
             return;
+
         }
 
+
         const container =
-            getContainer(element);
+            getContainer(
+                element
+            );
+
 
         const containerRect =
             container.getBoundingClientRect();
 
-        const rect =
+
+        const elementRect =
             element.getBoundingClientRect();
 
+
+        const left =
+            parseFloat(
+                element.style.left
+            ) ||
+            (
+                elementRect.left -
+                containerRect.left
+            );
+
+
+        const top =
+            parseFloat(
+                element.style.top
+            ) ||
+            (
+                elementRect.top -
+                containerRect.top
+            );
+
+
         state.active = {
-            type: "resize",
+
+            type: "drag",
 
             item,
-
-            handle,
 
             pointerId:
                 event.pointerId,
@@ -588,236 +774,624 @@
                 event.clientY,
 
             startLeft:
+                left,
+
+            startTop:
+                top
+
+        };
+
+
+        focusWindow(
+            item
+        );
+
+
+        element.classList.add(
+            "is-dragging"
+        );
+
+
+        /*
+         * Capturamos el puntero
+         * directamente en el header.
+         */
+
+        try {
+
+            event.currentTarget.setPointerCapture(
+                event.pointerId
+            );
+
+        } catch {}
+
+
+        event.preventDefault();
+
+    }
+
+
+    /* =====================================================
+       DESKTOP DRAG MOVE
+    ===================================================== */
+
+    function moveDesktopDrag(
+        event
+    ) {
+
+        const active =
+            state.active;
+
+
+        if (
+            !active ||
+            active.type !==
+            "drag"
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            active.pointerId !==
+            event.pointerId
+        ) {
+
+            return;
+
+        }
+
+
+        const element =
+            active.item.element;
+
+
+        const container =
+            getContainer(
+                element
+            );
+
+
+        const rect =
+            container.getBoundingClientRect();
+
+
+        const width =
+            element.offsetWidth;
+
+
+        const height =
+            element.offsetHeight;
+
+
+        let left =
+            active.startLeft +
+            (
+                event.clientX -
+                active.startX
+            );
+
+
+        let top =
+            active.startTop +
+            (
+                event.clientY -
+                active.startY
+            );
+
+
+        left =
+            clamp(
+                left,
+                8,
+                Math.max(
+                    8,
+                    rect.width -
+                    width -
+                    8
+                )
+            );
+
+
+        top =
+            clamp(
+                top,
+                8,
+                Math.max(
+                    8,
+                    rect.height -
+                    height -
+                    8
+                )
+            );
+
+
+        element.style.left =
+            `${left}px`;
+
+
+        element.style.top =
+            `${top}px`;
+
+    }
+
+
+    /* =====================================================
+       RESIZE
+    ===================================================== */
+
+    function setupResize(
+        item
+    ) {
+
+        const element =
+            item.element;
+
+
+        /*
+         * Si ya existen handles,
+         * no creamos otros.
+         */
+
+        if (
+            element.querySelector(
+                ".window-resize-handle"
+            )
+        ) {
+
+            return;
+
+        }
+
+
+        const directions = [
+
+            "n",
+            "e",
+            "s",
+            "w",
+
+            "ne",
+            "se",
+            "sw",
+            "nw"
+
+        ];
+
+
+        directions.forEach(
+            direction => {
+
+                const handle =
+                    document.createElement(
+                        "span"
+                    );
+
+
+                handle.className =
+                    "window-resize-handle " +
+                    `window-resize-${direction}`;
+
+
+                handle.dataset.resizeDirection =
+                    direction;
+
+
+                handle.setAttribute(
+                    "aria-hidden",
+                    "true"
+                );
+
+
+                element.appendChild(
+                    handle
+                );
+
+
+                handle.addEventListener(
+                    "pointerdown",
+                    event => {
+
+                        startResize(
+                            item,
+                            direction,
+                            event
+                        );
+
+                    }
+                );
+
+
+                handle.addEventListener(
+                    "pointermove",
+                    moveResize
+                );
+
+
+                handle.addEventListener(
+                    "pointerup",
+                    finishPointer
+                );
+
+
+                handle.addEventListener(
+                    "pointercancel",
+                    cancelPointer
+                );
+
+            }
+        );
+
+    }
+
+
+    /* =====================================================
+       RESIZE START
+    ===================================================== */
+
+    function startResize(
+        item,
+        direction,
+        event
+    ) {
+
+        if (
+            isMobile()
+        ) {
+
+            return;
+
+        }
+
+
+        const element =
+            item.element;
+
+
+        if (
+            element.classList.contains(
+                "is-maximized"
+            )
+        ) {
+
+            return;
+
+        }
+
+
+        const container =
+            getContainer(
+                element
+            );
+
+
+        const containerRect =
+            container.getBoundingClientRect();
+
+
+        const rect =
+            element.getBoundingClientRect();
+
+
+        state.active = {
+
+            type: "resize",
+
+            item,
+
+            pointerId:
+                event.pointerId,
+
+            direction,
+
+            startX:
+                event.clientX,
+
+            startY:
+                event.clientY,
+
+            left:
                 rect.left -
                 containerRect.left,
 
-            startTop:
+            top:
                 rect.top -
                 containerRect.top,
 
-            startWidth:
+            width:
                 rect.width,
 
-            startHeight:
+            height:
                 rect.height
+
         };
 
-        focusWindow(item);
+
+        focusWindow(
+            item
+        );
+
 
         element.classList.add(
             "is-resizing"
         );
 
+
         try {
-            handle.setPointerCapture(
+
+            event.currentTarget.setPointerCapture(
                 event.pointerId
             );
+
         } catch {}
 
+
         event.preventDefault();
+
         event.stopPropagation();
+
     }
 
-    function updateResize(event) {
+
+    /* =====================================================
+       RESIZE MOVE
+    ===================================================== */
+
+    function moveResize(
+        event
+    ) {
+
         const active =
             state.active;
 
+
         if (
             !active ||
-            active.type !== "resize" ||
-            active.pointerId !== event.pointerId
+            active.type !==
+            "resize"
         ) {
+
             return;
+
         }
 
-        const item =
-            active.item;
+
+        if (
+            active.pointerId !==
+            event.pointerId
+        ) {
+
+            return;
+
+        }
+
 
         const element =
-            item.element;
+            active.item.element;
+
 
         const container =
-            getContainer(element);
+            getContainer(
+                element
+            );
+
 
         const containerRect =
             container.getBoundingClientRect();
+
 
         const dx =
             event.clientX -
             active.startX;
 
+
         const dy =
             event.clientY -
             active.startY;
 
+
         let left =
-            active.startLeft;
+            active.left;
+
 
         let top =
-            active.startTop;
+            active.top;
+
 
         let width =
-            active.startWidth;
+            active.width;
+
 
         let height =
-            active.startHeight;
+            active.height;
 
-        const west =
-            active.handle.includes("w");
 
-        const east =
-            active.handle.includes("e");
+        const direction =
+            active.direction;
 
-        const north =
-            active.handle.includes("n");
 
-        const south =
-            active.handle.includes("s");
+        if (
+            direction.includes("e")
+        ) {
 
-        if (east) {
             width =
-                active.startWidth +
+                active.width +
                 dx;
+
         }
 
-        if (south) {
+
+        if (
+            direction.includes("s")
+        ) {
+
             height =
-                active.startHeight +
+                active.height +
                 dy;
+
         }
 
-        if (west) {
+
+        if (
+            direction.includes("w")
+        ) {
+
             width =
-                active.startWidth -
+                active.width -
                 dx;
 
             left =
-                active.startLeft +
+                active.left +
                 dx;
+
         }
 
-        if (north) {
+
+        if (
+            direction.includes("n")
+        ) {
+
             height =
-                active.startHeight -
+                active.height -
                 dy;
 
             top =
-                active.startTop +
+                active.top +
                 dy;
+
         }
 
-        if (width < MIN_WIDTH) {
-            if (west) {
+
+        if (
+            width <
+            MIN_WIDTH
+        ) {
+
+            if (
+                direction.includes("w")
+            ) {
+
                 left =
-                    active.startLeft +
-                    active.startWidth -
+                    active.left +
+                    active.width -
                     MIN_WIDTH;
+
             }
 
             width =
                 MIN_WIDTH;
+
         }
 
-        if (height < MIN_HEIGHT) {
-            if (north) {
+
+        if (
+            height <
+            MIN_HEIGHT
+        ) {
+
+            if (
+                direction.includes("n")
+            ) {
+
                 top =
-                    active.startTop +
-                    active.startHeight -
+                    active.top +
+                    active.height -
                     MIN_HEIGHT;
+
             }
 
             height =
                 MIN_HEIGHT;
+
         }
 
-        if (left < 8) {
-            width +=
-                left - 8;
 
-            left = 8;
-        }
+        /*
+         * Límites del workspace.
+         */
 
-        if (top < 8) {
-            height +=
-                top - 8;
-
-            top = 8;
-        }
-
-        if (
-            left + width >
-            containerRect.width - 8
-        ) {
-            width =
+        left =
+            clamp(
+                left,
+                8,
                 containerRect.width -
-                8 -
-                left;
-        }
+                width -
+                8
+            );
 
-        if (
-            top + height >
-            containerRect.height - 8
-        ) {
-            height =
+
+        top =
+            clamp(
+                top,
+                8,
                 containerRect.height -
-                8 -
-                top;
-        }
+                height -
+                8
+            );
+
 
         width =
-            Math.max(
-                MIN_WIDTH,
-                width
+            Math.min(
+                width,
+                containerRect.width -
+                left -
+                8
             );
 
+
         height =
-            Math.max(
-                MIN_HEIGHT,
-                height
+            Math.min(
+                height,
+                containerRect.height -
+                top -
+                8
             );
+
 
         element.style.left =
             `${left}px`;
 
+
         element.style.top =
             `${top}px`;
 
+
         element.style.width =
-            `${width}px`;
+            `${Math.max(
+                MIN_WIDTH,
+                width
+            )}px`;
+
 
         element.style.height =
-            `${height}px`;
+            `${Math.max(
+                MIN_HEIGHT,
+                height
+            )}px`;
+
     }
 
-    /*
-     * ================================
-     * MOBILE SHEET
-     * ================================
-     */
 
-    function beginSheetDrag(
-        event,
-        item
+    /* =====================================================
+       MOBILE SHEET
+    ===================================================== */
+
+    function startMobileDrag(
+        item,
+        event
     ) {
+
         const element =
             item.element;
 
-        const header =
-            event.currentTarget;
-
-        if (
-            event.target.closest("button") ||
-            event.target.closest("input") ||
-            event.target.closest("select") ||
-            event.target.closest("textarea")
-        ) {
-            return;
-        }
 
         const computed =
             getComputedStyle(
                 element
             );
+
 
         const current =
             parseFloat(
@@ -826,7 +1400,9 @@
                 )
             ) || 0;
 
+
         state.active = {
+
             type: "sheet",
 
             item,
@@ -839,133 +1415,198 @@
 
             startSheetY:
                 current
+
         };
 
-        focusWindow(item);
+
+        focusWindow(
+            item
+        );
+
 
         element.classList.add(
             "is-dragging"
         );
 
+
         try {
-            header.setPointerCapture(
+
+            event.currentTarget.setPointerCapture(
                 event.pointerId
             );
+
         } catch {}
 
+
         event.preventDefault();
+
     }
 
-    function updateSheet(event) {
+
+    function moveMobileDrag(
+        event
+    ) {
+
         const active =
             state.active;
 
+
         if (
             !active ||
-            active.type !== "sheet" ||
-            active.pointerId !== event.pointerId
+            active.type !==
+            "sheet"
         ) {
+
             return;
+
         }
+
 
         const element =
             active.item.element;
 
-        const height =
-            element.offsetHeight ||
-            window.innerHeight * 0.7;
 
         const delta =
             event.clientY -
             active.startY;
 
+
+        const height =
+            element.offsetHeight ||
+            500;
+
+
         let y =
             active.startSheetY +
             delta;
 
+
         y =
             clamp(
                 y,
-                -70,
-                height * 0.72
+                -50,
+                height * 0.75
             );
+
 
         element.style.setProperty(
             "--sheet-y",
             `${y}px`
         );
+
     }
 
-    /*
-     * ================================
-     * FINALIZAR POINTER
-     * ================================
-     */
 
-    function finishPointer(event) {
+    /* =====================================================
+       POINTER END
+    ===================================================== */
+
+    function finishPointer(
+        event
+    ) {
+
         const active =
             state.active;
 
-        if (!active) return;
+
+        if (!active) {
+            return;
+        }
+
 
         if (
             active.pointerId !==
             event.pointerId
         ) {
+
+            return;
+
+        }
+
+
+        const element =
+            active.item.element;
+
+
+        element.classList.remove(
+            "is-dragging",
+            "is-resizing"
+        );
+
+
+        if (
+            active.type ===
+            "sheet"
+        ) {
+
+            finishSheet(
+                active
+            );
+
+        }
+
+
+        try {
+
+            event.currentTarget.releasePointerCapture(
+                event.pointerId
+            );
+
+        } catch {}
+
+
+        state.active =
+            null;
+
+
+        saveLayout();
+
+    }
+
+
+    function cancelPointer(
+        event
+    ) {
+
+        const active =
+            state.active;
+
+
+        if (!active) {
             return;
         }
+
 
         active.item.element.classList.remove(
             "is-dragging",
             "is-resizing"
         );
 
-        try {
-            event.currentTarget.releasePointerCapture(
-                event.pointerId
-            );
-        } catch {}
 
-        if (
-            active.type === "drag" ||
-            active.type === "resize"
-        ) {
-            state.active = null;
-            saveLayout();
-        }
+        state.active =
+            null;
+
     }
 
-    /*
-     * ================================
-     * FINALIZAR SHEET
-     * ================================
-     */
 
-    function finishSheet(event) {
-        const active =
-            state.active;
+    /* =====================================================
+       MOBILE SHEET SNAP
+    ===================================================== */
 
-        if (
-            !active ||
-            active.type !== "sheet"
-        ) {
-            return;
-        }
-
-        if (
-            active.pointerId !==
-            event.pointerId
-        ) {
-            return;
-        }
-
-        const item =
-            active.item;
+    function finishSheet(
+        active
+    ) {
 
         const element =
-            item.element;
+            active.item.element;
 
-        const y =
+
+        const height =
+            element.offsetHeight ||
+            500;
+
+
+        const current =
             parseFloat(
                 getComputedStyle(
                     element
@@ -974,459 +1615,627 @@
                 )
             ) || 0;
 
-        const height =
-            element.offsetHeight ||
-            window.innerHeight * 0.7;
-
-        element.classList.remove(
-            "is-dragging"
-        );
 
         /*
-         * Si bajó demasiado,
-         * cerrar ventana.
+         * Deslizar suficientemente hacia
+         * abajo = cerrar.
          */
+
         if (
-            y >
-            height * 0.28
+            current >
+            height * 0.30
         ) {
+
             closeWindow(
-                item.id
+                active.item.id
             );
+
+            return;
+
         }
+
 
         /*
          * Posición intermedia.
          */
-        else if (
-            y >
+
+        if (
+            current >
             height * 0.10
         ) {
+
             element.style.setProperty(
                 "--sheet-y",
                 `${Math.round(
                     height * 0.42
                 )}px`
             );
+
+            return;
+
         }
+
 
         /*
          * Posición completa.
          */
-        else {
+
+        element.style.setProperty(
+            "--sheet-y",
+            "0px"
+        );
+
+    }
+
+
+    /* =====================================================
+       ABRIR
+    ===================================================== */
+
+    function openWindow(
+        id
+    ) {
+
+        const item =
+            state.windows.get(
+                id
+            );
+
+
+        if (!item) {
+
+            console.warn(
+                `[PluginDex] Ventana no encontrada: ${id}`
+            );
+
+            return;
+
+        }
+
+
+        const element =
+            item.element;
+
+
+        element.classList.add(
+            "is-open"
+        );
+
+
+        /*
+         * Compatibilidad con inspector
+         * del app.js.
+         */
+
+        if (
+            id ===
+            "inspector"
+        ) {
+
+            element.classList.add(
+                "visible"
+            );
+
+        }
+
+
+        /*
+         * Desktop:
+         * aseguramos posición.
+         */
+
+        if (
+            !isMobile()
+        ) {
+
+            positionWindow(
+                item
+            );
+
+        }
+
+
+        /*
+         * Mobile:
+         * subir completamente.
+         */
+
+        if (
+            isMobile()
+        ) {
+
             element.style.setProperty(
                 "--sheet-y",
                 "0px"
             );
+
         }
 
-        state.active = null;
 
-        saveLayout();
+        focusWindow(
+            item
+        );
+
     }
 
-    /*
-     * ================================
-     * RESIZE HANDLES
-     * ================================
-     */
 
-    function createResizeHandles(item) {
+    /* =====================================================
+       CERRAR
+    ===================================================== */
+
+    function closeWindow(
+        id
+    ) {
+
+        const item =
+            state.windows.get(
+                id
+            );
+
+
+        if (!item) {
+            return;
+        }
+
+
+        item.element.classList.remove(
+            "is-open"
+        );
+
+
+        if (
+            id ===
+            "inspector"
+        ) {
+
+            item.element.classList.remove(
+                "visible"
+            );
+
+        }
+
+
+        if (
+            state.active?.item ===
+            item
+        ) {
+
+            state.active =
+                null;
+
+        }
+
+    }
+
+
+    /* =====================================================
+       MINIMIZAR
+    ===================================================== */
+
+    function minimizeWindow(
+        id
+    ) {
+
+        const item =
+            state.windows.get(
+                id
+            );
+
+
+        if (!item) {
+            return;
+        }
+
+
+        item.element.classList.toggle(
+            "is-minimized"
+        );
+
+
+        focusWindow(
+            item
+        );
+
+
+        saveLayout();
+
+    }
+
+
+    /* =====================================================
+       MAXIMIZAR
+    ===================================================== */
+
+    function maximizeWindow(
+        id
+    ) {
+
+        const item =
+            state.windows.get(
+                id
+            );
+
+
+        if (!item) {
+            return;
+        }
+
+
         const element =
             item.element;
 
+
+        /*
+         * En móvil simplemente
+         * expandimos el sheet.
+         */
+
         if (
-            !element.hasAttribute(
-                "data-window-resizable"
+            isMobile()
+        ) {
+
+            element.classList.toggle(
+                "is-maximized"
+            );
+
+
+            element.style.setProperty(
+                "--sheet-y",
+                "0px"
+            );
+
+
+            return;
+
+        }
+
+
+        /*
+         * Guardamos estado anterior.
+         */
+
+        if (
+            !element.classList.contains(
+                "is-maximized"
             )
         ) {
-            return;
+
+            item.previous = {
+
+                left:
+                    element.style.left,
+
+                top:
+                    element.style.top,
+
+                width:
+                    element.style.width,
+
+                height:
+                    element.style.height
+
+            };
+
+
+            element.classList.add(
+                "is-maximized"
+            );
+
+
+            element.style.right =
+                "auto";
+
+
+            element.style.bottom =
+                "auto";
+
+
+            element.style.left =
+                "12px";
+
+
+            element.style.top =
+                "12px";
+
+
+            element.style.width =
+                "calc(100% - 24px)";
+
+
+            element.style.height =
+                "calc(100% - 24px)";
+
         }
 
-        if (
-            element.querySelector(
-                ".window-resize-handle"
-            )
-        ) {
-            return;
+        else {
+
+            element.classList.remove(
+                "is-maximized"
+            );
+
+
+            if (
+                item.previous
+            ) {
+
+                element.style.left =
+                    item.previous.left;
+
+                element.style.top =
+                    item.previous.top;
+
+                element.style.width =
+                    item.previous.width;
+
+                element.style.height =
+                    item.previous.height;
+
+            }
+
+
+            item.previous =
+                null;
+
         }
 
-        const directions = [
-            "n",
-            "e",
-            "s",
-            "w",
-            "ne",
-            "se",
-            "sw",
-            "nw"
-        ];
 
-        directions.forEach(direction => {
-            const handle =
-                document.createElement(
-                    "span"
-                );
-
-            handle.className =
-                "window-resize-handle " +
-                `window-resize-${direction}`;
-
-            handle.dataset.resizeDirection =
-                direction;
-
-            handle.setAttribute(
-                "aria-hidden",
-                "true"
-            );
-
-            element.appendChild(
-                handle
-            );
-
-            handle.addEventListener(
-                "pointerdown",
-                event => {
-                    beginResize(
-                        event,
-                        item,
-                        direction
-                    );
-                }
-            );
-
-            handle.addEventListener(
-                "pointermove",
-                updateResize
-            );
-
-            handle.addEventListener(
-                "pointerup",
-                finishPointer
-            );
-
-            handle.addEventListener(
-                "pointercancel",
-                finishPointer
-            );
-        });
-    }
-
-    /*
-     * ================================
-     * REGISTRAR VENTANA
-     * ================================
-     */
-
-    function register(element) {
-        const id =
-            element.dataset.window;
-
-        if (!id) return null;
-
-        if (
-            state.windows.has(id)
-        ) {
-            return state.windows.get(
-                id
-            );
-        }
-
-        const item = {
-            id,
-            element,
-            previous: null
-        };
-
-        state.windows.set(
-            id,
+        focusWindow(
             item
         );
 
-        element.classList.add(
-            "window-ready"
-        );
 
-        createResizeHandles(
-            item
-        );
+        saveLayout();
 
-        element.addEventListener(
-            "pointerdown",
-            () => {
-                focusWindow(item);
-            },
-            { passive: true }
-        );
-
-        const header =
-            element.querySelector(
-                "[data-window-drag]"
-            );
-
-        if (header) {
-            header.addEventListener(
-                "pointerdown",
-                event => {
-                    beginDrag(
-                        event,
-                        item
-                    );
-                }
-            );
-
-            header.addEventListener(
-                "pointermove",
-                event => {
-                    updateDrag(event);
-                    updateSheet(event);
-                }
-            );
-
-            header.addEventListener(
-                "pointerup",
-                event => {
-                    finishPointer(event);
-                    finishSheet(event);
-                }
-            );
-
-            header.addEventListener(
-                "pointercancel",
-                event => {
-                    finishPointer(event);
-                    finishSheet(event);
-                }
-            );
-        }
-
-        return item;
     }
 
-    function registerAll() {
-        $$("[data-window]")
-            .forEach(register);
-    }
 
-    /*
-     * ================================
-     * EVENTOS GLOBALES
-     * ================================
-     */
+    /* =====================================================
+       BOTONES
+    ===================================================== */
 
-    function setupDelegation() {
+    function setupButtons() {
+
         document.addEventListener(
             "click",
             event => {
 
-                /*
-                 * ABRIR
-                 */
                 const open =
                     event.target.closest(
                         "[data-window-open]"
                     );
 
+
                 if (open) {
+
                     event.preventDefault();
+                    event.stopPropagation();
 
                     openWindow(
                         open.dataset.windowOpen
                     );
 
                     return;
+
                 }
 
-                /*
-                 * CERRAR
-                 */
+
                 const close =
                     event.target.closest(
                         "[data-window-close]"
                     );
 
+
                 if (close) {
+
                     event.preventDefault();
+                    event.stopPropagation();
 
-                    const element =
+                    const windowElement =
                         close.closest(
-                            "[data-window]"
+                            ".window"
                         );
 
-                    if (element) {
+
+                    if (
+                        windowElement
+                    ) {
+
                         closeWindow(
-                            element.dataset.window
+                            windowElement.dataset.window
                         );
+
                     }
 
                     return;
+
                 }
 
-                /*
-                 * MINIMIZAR
-                 */
+
                 const minimize =
                     event.target.closest(
                         "[data-window-minimize]"
                     );
 
-                if (minimize) {
-                    event.preventDefault();
 
-                    const element =
+                if (minimize) {
+
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    const windowElement =
                         minimize.closest(
-                            "[data-window]"
+                            ".window"
                         );
 
-                    if (element) {
-                        const item =
-                            state.windows.get(
-                                element.dataset.window
-                            );
 
-                        if (item) {
-                            toggleMinimize(
-                                item
-                            );
-                        }
+                    if (
+                        windowElement
+                    ) {
+
+                        minimizeWindow(
+                            windowElement.dataset.window
+                        );
+
                     }
 
                     return;
+
                 }
 
-                /*
-                 * MAXIMIZAR
-                 */
+
                 const maximize =
                     event.target.closest(
                         "[data-window-maximize]"
                     );
 
-                if (maximize) {
-                    event.preventDefault();
 
-                    const element =
+                if (maximize) {
+
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    const windowElement =
                         maximize.closest(
-                            "[data-window]"
+                            ".window"
                         );
 
-                    if (element) {
-                        const item =
-                            state.windows.get(
-                                element.dataset.window
-                            );
 
-                        if (item) {
-                            toggleMaximize(
-                                item
-                            );
-                        }
+                    if (
+                        windowElement
+                    ) {
+
+                        maximizeWindow(
+                            windowElement.dataset.window
+                        );
+
                     }
+
                 }
+
             }
         );
 
-        /*
-         * ESCAPE
-         */
+    }
+
+
+    /* =====================================================
+       ESCAPE
+    ===================================================== */
+
+    function setupKeyboard() {
+
         document.addEventListener(
             "keydown",
             event => {
+
                 if (
                     event.key !==
                     "Escape"
                 ) {
+
                     return;
+
                 }
+
 
                 const opened =
-                    [...state.windows.values()]
-                        .filter(item => {
-                            const el =
-                                item.element;
+                    [
+                        ...state.windows.values()
+                    ]
+                    .filter(
+                        item =>
+                            item.element.classList.contains(
+                                "is-open"
+                            ) ||
+                            item.element.classList.contains(
+                                "visible"
+                            )
+                    )
+                    .sort(
+                        (a, b) =>
+                            Number(
+                                b.element.style.zIndex ||
+                                0
+                            ) -
+                            Number(
+                                a.element.style.zIndex ||
+                                0
+                            )
+                    );
 
-                            return (
-                                el.classList.contains(
-                                    "is-open"
-                                ) ||
-                                el.classList.contains(
-                                    "visible"
-                                )
-                            );
-                        })
-                        .sort(
-                            (a, b) =>
-                                Number(
-                                    b.element.style.zIndex ||
-                                    0
-                                ) -
-                                Number(
-                                    a.element.style.zIndex ||
-                                    0
-                                )
-                        );
 
-                const item =
+                const top =
                     opened[0];
 
-                if (item) {
+
+                if (
+                    top
+                ) {
+
                     closeWindow(
-                        item.id
+                        top.id
                     );
+
                 }
+
             }
         );
+
     }
 
-    /*
-     * ================================
-     * RESPONSIVE
-     * ================================
-     */
 
-    function updateMode() {
+    /* =====================================================
+       RESPONSIVE
+    ===================================================== */
+
+    function updateResponsive() {
+
         const nextMode =
             isMobile()
                 ? "mobile"
                 : "desktop";
 
+
         if (
-            state.mode ===
-            nextMode
+            nextMode ===
+            state.mode
         ) {
+
             return;
+
         }
+
 
         state.mode =
             nextMode;
 
+
         state.windows.forEach(
             item => {
+
                 const element =
                     item.element;
 
-                element.classList.toggle(
-                    "window-mobile",
-                    nextMode ===
-                    "mobile"
-                );
-
-                element.classList.toggle(
-                    "window-desktop",
-                    nextMode ===
-                    "desktop"
-                );
 
                 if (
                     nextMode ===
                     "mobile"
                 ) {
+
                     element.style.removeProperty(
                         "left"
                     );
 
                     element.style.removeProperty(
+                        "right"
+                    );
+
+                    element.style.removeProperty(
                         "top"
+                    );
+
+                    element.style.removeProperty(
+                        "bottom"
                     );
 
                     element.style.removeProperty(
@@ -1437,133 +2246,69 @@
                         "height"
                     );
 
+
                     element.style.setProperty(
                         "--sheet-y",
                         "0px"
                     );
-                } else {
-                    setupInitialPosition(
+
+                }
+
+                else {
+
+                    positionWindow(
                         item
                     );
+
                 }
-            }
-        );
-    }
 
-    /*
-     * ================================
-     * INIT
-     * ================================
-     */
-
-    function init(options = {}) {
-        state.container =
-            options.container ||
-            document.querySelector(
-                "[data-window-container]"
-            ) ||
-            document.querySelector(
-                ".workspace"
-            ) ||
-            document.body;
-
-        /*
-         * Forzamos el primer update
-         * para que el modo inicial
-         * sí se aplique.
-         */
-        state.mode =
-            "__boot__";
-
-        registerAll();
-
-        updateMode();
-
-        setupDelegation();
-
-        window.addEventListener(
-            "resize",
-            () => {
-                clearTimeout(
-                    state.resizeTimer
-                );
-
-                state.resizeTimer =
-                    setTimeout(() => {
-                        updateMode();
-
-                        if (
-                            !isMobile()
-                        ) {
-                            state.windows.forEach(
-                                item => {
-                                    if (
-                                        item.element.classList.contains(
-                                            "is-open"
-                                        ) ||
-                                        item.element.classList.contains(
-                                            "visible"
-                                        )
-                                    ) {
-                                        setupInitialPosition(
-                                            item
-                                        );
-                                    }
-                                }
-                            );
-                        }
-                    },
-                    100
-                );
-            },
-            { passive: true }
-        );
-
-        state.windows.forEach(
-            item => {
-                if (
-                    item.element.classList.contains(
-                        "is-open"
-                    ) ||
-                    item.element.classList.contains(
-                        "visible"
-                    )
-                ) {
-                    focusWindow(item);
-                }
             }
         );
 
-        console.log(
-            "[PluginDex] Motor de ventanas activo."
-        );
     }
 
-    /*
-     * ================================
-     * RESET
-     * ================================
-     */
+
+    /* =====================================================
+       RESET
+    ===================================================== */
 
     function reset() {
+
         try {
+
             localStorage.removeItem(
                 STORAGE_KEY
             );
+
         } catch {}
+
 
         state.windows.forEach(
             item => {
+
                 const element =
                     item.element;
+
 
                 element.classList.remove(
                     "is-open",
                     "is-focused",
                     "is-minimized",
-                    "is-maximized",
-                    "visible"
+                    "is-maximized"
                 );
+
+
+                if (
+                    item.id ===
+                    "inspector"
+                ) {
+
+                    element.classList.remove(
+                        "visible"
+                    );
+
+                }
+
 
                 element.style.removeProperty(
                     "left"
@@ -1574,6 +2319,14 @@
                 );
 
                 element.style.removeProperty(
+                    "right"
+                );
+
+                element.style.removeProperty(
+                    "bottom"
+                );
+
+                element.style.removeProperty(
                     "width"
                 );
 
@@ -1581,28 +2334,139 @@
                     "height"
                 );
 
-                element.style.setProperty(
-                    "--sheet-y",
-                    "0px"
+
+                positionWindow(
+                    item
                 );
 
-                item.previous =
-                    null;
             }
         );
 
-        state.windows.forEach(
-            setupInitialPosition
-        );
     }
 
-    /*
-     * ================================
-     * API PÚBLICA
-     * ================================
-     */
+
+    /* =====================================================
+       INIT
+    ===================================================== */
+
+    function init(
+        options = {}
+    ) {
+
+        if (
+            state.initialized
+        ) {
+
+            return;
+
+        }
+
+
+        state.initialized =
+            true;
+
+
+        state.container =
+            options.container ||
+            document.querySelector(
+                "[data-window-container]"
+            ) ||
+            document.querySelector(
+                ".workspace"
+            );
+
+
+        state.mode =
+            isMobile()
+                ? "mobile"
+                : "desktop";
+
+
+        /*
+         * SOLO .window reales.
+         *
+         * Esto evita romper
+         * toolDock.
+         */
+
+        registerAll();
+
+
+        setupButtons();
+
+        setupKeyboard();
+
+
+        /*
+         * Responsive.
+         */
+
+        window.addEventListener(
+            "resize",
+            () => {
+
+                clearTimeout(
+                    state.resizeTimer
+                );
+
+
+                state.resizeTimer =
+                    setTimeout(
+                        () => {
+
+                            updateResponsive();
+
+                        },
+                        100
+                    );
+
+            },
+            {
+                passive: true
+            }
+        );
+
+
+        /*
+         * Si una ventana ya estaba
+         * visible al iniciar.
+         */
+
+        state.windows.forEach(
+            item => {
+
+                if (
+                    item.element.classList.contains(
+                        "visible"
+                    ) ||
+                    item.element.classList.contains(
+                        "is-open"
+                    )
+                ) {
+
+                    focusWindow(
+                        item
+                    );
+
+                }
+
+            }
+        );
+
+
+        console.log(
+            "[PluginDex] Window Engine V2 activo."
+        );
+
+    }
+
+
+    /* =====================================================
+       API
+    ===================================================== */
 
     window.PluginDexWindows = {
+
         init,
 
         open:
@@ -1611,27 +2475,47 @@
         close:
             closeWindow,
 
+        minimize:
+            minimizeWindow,
+
+        maximize:
+            maximizeWindow,
+
         focus(id) {
+
             const item =
-                state.windows.get(id);
+                state.windows.get(
+                    id
+                );
+
 
             if (item) {
-                focusWindow(item);
+
+                focusWindow(
+                    item
+                );
+
             }
+
         },
 
         reset,
 
         get(id) {
+
             return (
-                state.windows.get(id)
-                    ?.element ||
+                state.windows.get(
+                    id
+                )?.element ||
                 null
             );
+
         },
 
         getState() {
+
             return {
+
                 mode:
                     state.mode,
 
@@ -1643,7 +2527,11 @@
                 active:
                     state.active?.item?.id ||
                     null
+
             };
+
         }
+
     };
+
 })();
